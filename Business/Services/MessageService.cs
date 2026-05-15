@@ -99,5 +99,52 @@ namespace Business.Services
                 return Result<IEnumerable<MessageDTO>>.Failure([ex.Message]);
             }
         }
+        
+        public async Task<IResult<IEnumerable<ConversationDTO>>> GetMyInboxAsync(string userId)
+        {
+            try
+            {
+                // Fetch all messages involving this user
+                var messagesResult = await _unitOfWork.Messages.FindManyAsync(m => 
+                    m.SenderId == userId || m.ReceiverId == userId
+                );
+
+                if (!messagesResult.IsSuccess || messagesResult.Data == null)
+                {
+                    return Result<IEnumerable<ConversationDTO>>.Failure(["Failed to load inbox."]);
+                }
+
+                // Group by the OTHER user's ID
+                var latestMessages = messagesResult.Data
+                    .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                    .Select(group => group.OrderByDescending(m => m.CreatedAt).First())
+                    .ToList();
+
+                var inbox = new List<ConversationDTO>();
+
+                // Map the user names securely
+                foreach (var msg in latestMessages)
+                {
+                    var otherUserId = msg.SenderId == userId ? msg.ReceiverId : msg.SenderId;
+                    var otherUser = await _userManager.FindByIdAsync(otherUserId);
+
+                    inbox.Add(new ConversationDTO
+                    {
+                        OtherUserId = otherUserId,
+                        OtherUserName = otherUser?.FirstName ?? "Unknown User",
+                        LastMessage = msg.Content,
+                        LastMessageAt = msg.CreatedAt,
+                        IsRead = msg.IsRead || msg.SenderId == userId // Unread only if THEY sent it
+                    });
+                }
+
+                // Sort by most recent conversation at the top
+                return Result<IEnumerable<ConversationDTO>>.Success(inbox.OrderByDescending(c => c.LastMessageAt));
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<ConversationDTO>>.Failure([ex.Message]);
+            }
+        }
     }
 }

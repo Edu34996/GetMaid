@@ -39,6 +39,10 @@
                 <td>@job.DateNeeded.ToShortDateString()</td>
                 <td>$@job.Budget</td>
                 <td>
+                    <a href="/Message/Chat?otherUserId=@job.CustomerId" class="btn btn-outline-primary btn-sm">
+                        Ask Employer a Question
+                    </a>
+                    
                     @if (job.HasApplied)
                     {
                         <button disabled style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; cursor: not-allowed; border-radius: 3px;">
@@ -48,7 +52,7 @@
                     else
                     {
                         <form asp-controller="Worker" asp-action="ApplyForJob" method="post">
-                            <input type="hidden" name="jobId" value="@job.Id" />
+                            <input type="hidden" name="jobId" value="@job.Id"/>
                             <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">
                                 Apply
                             </button>

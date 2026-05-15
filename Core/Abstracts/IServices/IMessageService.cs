@@ -10,5 +10,7 @@ namespace Core.Abstracts.IServices
         
         // Pulls the entire chronological chat history between two specific users
         Task<IResult<IEnumerable<MessageDTO>>> GetChatThreadAsync(string currentUserId, string otherUserId);
+        
+        Task<IResult<IEnumerable<ConversationDTO>>> GetMyInboxAsync(string userId);
     }
 }

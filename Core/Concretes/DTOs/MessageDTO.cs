@@ -24,4 +24,13 @@ namespace Core.Concretes.DTOs
         public DateTime CreatedAt { get; set; }
         public bool IsMine { get; set; } // UI Flag: True = Right Chat Bubble, False = Left Chat Bubble
     }
+    
+    public class ConversationDTO
+    {
+        public string OtherUserId { get; set; } = null!;
+        public string OtherUserName { get; set; } = null!;
+        public string LastMessage { get; set; } = null!;
+        public DateTime LastMessageAt { get; set; }
+        public bool IsRead { get; set; }
+    }
 }

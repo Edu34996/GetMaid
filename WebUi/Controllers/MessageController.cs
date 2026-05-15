@@ -75,5 +75,21 @@ namespace WebUi.Controllers
             // Instantly redirect back to the same chat thread to see the new message
             return RedirectToAction(nameof(Chat), new { otherUserId = receiverId });
         }
+        // GET: Message/Inbox
+        [HttpGet]
+        public async Task<IActionResult> Inbox()
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized();
+
+            var result = await _messageService.GetMyInboxAsync(currentUserId);
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+            }
+
+            return View(result.Data ?? new List<ConversationDTO>());
+        }
     }
 }
