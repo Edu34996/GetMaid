@@ -1,0 +1,67 @@
+@model Core.Concretes.DTOs.CustomerDashboardDTO
+
+@{
+    ViewData["Title"] = "Customer Dashboard";
+}
+
+<h1>Customer Dashboard</h1>
+<hr />
+
+<h3>My Profile</h3>
+<ul>
+    <li><strong>First Name:</strong> @Model.FirstName</li>
+    <li><strong>Email:</strong> @Model.Email</li>
+    <li><strong>Address:</strong> @Model.Address</li>
+    <li><strong>City:</strong> @Model.City</li>
+</ul>
+
+<hr />
+
+<h3>Add a Child</h3>
+<form asp-controller="Customer" asp-action="AddChild" method="post">
+    <div style="margin-bottom: 10px;">
+        <label>First Name:</label><br />
+        <input type="text" name="FirstName" required />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Age:</label><br />
+        <input type="number" name="Age" required />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Special Care Instructions:</label><br />
+        <input type="text" name="SpecialCareInstructions" />
+    </div>
+    <button type="submit">Save Child</button>
+</form>
+
+<hr />
+
+<h3>My Children</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Care Instructions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (ViewBag.Children != null)
+    {
+        foreach (var child in ViewBag.Children)
+        {
+            <tr>
+                <td>@child.FirstName</td>
+                <td>@child.Age</td>
+                <td>@child.SpecialCareInstructions</td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">No children registered yet.</td>
+        </tr>
+    }
+    </tbody>
+</table>

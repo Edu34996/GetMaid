@@ -1,0 +1,49 @@
+@model Core.Concretes.DTOs.WorkerDashboardDTO
+
+@{
+    ViewData["Title"] = "Worker Dashboard";
+}
+
+<h1>Worker Dashboard</h1>
+<hr />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<h3>Current Profile</h3>
+<ul>
+    <li><strong>First Name:</strong> @Model.FirstName</li>
+    <li><strong>Email:</strong> @Model.Email</li>
+    <li><strong>Bio:</strong> @Model.Bio</li>
+    <li><strong>Hourly Rate:</strong> @Model.HourlyRate</li>
+    <li><strong>Provides Maid Service:</strong> @Model.ProvidesMaidService</li>
+    <li><strong>Provides Childcare:</strong> @Model.ProvidesChildcare</li>
+</ul>
+
+<hr />
+
+<h3>Update Profile</h3>
+<!-- The form posts to the UpdateProfile action in the WorkerController -->
+<form asp-controller="Worker" asp-action="UpdateProfile" method="post">
+    <div style="margin-bottom: 10px;">
+        <label>Bio:</label><br />
+        <textarea name="Bio" rows="4" cols="50">@Model.Bio</textarea>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Hourly Rate:</label><br />
+        <input type="text" name="HourlyRate" value="@Model.HourlyRate" />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Provides Maid Service:</label>
+        <input type="checkbox" name="ProvidesMaidService" value="true" @(Model.ProvidesMaidService ? "checked" : "") />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Provides Childcare:</label>
+        <input type="checkbox" name="ProvidesChildcare" value="true" @(Model.ProvidesChildcare ? "checked" : "") />
+    </div>
+    <button type="submit">Update Profile</button>
+</form>

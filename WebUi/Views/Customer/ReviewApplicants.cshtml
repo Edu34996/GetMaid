@@ -1,0 +1,57 @@
+@model IEnumerable<Core.Concretes.DTOs.JobApplicationDTO>
+
+<h1>Review Applicants</h1>
+<a href="/Customer/MyJobs">Back to My Jobs</a>
+<hr />
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+    <thead>
+    <tr>
+        <th>Worker Name</th>
+        <th>Hourly Rate</th>
+        <th>Bio</th>
+        <th>Application Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var app in Model)
+        {
+            <tr>
+                <td><strong>@app.WorkerName</strong></td>
+                <td>$@app.WorkerHourlyRate / hr</td>
+                <td>@app.WorkerBio</td>
+                <td>@app.Status</td>
+                <td>
+                    @if (app.Status == "Pending")
+                    {
+                        <form asp-controller="Customer" asp-action="HireWorker" method="post">
+                            <input type="hidden" name="applicationId" value="@app.ApplicationId" />
+                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer;">
+                                Hire Worker
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span style="color: gray;"><em>@app.Status</em></span>
+                    }
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr><td colspan="5">No workers have applied for this job yet. Check back soon!</td></tr>
+    }
+    </tbody>
+</table>

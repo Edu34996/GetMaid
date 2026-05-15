@@ -1,0 +1,93 @@
+@model IEnumerable<Core.Concretes.DTOs.WorkerDashboardDTO>
+
+@{
+    ViewData["Title"] = "Worker Shop";
+    
+    // We safely extract the current filter from the ViewBag so the form remembers what the user typed
+    var currentFilter = ViewBag.CurrentFilter as Core.Concretes.DTOs.WorkerSearchFilterDTO 
+                        ?? new Core.Concretes.DTOs.WorkerSearchFilterDTO();
+}
+
+<h1>Find a Worker</h1>
+<hr />
+
+<div style="background-color: #f9f9f9; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px;">
+    <h3>Filter Workers</h3>
+    <form asp-controller="Customer" asp-action="WorkerShop" method="get">
+        <div style="margin-bottom: 10px;">
+            <label>Maximum Hourly Rate ($):</label>
+            <input type="number" step="0.01" name="MaxHourlyRate" value="@currentFilter.MaxHourlyRate" placeholder="e.g. 25.00" />
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <label>
+                <input type="checkbox" name="NeedsMaidService" value="true" @(currentFilter.NeedsMaidService ? "checked" : "") />
+                Must Provide Maid Service
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <label>
+                <input type="checkbox" name="NeedsChildcare" value="true" @(currentFilter.NeedsChildcare ? "checked" : "") />
+                Must Provide Childcare
+            </label>
+        </div>
+        
+        <button type="submit">Apply Filters</button>
+        <a href="/Customer/WorkerShop" style="margin-left: 10px;">Clear Filters</a>
+    </form>
+</div>
+
+<h3>Available Workers</h3>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="color: red; margin-bottom: 15px;">@TempData["ErrorMessage"]</div>
+}
+
+<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Bio</th>
+            <th>Hourly Rate</th>
+            <th>Services Provided</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var worker in Model)
+            {
+                <tr>
+                    <td>@worker.FirstName</td>
+                    <td>@worker.Bio</td>
+                    <td>$@worker.HourlyRate / hr</td>
+                    <td>
+                        @if (worker.ProvidesMaidService)
+                        {
+                            <span>🧹 Maid Service</span><br />
+                        }
+                        @if (worker.ProvidesChildcare)
+                        {
+                            <span>👶 Childcare</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="/Customer/BookWorker?workerId=@worker.Id" 
+                           style="background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">
+                            Book Worker
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5">No workers match your current filters. Try adjusting your search!</td>
+            </tr>
+        }
+    </tbody>
+</table>

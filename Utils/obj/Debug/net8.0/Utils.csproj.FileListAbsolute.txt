@@ -1,0 +1,12 @@
+/home/edu/RiderProjects/GetMaid/Utils/bin/Debug/net8.0/Utils.deps.json
+/home/edu/RiderProjects/GetMaid/Utils/bin/Debug/net8.0/Utils.dll
+/home/edu/RiderProjects/GetMaid/Utils/bin/Debug/net8.0/Utils.pdb
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.csproj.AssemblyReference.cache
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.GeneratedMSBuildEditorConfig.editorconfig
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.AssemblyInfoInputs.cache
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.AssemblyInfo.cs
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.csproj.CoreCompileInputs.cache
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.dll
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/refint/Utils.dll
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.pdb
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/ref/Utils.dll

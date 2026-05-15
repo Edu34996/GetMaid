@@ -1,0 +1,16 @@
+@model Core.Concretes.DTOs.CustomerRegisterDTO
+
+<h2>Register as Customer</h2>
+
+<form asp-action="RegisterCustomer" method="post">
+    <div asp-validation-summary="All" style="color:red"></div>
+    
+    <input asp-for="FirstName" placeholder="First Name" /><br />
+    <input asp-for="LastName" placeholder="Last Name" /><br />
+    <input asp-for="Email" placeholder="Email" /><br />
+    <input asp-for="Password" type="password" placeholder="Password" /><br />
+    <input asp-for="Address" placeholder="Address" /><br />
+    <input asp-for="City" placeholder="City" /><br />
+    
+    <button type="submit">Create Customer Account</button>
+</form>

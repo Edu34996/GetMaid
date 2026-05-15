@@ -1,0 +1,39 @@
+@model Core.Concretes.DTOs.JobPostingCreateDTO
+
+<h1>Post a New Job</h1>
+<hr />
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+        <div asp-validation-summary="All"></div>
+    </div>
+}
+
+<form asp-controller="Customer" asp-action="CreateJob" method="post">
+    <div style="margin-bottom: 10px;">
+        <label>Job Title:</label><br />
+        <input type="text" asp-for="Title" required />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Description:</label><br />
+        <textarea asp-for="Description" rows="4" cols="50" required></textarea>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Location (City/Neighborhood):</label><br />
+        <input type="text" asp-for="Location" required />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Date Needed:</label><br />
+        <input type="date" asp-for="DateNeeded" required />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Estimated Hours:</label><br />
+        <input type="number" asp-for="EstimatedHours" required />
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Total Budget ($):</label><br />
+        <input type="number" asp-for="Budget" step="0.01" required />
+    </div>
+    <button type="submit">Publish Job</button>
+</form>

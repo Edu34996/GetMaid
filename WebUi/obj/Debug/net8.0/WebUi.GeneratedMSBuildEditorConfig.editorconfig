@@ -1,0 +1,115 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = WebApplication1
+build_property.RootNamespace = WebApplication1
+build_property.ProjectDir = /home/edu/RiderProjects/GetMaid/WebUi/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /home/edu/RiderProjects/GetMaid/WebUi
+build_property._RazorSourceGeneratorDebug = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Account/login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9sb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Account/RegisterCustomer.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9SZWdpc3RlckN1c3RvbWVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Account/RegisterWorker.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9SZWdpc3Rlcldvcmtlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/BookWorker.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvQm9va1dvcmtlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/CreateJob.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvQ3JlYXRlSm9iLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvRGFzaGJvYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/EditReview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvRWRpdFJldmlldy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/LeaveReview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvTGVhdmVSZXZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/MyBookings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvTXlCb29raW5ncy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/MyJobs.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvTXlKb2JzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/ReviewApplicants.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvUmV2aWV3QXBwbGljYW50cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/WorkerShop.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvV29ya2VyU2hvcC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Worker/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvV29ya2VyL0Rhc2hib2FyZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Worker/EditReview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvV29ya2VyL0VkaXRSZXZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Worker/JobBoard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvV29ya2VyL0pvYkJvYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Worker/LeaveReview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvV29ya2VyL0xlYXZlUmV2aWV3LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Worker/MyBookings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvV29ya2VyL015Qm9va2luZ3MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-0dfv1v4jm7

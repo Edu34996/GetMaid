@@ -1,0 +1,51 @@
+@model IEnumerable<Core.Concretes.DTOs.BookingDTO>
+
+    <h1>My Bookings</h1>
+    <a href="/Customer/WorkerShop">Find More Workers</a>
+    <hr />
+
+    @if (TempData["SuccessMessage"] != null)
+{
+    <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+               @TempData["SuccessMessage"]
+               </div>
+}
+
+<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+    <thead>
+    <tr>
+    <th>Worker Name</th>
+    <th>Date</th>
+    <th>Duration</th>
+    <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model != null && Model.Any())
+{
+    foreach (var booking in Model)
+    {
+        <tr>
+            <td>@booking.WorkerName</td>
+            <td>@booking.ScheduledDate.ToShortDateString()</td>
+            <td>@booking.DurationHours hours</td>
+            <td>
+                <strong>@booking.Status</strong>
+                @if (booking.Status == "Confirmed")
+                {
+                    <br /><br />
+                    <a href="/Customer/LeaveReview?bookingId=@booking.Id&revieweeId=@booking.WorkerId" 
+                       style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 0.9em;">
+                        Leave Review
+                    </a>
+                }
+            </td>
+            </tr>
+    }
+}
+else
+{
+    <tr><td colspan="4">You have no booking history.</td></tr>
+}
+</tbody>
+    </table>

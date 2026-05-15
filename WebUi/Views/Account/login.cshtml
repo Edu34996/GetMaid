@@ -1,0 +1,24 @@
+@model Core.Concretes.DTOs.LoginDTO
+
+<h2>Login</h2>
+
+<form asp-action="Login" method="post">
+    <div asp-validation-summary="ModelOnly" style="color:red"></div>
+    
+    <div>
+        <label>Email</label><br />
+        <input asp-for="Email" />
+    </div>
+    <div>
+        <label>Password</label><br />
+        <input asp-for="Password" type="password" />
+    </div>
+    <div>
+        <input asp-for="RememberMe" /> <label>Remember Me</label>
+    </div>
+    <button type="submit">Login</button>
+</form>
+
+<hr />
+<a asp-action="RegisterCustomer">Register as Customer</a> | 
+<a asp-action="RegisterWorker">Register as Worker</a>

@@ -1,0 +1,20 @@
+@model Core.Concretes.DTOs.WorkerRegisterDTO
+
+<h2>Register as Worker</h2>
+
+<form asp-action="RegisterWorker" method="post">
+    <div asp-validation-summary="All" style="color:red"></div>
+    
+    <input asp-for="FirstName" placeholder="First Name" /><br />
+    <input asp-for="LastName" placeholder="Last Name" /><br />
+    <input asp-for="Email" placeholder="Email" /><br />
+    <input asp-for="Password" type="password" placeholder="Password" /><br />
+    <input asp-for="Bio" placeholder="Short Bio" /><br />
+    <input asp-for="HourlyRate" type="number" placeholder="Hourly Rate" /><br />
+    
+    <label>Services:</label><br />
+    <input asp-for="ProvidesMaidService" /> Cleaning <br />
+    <input asp-for="ProvidesChildcare" /> Childcare <br />
+    
+    <button type="submit">Create Worker Account</button>
+</form>

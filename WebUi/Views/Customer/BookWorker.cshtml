@@ -1,0 +1,29 @@
+@model Core.Concretes.DTOs.BookingCreateDTO
+
+<h1>Request a Booking</h1>
+<hr />
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div style="color: red; margin-bottom: 15px;">
+        <div asp-validation-summary="All"></div>
+    </div>
+}
+
+<form asp-controller="Customer" asp-action="BookWorker" method="post">
+    <input type="hidden" asp-for="WorkerId" />
+
+    <div style="margin-bottom: 10px;">
+        <label>Scheduled Date:</label><br />
+        <input type="date" asp-for="ScheduledDate" required />
+    </div>
+    
+    <div style="margin-bottom: 10px;">
+        <label>Duration (Hours):</label><br />
+        <input type="number" asp-for="DurationHours" min="1" max="12" required />
+    </div>
+    
+    <button type="submit" style="background-color: #007bff; color: white; padding: 10px 15px; border: none; cursor: pointer;">
+        Submit Request
+    </button>
+</form>

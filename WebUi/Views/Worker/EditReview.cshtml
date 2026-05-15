@@ -1,0 +1,35 @@
+@model Core.Concretes.DTOs.ReviewUpdateDTO
+
+<h1>Edit Your Review</h1>
+<hr />
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+        <div asp-validation-summary="All"></div>
+    </div>
+}
+
+<form asp-controller="Worker" asp-action="EditReview" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div style="margin-bottom: 15px;">
+        <label><strong>Update Rating (1 to 5 Stars):</strong></label><br />
+        <select asp-for="Rating" style="padding: 5px; width: 200px;" required>
+            <option value="5">⭐⭐⭐⭐⭐ (5 - Excellent)</option>
+            <option value="4">⭐⭐⭐⭐ (4 - Good)</option>
+            <option value="3">⭐⭐⭐ (3 - Average)</option>
+            <option value="2">⭐⭐ (2 - Poor)</option>
+            <option value="1">⭐ (1 - Terrible)</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label><strong>Update Comments:</strong></label><br />
+        <textarea asp-for="Comment" rows="4" cols="50">@Model.Comment</textarea>
+    </div>
+
+    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; cursor: pointer;">
+        Save Changes
+    </button>
+</form>
