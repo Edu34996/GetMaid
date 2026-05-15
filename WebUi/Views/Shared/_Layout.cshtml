@@ -25,6 +25,12 @@
 
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
+                            <li class="nav-item">
+                                <a class="nav-link text-primary fw-bold" asp-controller="Message" asp-action="Inbox">
+                                    📥 Inbox
+                                </a>
+                            </li>
+
                             @if (User.IsInRole("Customer"))
                             {
                                 <li class="nav-item"><a class="nav-link text-dark" asp-controller="Customer" asp-action="Dashboard">Dashboard</a></li>

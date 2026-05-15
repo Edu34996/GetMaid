@@ -14,6 +14,7 @@ namespace Core.Concretes.DTOs
         public string Status { get; set; } = null!;
         
         // We will pass the Customer's Name so the Worker can see who posted it
+        public string CustomerId { get; set; } = null!;
         public string CustomerName { get; set; } = null!;
         
         public bool HasApplied { get; set; } = false;
