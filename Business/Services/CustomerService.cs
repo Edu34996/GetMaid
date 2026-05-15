@@ -237,7 +237,7 @@ namespace Business.Services
                     CustomerId = customerId,
                     ScheduledDate = model.ScheduledDate, 
                     DurationHours = model.DurationHours, 
-                    Status = "Pending" 
+                    Status = Core.Concretes.Enums.ApplicationStatus.Pending // REPLACED
                 };
 
                 var createResult = await _unitOfWork.Bookings.CreateAsync(booking);

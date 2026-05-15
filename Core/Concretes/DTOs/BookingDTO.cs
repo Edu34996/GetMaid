@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Core.Concretes.Enums;
 
 namespace Core.Concretes.DTOs
 {
@@ -28,6 +29,5 @@ namespace Core.Concretes.DTOs
 
         public DateTime ScheduledDate { get; set; }
         public int DurationHours { get; set; }
-        public string Status { get; set; } = null!;
-    }
+        public ApplicationStatus Status { get; set; }    }
 }

@@ -34,6 +34,9 @@ namespace Data.Contexts
                 .Property(j => j.Status)
                 .HasConversion<string>();
             
+            builder.Entity<Booking>()
+                .Property(b => b.Status)
+                .HasConversion<string>();
             
             // Configure the Child to Customer relationship
             builder.Entity<Child>(entity =>

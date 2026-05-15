@@ -1,3 +1,4 @@
+@using Core.Concretes.Enums
 @model IEnumerable<Core.Concretes.DTOs.BookingDTO>
 
 <h1>My Booking Requests</h1>
@@ -38,7 +39,7 @@
                     <td><strong>@booking.Status</strong></td>
                     <td>
                         <strong>@booking.Status</strong>
-                        @if (booking.Status == "Confirmed")
+                        if (booking.Status == ApplicationStatus.Accepted)
                         {
                             <br /><br />
                             <a href="/Customer/LeaveReview?bookingId=@booking.Id&revieweeId=@booking.WorkerId" 

@@ -1,5 +1,6 @@
 using System;
 using Core.Abstracts.Bases;
+using Core.Concretes.Enums;
 
 namespace Core.Concretes.Entities
 {
@@ -15,6 +16,5 @@ namespace Core.Concretes.Entities
         public int DurationHours { get; set; }
 
         // e.g., "Pending", "Confirmed", "Completed", "Cancelled"
-        public string Status { get; set; } = "Pending"; 
-    }
+        public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;    }
 }

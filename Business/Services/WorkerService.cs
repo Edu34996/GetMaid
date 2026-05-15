@@ -174,7 +174,7 @@ namespace Business.Services
 
                 // Sort so "Pending" requests show up at the top of the list!
                 return Result<IEnumerable<BookingDTO>>.Success(
-                    bookingDtos.OrderByDescending(b => b.Status == "Pending").ToList()
+                    bookingDtos.OrderByDescending(b => b.Status == Core.Concretes.Enums.ApplicationStatus.Pending).ToList()
                 );
             }
             catch (Exception ex)
@@ -202,14 +202,15 @@ namespace Business.Services
                     return Result.Failure(new[] { "Unauthorized action." }, 401);
                 }
 
-                // Workflow Check: Only "Pending" bookings can be responded to
-                if (booking.Status != "Pending")
+                if (booking.Status != Core.Concretes.Enums.ApplicationStatus.Pending)
                 {
                     return Result.Failure(new[] { $"This booking is already {booking.Status}." }, 400);
                 }
 
                 // Update the status based on the boolean
-                booking.Status = isConfirmed ? "Confirmed" : "Rejected";
+                booking.Status = isConfirmed ? 
+                    Core.Concretes.Enums.ApplicationStatus.Accepted : 
+                    Core.Concretes.Enums.ApplicationStatus.Rejected; // REPLACED
 
                 var updateResult = await _unitOfWork.Bookings.UpdateAsync(booking);
                 if (!updateResult.IsSuccess) return updateResult;
