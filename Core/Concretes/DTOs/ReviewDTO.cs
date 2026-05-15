@@ -33,7 +33,7 @@ namespace Core.Concretes.DTOs
     // Used when updating an existing review
     public class ReviewUpdateDTO
     {
-        public int Id { get; set; } // The actual Review ID in the database
+        public string Id { get; set; } // The actual Review ID in the database
 
         [Required(ErrorMessage = "Please select a rating.")]
         [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5 stars.")]

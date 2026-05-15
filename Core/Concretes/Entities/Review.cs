@@ -1,9 +1,9 @@
+using Core.Abstracts.Bases;
+
 namespace Core.Concretes.Entities
 {
-    public class Review
+    public class Review : BaseEntity
     {
-        public int Id { get; set; }
-        
         // Tying the review to a specific job proves they worked together!
         public int BookingId { get; set; } 
         

@@ -1,12 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using Core.Abstracts.Bases;
 
 namespace Core.Concretes.Entities
 {
-    public class Child
+    public class Child : BaseEntity
     {
-        [Key]
-        public string Id { get; set; }
-
         [Required]
         [MaxLength(50)]
         public string FirstName { get; set; } = null!;

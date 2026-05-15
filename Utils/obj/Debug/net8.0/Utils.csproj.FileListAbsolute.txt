@@ -10,3 +10,4 @@
 /home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/refint/Utils.dll
 /home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.pdb
 /home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/ref/Utils.dll
+/home/edu/RiderProjects/GetMaid/Utils/obj/Debug/net8.0/Utils.sourcelink.json

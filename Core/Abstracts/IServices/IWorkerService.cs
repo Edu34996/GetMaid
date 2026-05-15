@@ -18,7 +18,7 @@ namespace Core.Abstracts.IServices
         Task<IResult<IEnumerable<BookingDTO>>> GetMyBookingsAsync(string workerId);
         
         // We use a boolean 'isConfirmed' to easily toggle between Confirmed and Rejected
-        Task<IResult> RespondToBookingAsync(int bookingId, string workerId, bool isConfirmed);
+        Task<IResult> RespondToBookingAsync(string bookingId, string workerId, bool isConfirmed);
         
         //Review Management
         Task<IResult> LeaveReviewForCustomerAsync(ReviewCreateDTO model, string workerId);

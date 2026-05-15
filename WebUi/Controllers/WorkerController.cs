@@ -121,7 +121,7 @@ namespace WebUi.Controllers
         // POST: Worker/RespondToBooking
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RespondToBooking(int bookingId, bool confirm)
+        public async Task<IActionResult> RespondToBooking(string bookingId, bool confirm)
         {
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();

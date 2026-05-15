@@ -17,3 +17,4 @@
 /home/edu/RiderProjects/GetMaid/Data/obj/Debug/net8.0/Data.genruntimeconfig.cache
 /home/edu/RiderProjects/GetMaid/Data/obj/Debug/net8.0/ref/Data.dll
 /home/edu/RiderProjects/GetMaid/Data/obj/Debug/net8.0/Data.csproj.CopyComplete
+/home/edu/RiderProjects/GetMaid/Data/obj/Debug/net8.0/Data.sourcelink.json

@@ -1,11 +1,10 @@
 using System;
+using Core.Abstracts.Bases;
 
 namespace Core.Concretes.Entities
 {
-    public class Booking
+    public class Booking : BaseEntity
     {
-        public int Id { get; set; }
-        
         public string CustomerId { get; set; } = null!;
         public virtual Customer? Customer { get; set; } // Added navigation property
 

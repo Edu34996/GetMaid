@@ -154,3 +154,4 @@
 /home/edu/RiderProjects/GetMaid/WebUi/obj/Debug/net8.0/WebUi.genruntimeconfig.cache
 /home/edu/RiderProjects/GetMaid/WebUi/obj/Debug/net8.0/ref/WebUi.dll
 /home/edu/RiderProjects/GetMaid/WebUi/obj/Debug/net8.0/WebUi.csproj.CopyComplete
+/home/edu/RiderProjects/GetMaid/WebUi/obj/Debug/net8.0/WebUi.sourcelink.json

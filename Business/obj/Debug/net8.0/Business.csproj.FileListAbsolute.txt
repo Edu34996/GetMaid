@@ -17,3 +17,4 @@
 /home/edu/RiderProjects/GetMaid/Business/obj/Debug/net8.0/Business.pdb
 /home/edu/RiderProjects/GetMaid/Business/obj/Debug/net8.0/ref/Business.dll
 /home/edu/RiderProjects/GetMaid/Business/obj/Debug/net8.0/Business.csproj.CopyComplete
+/home/edu/RiderProjects/GetMaid/Business/obj/Debug/net8.0/Business.sourcelink.json

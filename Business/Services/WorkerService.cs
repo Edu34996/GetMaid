@@ -183,7 +183,7 @@ namespace Business.Services
             }
         }
 
-        public async Task<IResult> RespondToBookingAsync(int bookingId, string workerId, bool isConfirmed)
+        public async Task<IResult> RespondToBookingAsync(string bookingId, string workerId, bool isConfirmed)
         {
             try
             {
