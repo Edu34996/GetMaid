@@ -1,4 +1,5 @@
 using System;
+using Core.Concretes.Enums;
 
 namespace Core.Concretes.DTOs
 {
@@ -13,6 +14,7 @@ namespace Core.Concretes.DTOs
         public string WorkerBio { get; set; } = null!;
         public decimal WorkerHourlyRate { get; set; }
         
-        public string Status { get; set; } = null!;
+        public ApplicationStatus Status { get; set; }
+        
     }
 }

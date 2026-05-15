@@ -1,3 +1,4 @@
+@using Core.Concretes.Enums
 @model IEnumerable<Core.Concretes.DTOs.JobApplicationDTO>
 
 <h1>Review Applicants</h1>
@@ -32,7 +33,7 @@
                 <td>@app.WorkerBio</td>
                 <td>@app.Status</td>
                 <td>
-                    @if (app.Status == "Pending")
+                    @if (app.Status == ApplicationStatus.Pending)
                     {
                         <form asp-controller="Customer" asp-action="HireWorker" method="post">
                             <input type="hidden" name="applicationId" value="@app.ApplicationId" />

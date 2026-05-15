@@ -135,7 +135,7 @@ namespace Business.Services
                 {
                     JobPostingId = jobPostingId,
                     WorkerId = workerId,
-                    Status = "Pending"
+                    Status = Core.Concretes.Enums.ApplicationStatus.Pending // REPLACED
                 };
 
                 var createResult = await _unitOfWork.JobApplications.CreateAsync(application);

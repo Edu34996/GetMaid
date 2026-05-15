@@ -30,6 +30,11 @@ namespace Data.Contexts
             // Essential: Configures the schema for Identity (AspNetUsers, AspNetRoles, etc.)
             base.OnModelCreating(builder);
 
+            builder.Entity<JobApplication>()
+                .Property(j => j.Status)
+                .HasConversion<string>();
+            
+            
             // Configure the Child to Customer relationship
             builder.Entity<Child>(entity =>
             {

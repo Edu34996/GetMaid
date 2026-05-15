@@ -1,5 +1,6 @@
 using System;
 using Core.Abstracts.Bases;
+using Core.Concretes.Enums;
 
 namespace Core.Concretes.Entities
 {
@@ -13,7 +14,6 @@ namespace Core.Concretes.Entities
         public string WorkerId { get; set; } = null!;
         public virtual Worker? Worker { get; set; }
 
-        // Status of this specific application: "Pending", "Accepted", or "Rejected"
-        public string Status { get; set; } = "Pending"; 
+        public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
     }
 }

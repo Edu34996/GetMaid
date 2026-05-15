@@ -349,19 +349,19 @@ namespace Business.Services
                 }
 
                 // 3. Update the winning application
-                targetApplication.Status = "Accepted";
+                targetApplication.Status = Core.Concretes.Enums.ApplicationStatus.Accepted; // REPLACED
                 await _unitOfWork.JobApplications.UpdateAsync(targetApplication);
+
 
                 // 4. Reject all other applications for this specific job
                 var otherAppsResult = await _unitOfWork.JobApplications.FindManyAsync(
                     a => a.JobPostingId == targetApplication.JobPostingId && a.Id != applicationId
                 );
-
                 if (otherAppsResult.IsSuccess && otherAppsResult.Data != null)
                 {
                     foreach (var otherApp in otherAppsResult.Data)
                     {
-                        otherApp.Status = "Rejected";
+                        otherApp.Status = Core.Concretes.Enums.ApplicationStatus.Rejected; // REPLACED
                         await _unitOfWork.JobApplications.UpdateAsync(otherApp);
                     }
                 }
