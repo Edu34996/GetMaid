@@ -267,7 +267,7 @@ namespace Business.Services
                 return Result.Failure([ex.Message]);
             }
         }
-        public async Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(int bookingId, string userId)
+        public async Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string userId)
         {
             try
             {

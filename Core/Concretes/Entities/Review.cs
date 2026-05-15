@@ -5,7 +5,7 @@ namespace Core.Concretes.Entities
     public class Review : BaseEntity
     {
         // Tying the review to a specific job proves they worked together!
-        public int BookingId { get; set; } 
+        public string BookingId { get; set; } 
         
         public string ReviewerId { get; set; } = null!; // Person writing it
         public string RevieweeId { get; set; } = null!; // Person receiving it

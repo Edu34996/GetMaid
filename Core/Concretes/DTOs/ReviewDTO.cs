@@ -7,7 +7,7 @@ namespace Core.Concretes.DTOs
     public class ReviewCreateDTO
     {
         [Required]
-        public int BookingId { get; set; }
+        public string BookingId { get; set; }
 
         [Required]
         public string RevieweeId { get; set; } = null!; // Hidden input: Who are we reviewing?

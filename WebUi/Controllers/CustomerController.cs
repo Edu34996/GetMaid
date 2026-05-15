@@ -219,7 +219,7 @@ namespace WebUi.Controllers
         
         // GET: Customer/LeaveReview (UPDATED WITH SMART ROUTING)
         [HttpGet]
-        public async Task<IActionResult> LeaveReview(int bookingId, string revieweeId)
+        public async Task<IActionResult> LeaveReview(string bookingId, string revieweeId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
@@ -245,7 +245,7 @@ namespace WebUi.Controllers
 
         // GET: Customer/EditReview
         [HttpGet]
-        public async Task<IActionResult> EditReview(int bookingId)
+        public async Task<IActionResult> EditReview(string bookingId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();

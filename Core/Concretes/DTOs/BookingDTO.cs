@@ -19,7 +19,7 @@ namespace Core.Concretes.DTOs
     // Used to display booking history to both Customers and Workers
     public class BookingDTO
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string CustomerId { get; set; } = null!;
         public string WorkerId { get; set; } = null!;
         

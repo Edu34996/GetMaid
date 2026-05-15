@@ -22,7 +22,7 @@ namespace Core.Abstracts.IServices
         
         //Review Management
         Task<IResult> LeaveReviewForCustomerAsync(ReviewCreateDTO model, string workerId);
-        Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(int bookingId, string userId);
+        Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string userId);
         Task<IResult> UpdateReviewAsync(ReviewUpdateDTO model, string userId);
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="getmaid.db [2]" uuid="47169dcd-5bb6-49f9-bc8a-3c7c6a75b2e1">
+    <data-source source="LOCAL" name="getmaid" uuid="f291a573-6e96-4926-9e8c-6c3dd1865748">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
