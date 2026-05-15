@@ -41,6 +41,7 @@ namespace Business
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IWorkerService, WorkerService>();
+            services.AddScoped<IMessageService, MessageService>();
             
             return services;
         }

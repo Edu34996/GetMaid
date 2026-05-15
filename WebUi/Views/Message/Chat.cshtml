@@ -1,0 +1,71 @@
+@model IEnumerable<Core.Concretes.DTOs.MessageDTO>
+
+@{
+    ViewData["Title"] = "Chat";
+    // We get the receiver ID from the ViewBag set in the controller
+    var receiverId = ViewBag.ReceiverId as string;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Conversation</h5>
+                    <a href="javascript:history.back()" class="btn btn-sm btn-outline-light">Back</a>
+                </div>
+                
+                <div class="card-body" style="height: 500px; overflow-y: auto; display: flex; flex-direction: column;" id="chatWindow">
+                    
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var message in Model)
+                        {
+                            // Determine the alignment and styling based on who sent it
+                            var alignmentClass = message.IsMine ? "align-self-end bg-primary text-white" : "align-self-start bg-light text-dark border";
+                            var textAlign = message.IsMine ? "text-end" : "text-start";
+                            
+                            <div class="mb-3 w-75 @(message.IsMine ? "align-self-end" : "align-self-start")">
+                                <div class="p-3 rounded-3 shadow-sm @alignmentClass">
+                                    <div class="fw-bold mb-1" style="font-size: 0.85em; opacity: 0.8;">
+                                        @message.SenderName
+                                    </div>
+                                    <div>
+                                        @message.Content
+                                    </div>
+                                    <div class="mt-1" style="font-size: 0.75em; opacity: 0.7; text-align: right;">
+                                        @message.CreatedAt.ToLocalTime().ToString("MMM dd, h:mm tt")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted mt-5">
+                            <p>No messages yet. Say hello!</p>
+                        </div>
+                    }
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <form asp-controller="Message" asp-action="SendMessage" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="receiverId" value="@receiverId" />
+                        
+                        <input type="text" name="content" class="form-control rounded-pill" placeholder="Type your message here..." required autocomplete="off" />
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var chatWindow = document.getElementById("chatWindow");
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        });
+    </script>
+}
