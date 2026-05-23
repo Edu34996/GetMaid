@@ -7,6 +7,7 @@ using Utils.Responses;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.Concretes.Enums;
 
 namespace Business.Services
 {
@@ -119,17 +120,41 @@ namespace Business.Services
             try
             {
                 // Manual mapping for Worker
+                // Manual mapping for Worker
                 var worker = new Worker
                 {
+                    // IdentityUser fields
                     UserName = model.Email,
                     Email = model.Email,
+    
+                    // ApplicationUser fields
                     FirstName = model.FirstName,
                     LastName = model.LastName,
-                    Bio = model.Bio,
-                    HourlyRate = model.HourlyRate,
+    
+                    // Worker specific fields
+                    Bio = model.Bio ?? string.Empty,
+                    City = model.City, // Added based on your entity
+                    IsSmoker = model.IsSmoker,
                     ExperienceYears = model.ExperienceYears,
-                    ProvidesChildcare = model.ProvidesChildcare,
-                    ProvidesMaidService = model.ProvidesMaidService,
+                    MinHourlyRate = model.MinHourlyRate,
+                    MaxHourlyRate = model.MaxHourlyRate,
+    
+                    // Defaults for new registration
+                    IdentityVerificationStatus = VerificationStatus.Unverified,
+                    ProfilePictureUrl = model.ProfilePictureUrl ?? "default-avatar.png", // Ensure this isn't null
+    
+                    // Lists (Always initialize to avoid null reference issues)
+                    OfferedServices = model.OfferedServices ?? new List<ServiceType>(),
+                    Skills = model.Skills ?? new List<Skill>(),
+                    ExperiencedAgeGroups = model.ExperiencedAgeGroups ?? new List<AgeGroup>(),
+                    LanguagesSpoken = model.LanguagesSpoken ?? new List<string>(),
+                    PreferredWorkDays = model.PreferredWorkDays ?? new List<DayOfWeek>(),
+    
+                    // Preferences
+                    PreferredArrangement = model.PreferredArrangement,
+                    CommitmentPreference = model.CommitmentPreference,
+    
+                    // BaseEntity default
                     CreatedAt = DateTime.UtcNow
                 };
 

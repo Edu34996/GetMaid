@@ -7,33 +7,39 @@ namespace Core.Abstracts.IServices
 {
     public interface ICustomerService
     {
-        // Profile Management
+       
         Task<IResult<CustomerDashboardDTO>> GetProfileAsync(string customerId);
+       
         Task<IResult> UpdateProfileAsync(string customerId, CustomerProfileUpdateDTO model);
 
-        // Job Posting/Management
-        Task<IResult> CreateJobPostingAsync(JobPostingCreateDTO model, string customerId);
-        Task<IResult<IEnumerable<JobPostingDTO>>> GetMyJobPostingsAsync(string customerId);
+        Task<IResult<string>> CreateServiceRequestAsync(ServiceRequestCreateDTO model, string customerId);
+
+        Task<IResult<IEnumerable<JobPostingCardDTO>>> GetMyJobPostingsAsync(string customerId);
         
-        // Child Management
+        Task<IResult<JobPostingDetailDTO>> GetJobPostingDetailsAsync(string jobId, string customerId);
+        
+        Task<IResult<IEnumerable<BookingListItemDTO>>> GetMyBookingsAsync(string customerId);
+        
+        Task<IResult<BookingDetailDTO>> GetBookingDetailsAsync(string bookingId, string customerId);
+        
         Task<IResult> AddChildAsync(ChildDTO model, string customerId);
+       
         Task<IResult<List<ChildDTO>>> GetMyChildrenAsync(string customerId);
+        
         Task<IResult> RemoveChildAsync(string childId, string customerId);
+ 
+        Task<IResult<IEnumerable<WorkerCardDTO>>> BrowseWorkersAsync(WorkerSearchFilterDTO filter);
         
-        //WorkerShop Search-filter
-        Task<IResult<IEnumerable<WorkerDashboardDTO>>> BrowseWorkersAsync(WorkerSearchFilterDTO filter);
+        Task<IResult<WorkerDetailsDTO>> GetWorkerDetailsAsync(string workerId);
         
-        // Booking Management
-        Task<IResult> CreateBookingAsync(BookingCreateDTO model, string customerId);
-        Task<IResult<IEnumerable<BookingDTO>>> GetMyBookingsAsync(string customerId);
-        
-        // Job Application Management
         Task<IResult<IEnumerable<JobApplicationDTO>>> GetJobApplicantsAsync(string jobPostingId, string customerId);
+        
         Task<IResult> HireWorkerForJobAsync(string applicationId, string customerId);
         
-        //Review Management
         Task<IResult> LeaveReviewForWorkerAsync(ReviewCreateDTO model, string customerId);
-        Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string userId);
-        Task<IResult> UpdateReviewAsync(ReviewUpdateDTO model, string userId);
+        
+        Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string customerId);
+        
+        Task<IResult> UpdateReviewAsync(ReviewUpdateDTO model, string customerId);
     }
 }

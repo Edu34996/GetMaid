@@ -1,62 +1,82 @@
-@using Core.Concretes.Enums
-@model IEnumerable<Core.Concretes.DTOs.BookingDTO>
+@model IEnumerable<Core.Concretes.DTOs.BookingListItemDTO>
+
+@{
+    ViewData["Title"] = "My Booking Requests";
+}
 
 <h1>My Booking Requests</h1>
 <hr />
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+    <div class="text-success border border-success p-2 mb-3">
         @TempData["SuccessMessage"]
     </div>
 }
+
 @if (TempData["ErrorMessage"] != null)
 {
-    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+    <div class="text-danger border border-danger p-2 mb-3">
         @TempData["ErrorMessage"]
     </div>
 }
 
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+<table class="table table-bordered">
     <thead>
         <tr>
             <th>Customer Name</th>
-            <th>Date Requested</th>
-            <th>Duration</th>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Budget</th>
+            <th>Estimated Hours</th>
+            <th>Start Date</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Respond</th>
         </tr>
     </thead>
     <tbody>
-        @if (Model != null && Model.Any())
+    @if (Model != null && Model.Any())
+    {
+        foreach (var booking in Model)
         {
-            foreach (var booking in Model)
-            {
-                <tr>
-                    <td>@booking.CustomerName</td>
-                    <td>@booking.ScheduledDate.ToShortDateString()</td>
-                    <td>@booking.DurationHours hours</td>
-                    <td><strong>@booking.Status</strong></td>
-                    <td>
-                        <strong>@booking.Status</strong>
-                        if (booking.Status == ApplicationStatus.Accepted)
-                        {
-                            <br /><br />
-                            <a href="/Customer/LeaveReview?bookingId=@booking.Id&revieweeId=@booking.WorkerId" 
-                               style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 0.9em;">
-                                Leave Review
-                            </a>
-                            <a href="/Message/Chat?otherUserId=@booking.CustomerId" class="btn btn-sm btn-info text-white mt-1">
-                                Message Customer
-                            </a>
-                        }
-                    </td>
-                </tr>
-            }
+            <tr>
+                <td>@booking.CustomerName</td>
+                <td>@booking.Title</td>
+                <td>@booking.Location</td>
+                <td>@booking.Budget.ToString("0.00")</td>
+                <td>@booking.EstimatedHours</td>
+                <td>@booking.StartDate.ToShortDateString()</td>
+                <td><strong>@booking.Status</strong></td>
+                <td>
+                    @if (booking.Status == "Pending")
+                    {
+                        <form asp-controller="Worker" asp-action="RespondToBooking" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@booking.Id" />
+                            <input type="hidden" name="confirm" value="true" />
+                            <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                        </form>
+
+                        <form asp-controller="Worker" asp-action="RespondToBooking" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@booking.Id" />
+                            <input type="hidden" name="confirm" value="false" />
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No action available</span>
+                    }
+                </td>
+            </tr>
         }
-        else
-        {
-            <tr><td colspan="5">You have no booking requests at this time.</td></tr>
-        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="8">You have no booking requests at this time.</td>
+        </tr>
+    }
     </tbody>
 </table>

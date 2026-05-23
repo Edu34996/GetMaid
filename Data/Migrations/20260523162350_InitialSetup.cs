@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCleanSchema : Migration
+    public partial class InitialSetup : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -39,11 +39,36 @@ namespace Data.Migrations
                     Discriminator = table.Column<string>(type: "TEXT", maxLength: 21, nullable: false),
                     Address = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Longitude = table.Column<double>(type: "REAL", nullable: true),
                     Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    HourlyRate = table.Column<decimal>(type: "TEXT", nullable: true),
+                    FamilyStatus = table.Column<int>(type: "INTEGER", nullable: true),
+                    HasPets = table.Column<bool>(type: "INTEGER", nullable: true),
+                    NumberOfPets = table.Column<int>(type: "INTEGER", nullable: true),
+                    IdentityVerificationStatus = table.Column<int>(type: "INTEGER", nullable: true),
+                    IdentityDocumentPath = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    WorkerId = table.Column<string>(type: "TEXT", nullable: true),
+                    Worker_Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    IsSmoker = table.Column<bool>(type: "INTEGER", nullable: true),
+                    Worker_City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Worker_Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Worker_Longitude = table.Column<double>(type: "REAL", nullable: true),
+                    MinHourlyRate = table.Column<decimal>(type: "TEXT", nullable: true),
+                    MaxHourlyRate = table.Column<decimal>(type: "TEXT", nullable: true),
                     ExperienceYears = table.Column<int>(type: "INTEGER", nullable: true),
-                    ProvidesMaidService = table.Column<bool>(type: "INTEGER", nullable: true),
-                    ProvidesChildcare = table.Column<bool>(type: "INTEGER", nullable: true),
+                    ProfilePictureUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IntroductionVideoUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Worker_IdentityDocumentPath = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Worker_IdentityVerificationStatus = table.Column<int>(type: "INTEGER", nullable: true),
+                    OfferedServices = table.Column<string>(type: "TEXT", nullable: true),
+                    Skills = table.Column<string>(type: "TEXT", nullable: true),
+                    ExperiencedAgeGroups = table.Column<string>(type: "TEXT", nullable: true),
+                    LanguagesSpoken = table.Column<string>(type: "TEXT", nullable: true),
+                    PreferredArrangement = table.Column<int>(type: "INTEGER", nullable: true),
+                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxDaysPerWeek = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxHoursPerDay = table.Column<int>(type: "INTEGER", nullable: true),
+                    PreferredWorkDays = table.Column<string>(type: "TEXT", nullable: true),
                     UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
@@ -62,6 +87,11 @@ namespace Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUsers_AspNetUsers_WorkerId",
+                        column: x => x.WorkerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -80,25 +110,6 @@ namespace Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Messages", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Reviews",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    BookingId = table.Column<string>(type: "TEXT", nullable: false),
-                    ReviewerId = table.Column<string>(type: "TEXT", nullable: false),
-                    RevieweeId = table.Column<string>(type: "TEXT", nullable: false),
-                    Rating = table.Column<int>(type: "INTEGER", nullable: false),
-                    Comment = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reviews", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -212,11 +223,23 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    CustomerId = table.Column<string>(type: "TEXT", nullable: false),
-                    WorkerId = table.Column<string>(type: "TEXT", nullable: false),
-                    ScheduledDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DurationHours = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceTypes = table.Column<string>(type: "TEXT", nullable: false),
+                    WorkArrangement = table.Column<int>(type: "INTEGER", nullable: false),
+                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: false),
+                    RequiredSkills = table.Column<string>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    Requirements = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    Location = table.Column<string>(type: "TEXT", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EstimatedHours = table.Column<int>(type: "INTEGER", nullable: false),
+                    Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RequireNonSmoker = table.Column<bool>(type: "INTEGER", nullable: false),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerId = table.Column<string>(type: "TEXT", nullable: false),
+                    BookingInactive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    WorkerId = table.Column<string>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -243,8 +266,8 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    FirstName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Age = table.Column<int>(type: "INTEGER", nullable: false),
+                    Age = table.Column<int>(type: "INTEGER", nullable: true),
+                    Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     SpecialCareInstructions = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     CustomerId = table.Column<string>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -267,14 +290,22 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
+                    ServiceTypes = table.Column<string>(type: "TEXT", nullable: false),
+                    WorkArrangement = table.Column<int>(type: "INTEGER", nullable: false),
+                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: false),
+                    RequiredSkills = table.Column<string>(type: "TEXT", nullable: false),
                     Title = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    Requirements = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     Location = table.Column<string>(type: "TEXT", nullable: false),
-                    DateNeeded = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EstimatedHours = table.Column<int>(type: "INTEGER", nullable: false),
-                    Budget = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false),
+                    Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RequireNonSmoker = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
                     CustomerId = table.Column<string>(type: "TEXT", nullable: false),
+                    PostInactive = table.Column<bool>(type: "INTEGER", nullable: false),
                     AssignedWorkerId = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
@@ -297,6 +328,37 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Reviews",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    BookingId = table.Column<string>(type: "TEXT", nullable: false),
+                    ReviewerId = table.Column<string>(type: "TEXT", nullable: false),
+                    RevieweeId = table.Column<string>(type: "TEXT", nullable: false),
+                    Rating = table.Column<int>(type: "INTEGER", nullable: false),
+                    Comment = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reviews_AspNetUsers_RevieweeId",
+                        column: x => x.RevieweeId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Reviews_AspNetUsers_ReviewerId",
+                        column: x => x.ReviewerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "JobApplications",
                 columns: table => new
                 {
@@ -304,6 +366,10 @@ namespace Data.Migrations
                     JobPostingId = table.Column<string>(type: "TEXT", nullable: false),
                     WorkerId = table.Column<string>(type: "TEXT", nullable: false),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
+                    MessageToCustomer = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    SoonestAvailableStartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsCurrentlyWorking = table.Column<bool>(type: "INTEGER", nullable: false),
+                    QuestionsAboutWork = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -357,6 +423,11 @@ namespace Data.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_WorkerId",
+                table: "AspNetUsers",
+                column: "WorkerId");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -396,6 +467,16 @@ namespace Data.Migrations
                 name: "IX_JobPostings_CustomerId",
                 table: "JobPostings",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_RevieweeId",
+                table: "Reviews",
+                column: "RevieweeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_ReviewerId",
+                table: "Reviews",
+                column: "ReviewerId");
         }
 
         /// <inheritdoc />

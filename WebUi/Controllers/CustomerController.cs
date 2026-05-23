@@ -23,8 +23,8 @@ namespace WebUi.Controllers
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
             var result = await _customerService.GetProfileAsync(customerId);
-            
-            // For testing purposes, we will fetch children data simultaneously
+
+            // For testing purposes, fetch children data simultaneously
             var childrenResult = await _customerService.GetMyChildrenAsync(customerId);
             ViewBag.Children = childrenResult.Data ?? new List<ChildDTO>();
 
@@ -45,7 +45,6 @@ namespace WebUi.Controllers
 
             return View("Dashboard");
         }
-        // ... (Keep your existing Dashboard and AddChild methods) ...
 
         // GET: Customer/MyJobs
         public async Task<IActionResult> MyJobs()
@@ -54,11 +53,11 @@ namespace WebUi.Controllers
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
             var result = await _customerService.GetMyJobPostingsAsync(customerId);
-            
+
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                return View(new List<JobPostingDTO>());
+                return View(new List<JobPostingCardDTO>());
             }
 
             return View(result.Data);
@@ -74,14 +73,17 @@ namespace WebUi.Controllers
         // POST: Customer/CreateJob
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateJob(JobPostingCreateDTO model)
+        public async Task<IActionResult> CreateJob(ServiceRequestCreateDTO model)
         {
             if (!ModelState.IsValid) return View(model);
 
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            var result = await _customerService.CreateJobPostingAsync(model, customerId);
+            // Creating a job posting => ensure no target worker
+            model.TargetWorkerId = null;
+
+            var result = await _customerService.CreateServiceRequestAsync(model, customerId);
 
             if (result.IsSuccess)
             {
@@ -92,39 +94,53 @@ namespace WebUi.Controllers
             ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
             return View(model);
         }
+
         // GET: Customer/WorkerShop
         public async Task<IActionResult> WorkerShop(WorkerSearchFilterDTO filter)
         {
-            // The filter parameter will automatically bind to the query string or form data
-            filter ??= new WorkerSearchFilterDTO(); // Ensure it's never null
+            filter ??= new WorkerSearchFilterDTO();
 
             var result = await _customerService.BrowseWorkersAsync(filter);
 
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                return View(new List<WorkerDashboardDTO>());
+                return View(new List<WorkerCardDTO>());
             }
 
-            // We pass the filter back to the view via ViewBag so the form remembers what the user selected
             ViewBag.CurrentFilter = filter;
+            return View(result.Data);
+        }
+
+        // GET: Customer/WorkerDetails
+        [HttpGet]
+        public async Task<IActionResult> WorkerDetails(string workerId)
+        {
+            if (string.IsNullOrWhiteSpace(workerId)) return BadRequest("Worker ID is required.");
+
+            var result = await _customerService.GetWorkerDetailsAsync(workerId);
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages ?? new[] { "Worker not found." });
+                return RedirectToAction(nameof(WorkerShop));
+            }
 
             return View(result.Data);
         }
-        // ... (Keep existing Dashboard, AddChild, WorkerShop, and MyJobs methods) ...
 
         // GET: Customer/BookWorker
-        // This is triggered when the customer clicks "Book" on a worker's profile in the Shop
         [HttpGet]
         public IActionResult BookWorker(string workerId)
         {
             if (string.IsNullOrEmpty(workerId)) return BadRequest("Worker ID is required.");
 
-            // We pre-fill the DTO with the WorkerId so it can be stored in a hidden field in the form
-            var model = new BookingCreateDTO
+            var model = new ServiceRequestCreateDTO
             {
-                WorkerId = workerId,
-                ScheduledDate = DateTime.Today.AddDays(1) // Default to tomorrow
+                TargetWorkerId = workerId,
+                StartDate = DateTime.Today.AddDays(1),
+                EndDate = DateTime.Today.AddDays(1),
+                ServiceTypes = new List<Core.Concretes.Enums.ServiceType>()
             };
 
             return View(model);
@@ -133,14 +149,15 @@ namespace WebUi.Controllers
         // POST: Customer/BookWorker
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BookWorker(BookingCreateDTO model)
+        public async Task<IActionResult> BookWorker(ServiceRequestCreateDTO model)
         {
             if (!ModelState.IsValid) return View(model);
 
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            var result = await _customerService.CreateBookingAsync(model, customerId);
+            // Creating a booking => TargetWorkerId should be present from the form
+            var result = await _customerService.CreateServiceRequestAsync(model, customerId);
 
             if (result.IsSuccess)
             {
@@ -163,15 +180,13 @@ namespace WebUi.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                return View(new List<BookingDTO>());
+                return View(new List<BookingListItemDTO>());
             }
 
             return View(result.Data);
         }
-        // ... (Keep existing methods: Dashboard, AddChild, CreateJob, MyJobs, etc.) ...
 
         // GET: Customer/ReviewApplicants
-        // This loads the page showing everyone who applied for a specific job
         [HttpGet]
         public async Task<IActionResult> ReviewApplicants(string jobId)
         {
@@ -192,7 +207,6 @@ namespace WebUi.Controllers
         }
 
         // POST: Customer/HireWorker
-        // This is triggered when the customer clicks the "Hire" button on a specific applicant
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> HireWorker(string applicationId)
@@ -215,25 +229,21 @@ namespace WebUi.Controllers
 
             return RedirectToAction(nameof(MyJobs));
         }
-        // ... (Keep existing methods: MyBookings, ReviewApplicants, etc.) ...
-        
-        // GET: Customer/LeaveReview (UPDATED WITH SMART ROUTING)
+
+        // GET: Customer/LeaveReview
         [HttpGet]
         public async Task<IActionResult> LeaveReview(string bookingId, string revieweeId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            // SMART ROUTING: Check if they already reviewed this booking
             var existingReview = await _customerService.GetMyReviewByBookingIdAsync(bookingId, customerId);
-            
-            // If it succeeds, they already wrote one! Redirect them to the edit page.
+
             if (existingReview.IsSuccess)
             {
-                return RedirectToAction(nameof(EditReview), new { bookingId = bookingId });
+                return RedirectToAction(nameof(EditReview), new { bookingId });
             }
 
-            // Otherwise, load the blank creation form
             var model = new ReviewCreateDTO
             {
                 BookingId = bookingId,

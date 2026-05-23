@@ -1,29 +1,144 @@
-@model Core.Concretes.DTOs.BookingCreateDTO
+@model Core.Concretes.DTOs.ServiceRequestCreateDTO
+@using Core.Concretes.Enums
 
-<h1>Request a Booking</h1>
+@{
+    ViewData["Title"] = "Book Worker";
+}
+
+<h1>Propose a Booking</h1>
+<p>Fill in the details below to send a booking request to this worker.</p>
 <hr />
 
 @if (!ViewData.ModelState.IsValid)
 {
-    <div style="color: red; margin-bottom: 15px;">
+    <div class="text-danger mb-3">
         <div asp-validation-summary="All"></div>
     </div>
 }
 
 <form asp-controller="Customer" asp-action="BookWorker" method="post">
-    <input type="hidden" asp-for="WorkerId" />
+    @Html.AntiForgeryToken()
 
-    <div style="margin-bottom: 10px;">
-        <label>Scheduled Date:</label><br />
-        <input type="date" asp-for="ScheduledDate" required />
+    <input type="hidden" asp-for="TargetWorkerId" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" placeholder="e.g. Weekly childcare support" />
+        <span asp-validation-for="Title" class="text-danger"></span>
     </div>
-    
-    <div style="margin-bottom: 10px;">
-        <label>Duration (Hours):</label><br />
-        <input type="number" asp-for="DurationHours" min="1" max="12" required />
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="4"
+                  placeholder="Describe the work you need, schedule expectations, number of children, home duties, etc."></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
     </div>
-    
-    <button type="submit" style="background-color: #007bff; color: white; padding: 10px 15px; border: none; cursor: pointer;">
-        Submit Request
+
+    <div class="mb-3">
+        <label asp-for="Requirements" class="form-label"></label>
+        <textarea asp-for="Requirements" class="form-control" rows="3"
+                  placeholder="Any preferred experience, certifications, language requirements, etc."></textarea>
+        <span asp-validation-for="Requirements" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Location" class="form-label"></label>
+        <input asp-for="Location" class="form-control" placeholder="Enter service location" />
+        <span asp-validation-for="Location" class="text-danger"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="StartDate" class="form-label"></label>
+            <input asp-for="StartDate" type="date" class="form-control" />
+            <span asp-validation-for="StartDate" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="EndDate" class="form-label"></label>
+            <input asp-for="EndDate" type="date" class="form-control" />
+            <span asp-validation-for="EndDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="EstimatedHours" class="form-label"></label>
+        <input asp-for="EstimatedHours" type="number" min="1" class="form-control" />
+        <span asp-validation-for="EstimatedHours" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Budget" class="form-label"></label>
+        <input asp-for="Budget" type="number" step="0.01" min="0.01" class="form-control" />
+        <span asp-validation-for="Budget" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="RequireNonSmoker" class="form-check-input" />
+        <label asp-for="RequireNonSmoker" class="form-check-label"></label>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Service Types</label>
+        <div class="border rounded p-3">
+            @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
+            {
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="ServiceTypes"
+                           value="@service"
+                           id="service_@service" />
+                    <label class="form-check-label" for="service_@service">@service</label>
+                </div>
+            }
+        </div>
+        <span asp-validation-for="ServiceTypes" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="WorkArrangement" class="form-label"></label>
+        <select asp-for="WorkArrangement"
+                asp-items="Html.GetEnumSelectList<WorkArrangement>()"
+                class="form-select">
+            <option value="">-- Select work arrangement --</option>
+        </select>
+        <span asp-validation-for="WorkArrangement" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CommitmentPreference" class="form-label"></label>
+        <select asp-for="CommitmentPreference"
+                asp-items="Html.GetEnumSelectList<CommitmentPreference>()"
+                class="form-select">
+            <option value="">-- Select commitment preference --</option>
+        </select>
+        <span asp-validation-for="CommitmentPreference" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Required Skills</label>
+        <div class="border rounded p-3">
+            @foreach (Skill skill in Enum.GetValues(typeof(Skill)))
+            {
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="RequiredSkills"
+                           value="@skill"
+                           id="skill_@skill" />
+                    <label class="form-check-label" for="skill_@skill">@skill</label>
+                </div>
+            }
+        </div>
+        <span asp-validation-for="RequiredSkills" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Send Booking Proposal
     </button>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

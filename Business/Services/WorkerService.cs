@@ -1,102 +1,84 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Core.Abstracts;
+using Microsoft.EntityFrameworkCore;
 using Core.Abstracts.IServices;
-using Core.Concretes.DTOs;
 using Core.Concretes.Entities;
+using Core.Concretes.DTOs;
+using Core.Concretes.Enums;
 using Utils.Responses;
+using Data.Contexts;
 
 namespace Business.Services
 {
     public class WorkerService : IWorkerService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly GetMaidContext _context; 
         private readonly IMapper _mapper;
 
-        // Classic C# constructor injecting both UnitOfWork and AutoMapper
-        public WorkerService(IUnitOfWork unitOfWork, IMapper mapper)
+        public WorkerService(GetMaidContext context, IMapper mapper)
         {
-            _unitOfWork = unitOfWork;
+            _context = context;
             _mapper = mapper;
         }
-
-        public async Task<IResult<WorkerDashboardDTO>> GetProfileAsync(string workerId)
+        
+        public async Task<IResult<WorkerDashboardDTO>> GetDashboardProfileAsync(string workerId)
         {
-            var workerResult = await _unitOfWork.Workers.FindByIdAsync(workerId);
-            
-            if (!workerResult.IsSuccess || workerResult.Data == null)
+            try
             {
-                return Result<WorkerDashboardDTO>.Failure(["Worker profile not found."], 404);
+                var worker = await _context.Workers
+                    .FirstOrDefaultAsync(w => w.Id == workerId && !w.IsDeleted);
+                if (worker == null)
+                {
+                    return Result<WorkerDashboardDTO>.Failure(new[] { "Worker profile not found." }, 404);
+                }
+                var model = _mapper.Map<WorkerDashboardDTO>(worker);
+                return Result<WorkerDashboardDTO>.Success(model, 200);
             }
-
-            // AutoMapper creates a new DTO populated with the entity's data
-            var dashboardDto = _mapper.Map<WorkerDashboardDTO>(workerResult.Data);
-
-            return Result<WorkerDashboardDTO>.Success(dashboardDto);
+            catch (Exception ex)
+            {
+                return Result<WorkerDashboardDTO>.Failure(new[] { ex.Message }, 500, "Error loading dashboard");
+            }
         }
 
         public async Task<IResult> UpdateProfileAsync(string workerId, WorkerProfileUpdateDTO model)
         {
-            var workerResult = await _unitOfWork.Workers.FindByIdAsync(workerId);
-            
-            if (!workerResult.IsSuccess || workerResult.Data == null)
-            {
-                return Result.Failure(["Worker not found to update."], 404);
-            }
-
-            var worker = workerResult.Data;
-
-            // AutoMapper securely copies the specific fields from the DTO onto the tracked entity
-            _mapper.Map(model, worker);
-
-            await _unitOfWork.Workers.UpdateAsync(worker);
-
-            return await _unitOfWork.CommitAsync();
-        }
-        
-        // Update the method signature
-        public async Task<IResult<IEnumerable<JobPostingDTO>>> GetOpenJobPostingsAsync(string workerId)
-        {
             try
             {
-                // 1. Fetch open jobs
-                var repositoryResult = await _unitOfWork.JobPostings.FindManyAsync(
-                    j => j.Status == "Open", 
-                    "Customer"
-                );
-
-                if (!repositoryResult.IsSuccess || repositoryResult.Data == null)
+                var worker = await _context.Workers
+                    .FirstOrDefaultAsync(w => w.Id == workerId && !w.IsDeleted);
+                if (worker == null)
                 {
-                    return Result<IEnumerable<JobPostingDTO>>.Failure(
-                        repositoryResult.Messages ?? new[] { "Failed to retrieve open job postings." }
-                    );
+                    return Result.Failure("Worker profile not found.", 404);
                 }
-
-                // 2. Fetch the applications made by this specific worker
-                var myApplicationsResult = await _unitOfWork.JobApplications.FindManyAsync(
-                    a => a.WorkerId == workerId
-                );
-                
-                // Extract just the Job IDs into a fast lookup list
-                var myAppliedJobIds = myApplicationsResult.IsSuccess && myApplicationsResult.Data != null 
-                    ? myApplicationsResult.Data.Select(a => a.JobPostingId).ToList() 
-                    : new List<string>();
-
-                // 3. Map to DTOs using AutoMapper
-                var postingDtos = _mapper.Map<IEnumerable<JobPostingDTO>>(repositoryResult.Data).ToList();
-                
-                // 4. Loop through and flip the flag if they already applied
-                foreach (var dto in postingDtos)
-                {
-                    dto.HasApplied = myAppliedJobIds.Contains(dto.Id);
-                }
-
-                return Result<IEnumerable<JobPostingDTO>>.Success(postingDtos);
+                _mapper.Map(model, worker);
+                _context.Workers.Update(worker);
+                await _context.SaveChangesAsync();
+                return Result.Success(200, "Profile updated successfully.");
             }
             catch (Exception ex)
             {
-                return Result<IEnumerable<JobPostingDTO>>.Failure(new[] { ex.Message });
+                return Result.Failure(new[] { ex.Message }, 500);
+            }
+        }
+
+        public async Task<IResult<IEnumerable<JobPostingCardDTO>>> GetOpenJobPostingsAsync(string workerId)
+        {
+            try
+            {
+                var openPostings = await _context.JobPostings
+                    .Where(j => !j.PostInactive && j.Status == ApplicationStatus.Pending)
+                    .ToListAsync();
+
+                var dtos = _mapper.Map<IEnumerable<JobPostingCardDTO>>(openPostings);
+        
+                return Result<IEnumerable<JobPostingCardDTO>>.Success(dtos, 200);
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<JobPostingCardDTO>>.Failure(new[] { ex.Message }, 500);
             }
         }
 
@@ -104,82 +86,87 @@ namespace Business.Services
         {
             try
             {
-                // 1. Fetch the job posting
-                var jobResult = await _unitOfWork.JobPostings.FindByIdAsync(jobPostingId);
+                var posting = await _context.JobPostings
+                    .FirstOrDefaultAsync(j => j.Id == jobPostingId && !j.PostInactive);
+                if (posting == null)
+                    return Result.Failure("Job posting not found or no longer available.", 404);
 
-                if (!jobResult.IsSuccess || jobResult.Data == null)
-                {
-                    return Result.Failure(new[] { "Job posting not found." }, 404);
-                }
+                var alreadyApplied = await _context.JobApplications
+                    .AnyAsync(a => a.JobPostingId == jobPostingId && a.WorkerId == workerId);
+                if (alreadyApplied)
+                    return Result.Failure("You have already applied for this job.", 409);
 
-                var job = jobResult.Data;
-
-                // 2. Ensure the job is still accepting applications
-                if (job.Status != "Open")
-                {
-                    return Result.Failure(new[] { "This job is no longer accepting applications." }, 400);
-                }
-
-                // 3. Prevent duplicate applications
-                var existingApplication = await _unitOfWork.JobApplications.FindFirstAsync(
-                    a => a.JobPostingId == jobPostingId && a.WorkerId == workerId
-                );
-                
-                if (existingApplication.IsSuccess && existingApplication.Data != null)
-                {
-                    return Result.Failure(new[] { "You have already applied for this job." }, 400);
-                }
-
-                // 4. Create the new Job Application
                 var application = new JobApplication
                 {
                     JobPostingId = jobPostingId,
                     WorkerId = workerId,
-                    Status = Core.Concretes.Enums.ApplicationStatus.Pending // REPLACED
+                    CreatedAt = DateTime.UtcNow,
+                    Status = ApplicationStatus.Pending
                 };
 
-                var createResult = await _unitOfWork.JobApplications.CreateAsync(application);
-                if (!createResult.IsSuccess) return createResult;
+                await _context.JobApplications.AddAsync(application);
+                await _context.SaveChangesAsync();
 
-                var commitResult = await _unitOfWork.CommitAsync();
-                if (!commitResult.IsSuccess) return commitResult;
-
-                return Result.Success();
+                return Result.Success(201, "Application submitted successfully.");
             }
             catch (Exception ex)
             {
-                return Result.Failure(new[] { ex.Message });
+                return Result.Failure(new[] { ex.Message }, 500);
             }
         }
-        
-        public async Task<IResult<IEnumerable<BookingDTO>>> GetMyBookingsAsync(string workerId)
+
+        public async Task<IResult<IEnumerable<BookingListItemDTO>>> GetMyBookingsAsync(string workerId)
         {
             try
             {
-                // Fetch bookings tied to this worker and eagerly load the Customer data
-                var bookingsResult = await _unitOfWork.Bookings.FindManyAsync(
-                    b => b.WorkerId == workerId,
-                    "Customer", "Worker"
-                );
+                var worker = await _context.Workers
+                    .FirstOrDefaultAsync(w => w.Id == workerId && !w.IsDeleted);
+                if (worker == null)
+                    return Result<IEnumerable<BookingListItemDTO>>.Failure(new[] { "Worker not found." }, 404);
 
-                if (!bookingsResult.IsSuccess || bookingsResult.Data == null)
-                {
-                    return Result<IEnumerable<BookingDTO>>.Failure(
-                        bookingsResult.Messages ?? new[] { "Failed to retrieve bookings." }
-                    );
-                }
+                var bookings = await _context.Bookings
+                    .Where(b => b.WorkerId == workerId)
+                    .OrderByDescending(b => b.StartDate)
+                    .ToListAsync();
 
-                // AutoMapper seamlessly translates the entities (including the eagerly loaded names)
-                var bookingDtos = _mapper.Map<IEnumerable<BookingDTO>>(bookingsResult.Data);
-
-                // Sort so "Pending" requests show up at the top of the list!
-                return Result<IEnumerable<BookingDTO>>.Success(
-                    bookingDtos.OrderByDescending(b => b.Status == Core.Concretes.Enums.ApplicationStatus.Pending).ToList()
-                );
+                var dtos = _mapper.Map<IEnumerable<BookingListItemDTO>>(bookings);
+                return Result<IEnumerable<BookingListItemDTO>>.Success(dtos, 200);
             }
             catch (Exception ex)
             {
-                return Result<IEnumerable<BookingDTO>>.Failure(new[] { ex.Message });
+                return Result<IEnumerable<BookingListItemDTO>>.Failure(new[] { ex.Message }, 500);
+            }
+        }
+
+        public async Task<IResult<BookingDetailDTO>> GetBookingDetailsAsync(string bookingId, string workerId)
+        {
+            try
+            {
+                var workerExists = await _context.Workers
+                    .AnyAsync(w => w.Id == workerId && !w.IsDeleted);
+
+                if (!workerExists)
+                {
+                    return Result<BookingDetailDTO>.Failure(new[] { "Worker not found." }, 404);
+                }
+
+                var booking = await _context.Bookings
+                    .Include(b => b.Customer)
+                    .Include(b => b.Worker)
+                    .FirstOrDefaultAsync(b => b.Id == bookingId && b.WorkerId == workerId);
+
+                if (booking == null)
+                {
+                    return Result<BookingDetailDTO>.Failure(
+                        new[] { "Booking not found or does not belong to this worker." }, 404);
+                }
+
+                var dto = _mapper.Map<BookingDetailDTO>(booking);
+                return Result<BookingDetailDTO>.Success(dto, 200);
+            }
+            catch (Exception ex)
+            {
+                return Result<BookingDetailDTO>.Failure(new[] { ex.Message }, 500, "Error loading booking details");
             }
         }
 
@@ -187,114 +174,122 @@ namespace Business.Services
         {
             try
             {
-                var bookingResult = await _unitOfWork.Bookings.FindByIdAsync(bookingId);
+                var workerExists = await _context.Workers
+                    .AnyAsync(w => w.Id == workerId && !w.IsDeleted);
 
-                if (!bookingResult.IsSuccess || bookingResult.Data == null)
-                {
-                    return Result.Failure(new[] { "Booking not found." }, 404);
-                }
+                if (!workerExists)
+                    return Result.Failure("Worker not found.", 404);
 
-                var booking = bookingResult.Data;
+                var booking = await _context.Bookings
+                    .FirstOrDefaultAsync(b => b.Id == bookingId && b.WorkerId == workerId);
 
-                // Security Check: Does this booking actually belong to the logged-in worker?
-                if (booking.WorkerId != workerId)
-                {
-                    return Result.Failure(new[] { "Unauthorized action." }, 401);
-                }
+                if (booking == null)
+                    return Result.Failure("Booking not found or does not belong to this worker.", 404);
 
-                if (booking.Status != Core.Concretes.Enums.ApplicationStatus.Pending)
-                {
-                    return Result.Failure(new[] { $"This booking is already {booking.Status}." }, 400);
-                }
+                // Only allow response when booking is still pending.
+                if (booking.Status != ApplicationStatus.Pending)
+                    return Result.Failure("This booking has already been responded to.", 409);
 
-                // Update the status based on the boolean
-                booking.Status = isConfirmed ? 
-                    Core.Concretes.Enums.ApplicationStatus.Accepted : 
-                    Core.Concretes.Enums.ApplicationStatus.Rejected; // REPLACED
+                booking.Status = isConfirmed ? ApplicationStatus.Accepted : ApplicationStatus.Rejected;
+                booking.UpdatedAt = DateTime.UtcNow; // remove if your entity doesn't have UpdatedAt
 
-                var updateResult = await _unitOfWork.Bookings.UpdateAsync(booking);
-                if (!updateResult.IsSuccess) return updateResult;
+                _context.Bookings.Update(booking);
+                await _context.SaveChangesAsync();
 
-                var commitResult = await _unitOfWork.CommitAsync();
-                if (!commitResult.IsSuccess) return commitResult;
-
-                return Result.Success();
+                return Result.Success(
+                    200,
+                    isConfirmed ? "Booking confirmed successfully." : "Booking rejected successfully.");
             }
             catch (Exception ex)
             {
-                return Result.Failure(new[] { ex.Message });
+                return Result.Failure(new[] { ex.Message }, 500);
             }
-        }
+        } 
         public async Task<IResult> LeaveReviewForCustomerAsync(ReviewCreateDTO model, string workerId)
         {
             try
             {
-                // 1. Verify the booking exists and belongs to this worker
-                var bookingResult = await _unitOfWork.Bookings.FindByIdAsync(model.BookingId);
-                if (!bookingResult.IsSuccess || bookingResult.Data == null) return Result.Failure(["Booking not found."], 404);
-                
-                var booking = bookingResult.Data;
-                if (booking.WorkerId != workerId || booking.CustomerId != model.RevieweeId)
-                {
-                    return Result.Failure(["Unauthorized to review this booking."], 401);
-                }
+                if (model == null)
+                    return Result.Failure("Review data is required.", 400);
 
-                // 2. Prevent Duplicate Reviews
-                var existingReview = await _unitOfWork.Reviews.FindFirstAsync(
-                    r => r.BookingId == model.BookingId && r.ReviewerId == workerId
-                );
-                
-                if (existingReview.IsSuccess && existingReview.Data != null)
-                {
-                    return Result.Failure(["You have already reviewed this booking."], 400);
-                }
+                var workerExists = await _context.Workers
+                    .AnyAsync(w => w.Id == workerId && !w.IsDeleted);
 
-                // 3. Create the Review
-                var review = new Review
-                {
-                    BookingId = model.BookingId,
-                    ReviewerId = workerId,
-                    RevieweeId = model.RevieweeId, // This is the CustomerId
-                    Rating = model.Rating,
-                    Comment = model.Comment,
-                    CreatedAt = DateTime.UtcNow
-                };
+                if (!workerExists) 
+                    return Result.Failure("Worker not found.", 404);
 
-                await _unitOfWork.Reviews.CreateAsync(review);
-                return await _unitOfWork.CommitAsync();
+                // Assumes ReviewCreateDTO has BookingId.
+                if (string.IsNullOrWhiteSpace(model.BookingId))
+                    return Result.Failure("BookingId is required.", 400);
+
+                var booking = await _context.Bookings
+                    .FirstOrDefaultAsync(b => b.Id == model.BookingId && b.WorkerId == workerId);
+
+                if (booking == null)
+                    return Result.Failure("Booking not found or does not belong to this worker.", 404);
+
+                // Optional business rule: allow reviews only after accepted/completed bookings.
+                // Keep/adjust statuses to your real enum values.
+                if (booking.Status != ApplicationStatus.Accepted && booking.Status != ApplicationStatus.Completed)
+                    return Result.Failure("You can only review a customer after the booking is accepted/completed.", 409);
+
+                var alreadyReviewed = await _context.Reviews
+                    .AnyAsync(r => r.BookingId == model.BookingId && r.ReviewerId == workerId);
+
+                if (alreadyReviewed)
+                    return Result.Failure("You have already reviewed this customer for this booking.", 409);
+
+                // Assumes your AutoMapper maps ReviewCreateDTO -> Review.
+                var review = _mapper.Map<Review>(model);
+                review.ReviewerId = workerId;
+                review.RevieweeId = booking.CustomerId; // review target customer from booking
+                review.BookingId = booking.Id;
+                review.CreatedAt = DateTime.UtcNow;
+
+                await _context.Reviews.AddAsync(review);
+                await _context.SaveChangesAsync();
+
+                return Result.Success(201, "Review submitted successfully.");
             }
             catch (Exception ex)
             {
-                return Result.Failure([ex.Message]);
+                return Result.Failure(new[] { ex.Message }, 500);
             }
         }
+
         public async Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string userId)
         {
             try
             {
-                // Find the review where this user was the reviewer for this specific booking
-                var reviewResult = await _unitOfWork.Reviews.FindFirstAsync(
-                    r => r.BookingId == bookingId && r.ReviewerId == userId
-                );
+                if (string.IsNullOrWhiteSpace(bookingId))
+                    return Result<ReviewUpdateDTO>.Failure(new[] { "BookingId is required." }, 400);
 
-                if (!reviewResult.IsSuccess || reviewResult.Data == null)
-                {
-                    return Result<ReviewUpdateDTO>.Failure(["Review not found."]);
-                }
+                var workerExists = await _context.Workers
+                    .AnyAsync(w => w.Id == userId && !w.IsDeleted);
 
-                // Map to the Update DTO
-                var dto = new ReviewUpdateDTO
-                {
-                    Id = reviewResult.Data.Id,
-                    Rating = reviewResult.Data.Rating,
-                    Comment = reviewResult.Data.Comment
-                };
+                if (!workerExists)
+                    return Result<ReviewUpdateDTO>.Failure(new[] { "Worker not found." }, 404);
 
-                return Result<ReviewUpdateDTO>.Success(dto);
+                var bookingExistsForWorker = await _context.Bookings
+                    .AnyAsync(b => b.Id == bookingId && b.WorkerId == userId);
+
+                if (!bookingExistsForWorker)
+                    return Result<ReviewUpdateDTO>.Failure(
+                        new[] { "Booking not found or does not belong to this worker." }, 404);
+
+                var review = await _context.Reviews
+                    .FirstOrDefaultAsync(r => r.BookingId == bookingId && r.ReviewerId == userId);
+
+                if (review == null)
+                    return Result<ReviewUpdateDTO>.Failure(
+                        new[] { "Review not found for this booking." }, 404);
+
+                var dto = _mapper.Map<ReviewUpdateDTO>(review);
+                return Result<ReviewUpdateDTO>.Success(dto, 200);
             }
             catch (Exception ex)
             {
-                return Result<ReviewUpdateDTO>.Failure([ex.Message]);
+                return Result<ReviewUpdateDTO>.Failure(new[] { ex.Message }, 500, "Error loading review");
             }
         }
 
@@ -302,27 +297,46 @@ namespace Business.Services
         {
             try
             {
-                var reviewResult = await _unitOfWork.Reviews.FindByIdAsync(model.Id);
-                
-                if (!reviewResult.IsSuccess || reviewResult.Data == null) return Result.Failure(["Review not found."], 404);
+                if (model == null)
+                    return Result.Failure("Review update data is required.", 400);
 
-                var review = reviewResult.Data;
+                if (string.IsNullOrWhiteSpace(model.Id))
+                    return Result.Failure("BookingId is required.", 400);
 
-                // Security Check: Only the original author can edit this review
-                if (review.ReviewerId != userId) return Result.Failure(["Unauthorized to edit this review."], 401);
+                var workerExists = await _context.Workers
+                    .AnyAsync(w => w.Id == userId && !w.IsDeleted);
 
-                // Update the mutable fields
-                review.Rating = model.Rating;
-                review.Comment = model.Comment;
+                if (!workerExists)
+                    return Result.Failure("Worker not found.", 404);
 
-                var updateResult = await _unitOfWork.Reviews.UpdateAsync(review);
-                if (!updateResult.IsSuccess) return updateResult;
+                var bookingExistsForWorker = await _context.Bookings
+                    .AnyAsync(b => b.Id == model.Id && b.WorkerId == userId);
 
-                return await _unitOfWork.CommitAsync();
+                if (!bookingExistsForWorker)
+                    return Result.Failure("Booking not found or does not belong to this worker.", 404);
+
+                var review = await _context.Reviews
+                    .FirstOrDefaultAsync(r => r.BookingId == model.Id && r.ReviewerId == userId);
+
+                if (review == null)
+                    return Result.Failure("Review not found for this booking.", 404);
+
+                // Update only editable fields.
+                _mapper.Map(model, review);
+
+                // Keep ownership and linkage immutable.
+                review.ReviewerId = userId;
+                review.BookingId = model.Id;
+                review.UpdatedAt = DateTime.UtcNow; // remove if your entity doesn't have UpdatedAt
+
+                _context.Reviews.Update(review);
+                await _context.SaveChangesAsync();
+
+                return Result.Success(200, "Review updated successfully.");
             }
             catch (Exception ex)
             {
-                return Result.Failure([ex.Message]);
+                return Result.Failure(new[] { ex.Message }, 500);
             }
         }
     }

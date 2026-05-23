@@ -1,55 +1,62 @@
-@using Core.Concretes.Enums
-@model IEnumerable<Core.Concretes.DTOs.BookingDTO>
+@model IEnumerable<Core.Concretes.DTOs.BookingListItemDTO>
 
-    <h1>My Bookings</h1>
-    <a href="/Customer/WorkerShop">Find More Workers</a>
-    <hr />
-
-    @if (TempData["SuccessMessage"] != null)
-{
-    <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
-               @TempData["SuccessMessage"]
-               </div>
+@{
+    ViewData["Title"] = "My Bookings";
 }
 
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+<h1>My Bookings</h1>
+<a asp-controller="Customer" asp-action="WorkerShop" class="btn btn-primary btn-sm">Find More Workers</a>
+<hr />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="text-success border border-success p-2 mb-3">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="text-danger border border-danger p-2 mb-3">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<table class="table table-bordered">
     <thead>
     <tr>
-    <th>Worker Name</th>
-    <th>Date</th>
-    <th>Duration</th>
-    <th>Status</th>
+        <th>Title</th>
+        <th>Customer Name</th>
+        <th>Location</th>
+        <th>Budget</th>
+        <th>Estimated Hours</th>
+        <th>Start Date</th>
+        <th>Status</th>
     </tr>
     </thead>
     <tbody>
     @if (Model != null && Model.Any())
-{
-    foreach (var booking in Model)
+    {
+        foreach (var booking in Model)
+        {
+            <tr>
+                <td>@booking.Title</td>
+                <td>@booking.CustomerName</td>
+                <td>@booking.Location</td>
+                <td>@booking.Budget.ToString("0.00")</td>
+                <td>@booking.EstimatedHours</td>
+                <td>@booking.StartDate.ToShortDateString()</td>
+                <td>
+                    <strong>@booking.Status</strong>
+                </td>
+            </tr>
+        }
+    }
+    else
     {
         <tr>
-            <td>@booking.WorkerName</td>
-            <td>@booking.ScheduledDate.ToShortDateString()</td>
-            <td>@booking.DurationHours hours</td>
-            <td>
-                <strong>@booking.Status</strong>
-                if (booking.Status == ApplicationStatus.Accepted)
-                {
-                    <br /><br />
-                    <a href="/Customer/LeaveReview?bookingId=@booking.Id&revieweeId=@booking.WorkerId" 
-                       style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 0.9em;">
-                        Leave Review
-                    </a>
-                    <a href="/Message/Chat?otherUserId=@booking.WorkerId" class="btn btn-sm btn-info text-white mt-1">
-                        Message Worker
-                    </a>
-                }
-            </td>
-            </tr>
+            <td colspan="7">You have no booking history.</td>
+        </tr>
     }
-}
-else
-{
-    <tr><td colspan="4">You have no booking history.</td></tr>
-}
-</tbody>
-    </table>
+    </tbody>
+</table>

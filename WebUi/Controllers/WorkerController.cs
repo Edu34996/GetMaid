@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebUi.Controllers
 {
-    // Restrict access to users with the "Worker" role
     [Authorize(Roles = "Worker")]
     public class WorkerController : Controller
     {
@@ -20,16 +19,16 @@ namespace WebUi.Controllers
         // GET: Worker/Dashboard
         public async Task<IActionResult> Dashboard()
         {
-            // Extract the secure ID from the authentication cookie
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();
 
-            var result = await _workerService.GetProfileAsync(workerId);
-            
+            // FIX: IWorkerService defines GetDashboardProfileAsync
+            var result = await _workerService.GetDashboardProfileAsync(workerId);
+
             if (!result.IsSuccess)
             {
-                return NotFound(result.Messages);
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+                return View();
             }
 
             return View(result.Data);
@@ -43,7 +42,6 @@ namespace WebUi.Controllers
             if (!ModelState.IsValid) return View("Dashboard", model);
 
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();
 
             var result = await _workerService.UpdateProfileAsync(workerId, model);
@@ -54,25 +52,23 @@ namespace WebUi.Controllers
                 return RedirectToAction(nameof(Dashboard));
             }
 
-            ModelState.AddModelError("", "Failed to update profile.");
+            ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
             return View("Dashboard", model);
         }
-        // ... (Keep your existing Dashboard and UpdateProfile methods) ...
 
         // GET: Worker/JobBoard
         public async Task<IActionResult> JobBoard()
         {
-            // Extract the worker ID
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();
 
-            // Pass the worker ID to the updated service method
             var result = await _workerService.GetOpenJobPostingsAsync(workerId);
-            
+
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                return View(new List<JobPostingDTO>());
+                // FIX: service returns JobPostingCardDTO list
+                return View(new List<JobPostingCardDTO>());
             }
 
             return View(result.Data);
@@ -90,7 +86,7 @@ namespace WebUi.Controllers
 
             if (result.IsSuccess)
             {
-                TempData["SuccessMessage"] = "You have successfully claimed the job!";
+                TempData["SuccessMessage"] = "You have successfully applied for the job!";
             }
             else
             {
@@ -99,7 +95,6 @@ namespace WebUi.Controllers
 
             return RedirectToAction(nameof(JobBoard));
         }
-        // ... (Keep existing Dashboard, UpdateProfile, JobBoard, and ApplyForJob methods) ...
 
         // GET: Worker/MyBookings
         public async Task<IActionResult> MyBookings()
@@ -112,7 +107,8 @@ namespace WebUi.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                return View(new List<BookingDTO>());
+                // FIX: service returns BookingListItemDTO list
+                return View(new List<BookingListItemDTO>());
             }
 
             return View(result.Data);
@@ -130,7 +126,7 @@ namespace WebUi.Controllers
 
             if (result.IsSuccess)
             {
-                TempData["SuccessMessage"] = confirm ? "Booking Confirmed!" : "Booking Rejected.";
+                TempData["SuccessMessage"] = confirm ? "Booking confirmed!" : "Booking rejected.";
             }
             else
             {
@@ -139,26 +135,21 @@ namespace WebUi.Controllers
 
             return RedirectToAction(nameof(MyBookings));
         }
-        // ... (Keep existing methods: MyBookings, RespondToBooking, etc.) ...
 
-
-        // GET: Worker/LeaveReview (UPDATED WITH SMART ROUTING)
+        // GET: Worker/LeaveReview
         [HttpGet]
         public async Task<IActionResult> LeaveReview(string bookingId, string revieweeId)
         {
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();
 
-            // SMART ROUTING: Check if they already reviewed this booking
             var existingReview = await _workerService.GetMyReviewByBookingIdAsync(bookingId, workerId);
-            
-            // If it succeeds, they already wrote one! Redirect them to the edit page.
+
             if (existingReview.IsSuccess)
             {
-                return RedirectToAction(nameof(EditReview), new { bookingId = bookingId });
+                return RedirectToAction(nameof(EditReview), new { bookingId });
             }
 
-            // Otherwise, load the blank creation form
             var model = new ReviewCreateDTO
             {
                 BookingId = bookingId,

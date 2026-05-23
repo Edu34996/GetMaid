@@ -1,26 +1,36 @@
+@using Core.Concretes.DTOs
 @using Core.Concretes.Enums
-@model IEnumerable<Core.Concretes.DTOs.JobApplicationDTO>
+@model IEnumerable<JobApplicationDTO>
+
+@{
+    ViewData["Title"] = "Review Applicants";
+}
 
 <h1>Review Applicants</h1>
-<a href="/Customer/MyJobs">Back to My Jobs</a>
+<a asp-controller="Customer" asp-action="MyJobs" class="btn btn-secondary btn-sm">Back to My Jobs</a>
 <hr />
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+    <div class="text-danger border border-danger p-2 mb-3">
         @TempData["ErrorMessage"]
     </div>
 }
 
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+<table class="table table-bordered">
     <thead>
-    <tr>
-        <th>Worker Name</th>
-        <th>Hourly Rate</th>
-        <th>Bio</th>
-        <th>Application Status</th>
-        <th>Action</th>
-    </tr>
+        <tr>
+            <th>Worker Name</th>
+            <th>Worker Bio</th>
+            <th>Min Rate</th>
+            <th>Max Rate</th>
+            <th>Message</th>
+            <th>Soonest Start</th>
+            <th>Currently Working</th>
+            <th>Questions</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
     </thead>
     <tbody>
     @if (Model != null && Model.Any())
@@ -29,22 +39,28 @@
         {
             <tr>
                 <td><strong>@app.WorkerName</strong></td>
-                <td>$@app.WorkerHourlyRate / hr</td>
                 <td>@app.WorkerBio</td>
+                <td>@(app.WorkerMinHourlyRate?.ToString("0.00") ?? "-")</td>
+                <td>@(app.WorkerMaxHourlyRate?.ToString("0.00") ?? "-")</td>
+                <td>@app.MessageToCustomer</td>
+                <td>@(app.SoonestAvailableStartDate?.ToShortDateString() ?? "-")</td>
+                <td>@(app.IsCurrentlyWorking ? "Yes" : "No")</td>
+                <td>@app.QuestionsAboutWork</td>
                 <td>@app.Status</td>
                 <td>
                     @if (app.Status == ApplicationStatus.Pending)
                     {
                         <form asp-controller="Customer" asp-action="HireWorker" method="post">
-                            <input type="hidden" name="applicationId" value="@app.ApplicationId" />
-                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="applicationId" value="@app.Id" />
+                            <button type="submit" class="btn btn-success btn-sm">
                                 Hire Worker
                             </button>
                         </form>
                     }
                     else
                     {
-                        <span style="color: gray;"><em>@app.Status</em></span>
+                        <span class="text-muted"><em>@app.Status</em></span>
                     }
                 </td>
             </tr>
@@ -52,7 +68,9 @@
     }
     else
     {
-        <tr><td colspan="5">No workers have applied for this job yet. Check back soon!</td></tr>
+        <tr>
+            <td colspan="10">No workers have applied for this job yet. Check back soon!</td>
+        </tr>
     }
     </tbody>
 </table>

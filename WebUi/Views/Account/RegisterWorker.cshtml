@@ -1,20 +1,352 @@
 @model Core.Concretes.DTOs.WorkerRegisterDTO
+@using Core.Concretes.Enums
+
+@{
+    ViewData["Title"] = "Register as Worker";
+}
 
 <h2>Register as Worker</h2>
+<p>Please complete all steps to finish registration.</p>
 
-<form asp-action="RegisterWorker" method="post">
-    <div asp-validation-summary="All" style="color:red"></div>
-    
-    <input asp-for="FirstName" placeholder="First Name" /><br />
-    <input asp-for="LastName" placeholder="Last Name" /><br />
-    <input asp-for="Email" placeholder="Email" /><br />
-    <input asp-for="Password" type="password" placeholder="Password" /><br />
-    <input asp-for="Bio" placeholder="Short Bio" /><br />
-    <input asp-for="HourlyRate" type="number" placeholder="Hourly Rate" /><br />
-    
-    <label>Services:</label><br />
-    <input asp-for="ProvidesMaidService" /> Cleaning <br />
-    <input asp-for="ProvidesChildcare" /> Childcare <br />
-    
-    <button type="submit">Create Worker Account</button>
+<form asp-action="RegisterWorker" method="post" id="workerRegisterForm">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="wizard-steps mb-3">
+        <span class="step-indicator active" data-step="1">1. Account</span>
+        <span class="step-indicator" data-step="2">2. Media & Location</span>
+        <span class="step-indicator" data-step="3">3. Availability</span>
+        <span class="step-indicator" data-step="4">4. Skills & Submit</span>
+    </div>
+
+    <!-- STEP 1 -->
+    <section class="form-step" data-step="1">
+        <h4>Step 1: Basic Account Information</h4>
+
+        <div class="mb-2">
+            <label asp-for="FirstName"></label>
+            <input asp-for="FirstName" class="form-control" />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="LastName"></label>
+            <input asp-for="LastName" class="form-control" />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="PhoneNumber"></label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" type="password" class="form-control" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="ConfirmPassword"></label>
+            <input asp-for="ConfirmPassword" type="password" class="form-control" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-2">
+            <input asp-for="IsSmoker" class="form-check-input" />
+            <label asp-for="IsSmoker" class="form-check-label"></label>
+        </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="form-step d-none" data-step="2">
+        <h4>Step 2: Media and Location</h4>
+
+        <div class="mb-2">
+            <label asp-for="Bio"></label>
+            <textarea asp-for="Bio" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Bio" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="IntroductionVideoUrl"></label>
+            <input asp-for="IntroductionVideoUrl" class="form-control" />
+            <span asp-validation-for="IntroductionVideoUrl" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="ProfilePictureUrl"></label>
+            <input asp-for="ProfilePictureUrl" class="form-control" />
+            <span asp-validation-for="ProfilePictureUrl" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="City"></label>
+            <input asp-for="City" class="form-control" placeholder="e.g. Cairo" />
+            <span asp-validation-for="City" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="Latitude"></label>
+            <input asp-for="Latitude" class="form-control" type="number" step="any" />
+            <span asp-validation-for="Latitude" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="Longitude"></label>
+            <input asp-for="Longitude" class="form-control" type="number" step="any" />
+            <span asp-validation-for="Longitude" class="text-danger"></span>
+        </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="form-step d-none" data-step="3">
+        <h4>Step 3: Availability and Work Preferences</h4>
+
+        <div class="mb-2">
+            <label asp-for="MinHourlyRate"></label>
+            <input asp-for="MinHourlyRate" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="MinHourlyRate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="MaxHourlyRate"></label>
+            <input asp-for="MaxHourlyRate" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="MaxHourlyRate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="PreferredArrangement"></label>
+            <select asp-for="PreferredArrangement"
+                    asp-items="Html.GetEnumSelectList<WorkArrangement>()"
+                    class="form-select">
+                <option value="">-- Select Arrangement --</option>
+            </select>
+            <span asp-validation-for="PreferredArrangement" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="MaxDaysPerWeek"></label>
+            <input asp-for="MaxDaysPerWeek" class="form-control" type="number" />
+            <span asp-validation-for="MaxDaysPerWeek" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="MaxHoursPerDay"></label>
+            <input asp-for="MaxHoursPerDay" class="form-control" type="number" />
+            <span asp-validation-for="MaxHoursPerDay" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label>Preferred Work Days</label>
+            <div class="border rounded p-2">
+                @foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+                {
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="PreferredWorkDays"
+                               value="@day"
+                               id="pwd_@day" />
+                        <label class="form-check-label" for="pwd_@day">@day</label>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="form-step d-none" data-step="4">
+        <h4>Step 4: Skills, Services and Experience</h4>
+
+        <div class="mb-2">
+            <label asp-for="ExperienceYears"></label>
+            <input asp-for="ExperienceYears" class="form-control" type="number" />
+            <span asp-validation-for="ExperienceYears" class="text-danger"></span>
+        </div>
+
+        <div class="mb-2">
+            <label>Services Offered</label>
+            <div class="border rounded p-2">
+                @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
+                {
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="OfferedServices"
+                               value="@service"
+                               id="svc_@service" />
+                        <label class="form-check-label" for="svc_@service">@service</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label>Specific Skills</label>
+            <div class="border rounded p-2">
+                @foreach (Skill skill in Enum.GetValues(typeof(Skill)))
+                {
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="Skills"
+                               value="@skill"
+                               id="skill_@skill" />
+                        <label class="form-check-label" for="skill_@skill">@skill</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label>Experienced Age Groups</label>
+            <div class="border rounded p-2">
+                @foreach (AgeGroup ageGroup in Enum.GetValues(typeof(AgeGroup)))
+                {
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="ExperiencedAgeGroups"
+                               value="@ageGroup"
+                               id="age_@ageGroup" />
+                        <label class="form-check-label" for="age_@ageGroup">@ageGroup</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label>Languages Spoken (comma-separated)</label>
+            <input type="text" id="languagesInput" class="form-control" placeholder="English, Arabic" />
+            <small class="text-muted">These are converted to hidden fields before submit.</small>
+            <div id="languagesHiddenContainer"></div>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="CommitmentPreference"></label>
+            <select asp-for="CommitmentPreference"
+                    asp-items="Html.GetEnumSelectList<CommitmentPreference>()"
+                    class="form-select">
+                <option value="">-- Select Commitment --</option>
+            </select>
+            <span asp-validation-for="CommitmentPreference" class="text-danger"></span>
+        </div>
+    </section>
+
+    <div class="mt-3 d-flex gap-2">
+        <button type="button" id="prevBtn" class="btn btn-secondary" disabled>Previous</button>
+        <button type="button" id="nextBtn" class="btn btn-primary">Next</button>
+        <button type="submit" id="submitBtn" class="btn btn-success d-none">Complete Registration</button>
+    </div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            let currentStep = 1;
+            const totalSteps = 4;
+
+            const form = document.getElementById('workerRegisterForm');
+            const stepElements = document.querySelectorAll('.form-step');
+            const indicators = document.querySelectorAll('.step-indicator');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const languagesInput = document.getElementById('languagesInput');
+            const languagesContainer = document.getElementById('languagesHiddenContainer');
+
+            function showStep(step) {
+                stepElements.forEach(s => s.classList.add('d-none'));
+                document.querySelector(`.form-step[data-step="${step}"]`).classList.remove('d-none');
+
+                indicators.forEach(i => i.classList.remove('active'));
+                document.querySelector(`.step-indicator[data-step="${step}"]`)?.classList.add('active');
+
+                prevBtn.disabled = step === 1;
+                nextBtn.classList.toggle('d-none', step === totalSteps);
+                submitBtn.classList.toggle('d-none', step !== totalSteps);
+            }
+
+            function buildLanguageHiddenInputs() {
+                languagesContainer.innerHTML = '';
+                const raw = (languagesInput.value || '').trim();
+                if (!raw) return;
+
+                raw.split(',')
+                    .map(x => x.trim())
+                    .filter(x => x.length > 0)
+                    .forEach(lang => {
+                        const hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'LanguagesSpoken';
+                        hidden.value = lang;
+                        languagesContainer.appendChild(hidden);
+                    });
+            }
+
+            function validateCurrentStep() {
+                const currentSection = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+                if (!currentSection) return true;
+
+                const requiredInputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
+                for (const el of requiredInputs) {
+                    if (!el.value || (el.type === 'checkbox' && !el.checked)) {
+                        el.focus();
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            nextBtn.addEventListener('click', function () {
+                if (!validateCurrentStep()) return;
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            });
+
+            prevBtn.addEventListener('click', function () {
+                if (currentStep > 1) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+
+            form.addEventListener('submit', function () {
+                buildLanguageHiddenInputs();
+            });
+
+            showStep(currentStep);
+        })();
+    </script>
+
+    <style>
+        .wizard-steps {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .step-indicator {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eee;
+            font-size: 0.9rem;
+        }
+
+        .step-indicator.active {
+            background: #0d6efd;
+            color: #fff;
+        }
+    </style>
+}

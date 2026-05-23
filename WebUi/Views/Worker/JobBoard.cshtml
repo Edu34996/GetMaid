@@ -1,31 +1,36 @@
-@model IEnumerable<Core.Concretes.DTOs.JobPostingDTO>
+@model IEnumerable<Core.Concretes.DTOs.JobPostingCardDTO>
+
+@{
+    ViewData["Title"] = "Available Jobs";
+}
 
 <h1>Available Jobs</h1>
 <hr />
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+    <div class="text-success border border-success p-2 mb-3">
         @TempData["SuccessMessage"]
     </div>
 }
+
 @if (TempData["ErrorMessage"] != null)
 {
-    <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+    <div class="text-danger border border-danger p-2 mb-3">
         @TempData["ErrorMessage"]
     </div>
 }
 
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+<table class="table table-bordered">
     <thead>
-    <tr>
-        <th>Customer</th>
-        <th>Title</th>
-        <th>Location</th>
-        <th>Date Needed</th>
-        <th>Budget</th>
-        <th>Action</th>
-    </tr>
+        <tr>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Start Date</th>
+            <th>Budget</th>
+            <th>Services</th>
+            <th>Action</th>
+        </tr>
     </thead>
     <tbody>
     @if (Model != null && Model.Any())
@@ -33,38 +38,40 @@
         foreach (var job in Model)
         {
             <tr>
-                <td>@job.CustomerName</td>
-                <td>@job.Title<br /><small>@job.Description</small></td>
+                <td>@job.Title</td>
                 <td>@job.Location</td>
-                <td>@job.DateNeeded.ToShortDateString()</td>
-                <td>$@job.Budget</td>
+                <td>@job.StartDate.ToShortDateString()</td>
+                <td>@job.Budget.ToString("0.00")</td>
                 <td>
-                    <a href="/Message/Chat?otherUserId=@job.CustomerId" class="btn btn-outline-primary btn-sm">
-                        Ask Employer a Question
-                    </a>
-                    
-                    @if (job.HasApplied)
+                    @if (job.ServiceTypes != null && job.ServiceTypes.Any())
                     {
-                        <button disabled style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; cursor: not-allowed; border-radius: 3px;">
-                            Applied (Pending)
-                        </button>
+                        @foreach (var service in job.ServiceTypes)
+                        {
+                            <span class="badge bg-secondary me-1">@service</span>
+                        }
                     }
                     else
                     {
-                        <form asp-controller="Worker" asp-action="ApplyForJob" method="post">
-                            <input type="hidden" name="jobId" value="@job.Id"/>
-                            <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">
-                                Apply
-                            </button>
-                        </form>
+                        <span>No services listed</span>
                     }
+                </td>
+                <td>
+                    <form asp-controller="Worker" asp-action="ApplyForJob" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="jobId" value="@job.Id" />
+                        <button type="submit" class="btn btn-success btn-sm">
+                            Apply
+                        </button>
+                    </form>
                 </td>
             </tr>
         }
     }
     else
     {
-        <tr><td colspan="6">No open jobs available right now.</td></tr>
+        <tr>
+            <td colspan="6">No open jobs available right now.</td>
+        </tr>
     }
     </tbody>
 </table>

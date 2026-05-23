@@ -1,40 +1,102 @@
-@model IEnumerable<Core.Concretes.DTOs.WorkerDashboardDTO>
+@using Core.Concretes.DTOs
+@using Core.Concretes.Enums
+@model IEnumerable<WorkerCardDTO>
 
 @{
     ViewData["Title"] = "Worker Shop";
-    
-    // We safely extract the current filter from the ViewBag so the form remembers what the user typed
-    var currentFilter = ViewBag.CurrentFilter as Core.Concretes.DTOs.WorkerSearchFilterDTO 
-                        ?? new Core.Concretes.DTOs.WorkerSearchFilterDTO();
+    var currentFilter = ViewBag.CurrentFilter as WorkerSearchFilterDTO ?? new WorkerSearchFilterDTO();
 }
 
 <h1>Find a Worker</h1>
 <hr />
 
-<div style="background-color: #f9f9f9; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px;">
+<div class="border rounded p-3 mb-4 bg-light">
     <h3>Filter Workers</h3>
+
     <form asp-controller="Customer" asp-action="WorkerShop" method="get">
-        <div style="margin-bottom: 10px;">
-            <label>Maximum Hourly Rate ($):</label>
-            <input type="number" step="0.01" name="MaxHourlyRate" value="@currentFilter.MaxHourlyRate" placeholder="e.g. 25.00" />
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label>City</label>
+                <input type="text" name="City" value="@currentFilter.City" class="form-control" placeholder="Enter city" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Minimum Hourly Rate</label>
+                <input type="number" step="0.01" name="MinHourlyRate" value="@currentFilter.MinHourlyRate" class="form-control" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Maximum Hourly Rate</label>
+                <input type="number" step="0.01" name="MaxHourlyRate" value="@currentFilter.MaxHourlyRate" class="form-control" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Minimum Experience Years</label>
+                <input type="number" name="MinExperienceYears" value="@currentFilter.MinExperienceYears" class="form-control" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Minimum Average Rating</label>
+                <input type="number" step="0.1" min="0" max="5" name="MinAverageRating" value="@currentFilter.MinAverageRating" class="form-control" />
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Preferred Arrangement</label>
+                <select name="PreferredArrangement" class="form-select">
+                    <option value="">-- Any --</option>
+                    @foreach (WorkArrangement arrangement in Enum.GetValues(typeof(WorkArrangement)))
+                    {
+                        <option value="@arrangement" selected="@(currentFilter.PreferredArrangement == arrangement)">
+                            @arrangement
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label>Commitment Preference</label>
+                <select name="CommitmentPreference" class="form-select">
+                    <option value="">-- Any --</option>
+                    @foreach (CommitmentPreference commitment in Enum.GetValues(typeof(CommitmentPreference)))
+                    {
+                        <option value="@commitment" selected="@(currentFilter.CommitmentPreference == commitment)">
+                            @commitment
+                        </option>
+                    }
+                </select>
+            </div>
         </div>
-        
-        <div style="margin-bottom: 10px;">
+
+        <div class="mb-3">
+            <label class="me-3">
+                <input type="checkbox" name="NonSmokerOnly" value="true" @(currentFilter.NonSmokerOnly == true ? "checked" : "") />
+                Non-smoker only
+            </label>
+
             <label>
-                <input type="checkbox" name="NeedsMaidService" value="true" @(currentFilter.NeedsMaidService ? "checked" : "") />
-                Must Provide Maid Service
+                <input type="checkbox" name="VerifiedOnly" value="true" @(currentFilter.VerifiedOnly == true ? "checked" : "") />
+                Verified workers only
             </label>
         </div>
-        
-        <div style="margin-bottom: 10px;">
-            <label>
-                <input type="checkbox" name="NeedsChildcare" value="true" @(currentFilter.NeedsChildcare ? "checked" : "") />
-                Must Provide Childcare
-            </label>
+
+        <div class="mb-3">
+            <label>Required Services</label>
+            <div class="border rounded p-2">
+                @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
+                {
+                    <label class="me-3">
+                        <input type="checkbox"
+                               name="RequiredServices"
+                               value="@service"
+                               @(currentFilter.RequiredServices.Contains(service) ? "checked" : "") />
+                        @service
+                    </label>
+                }
+            </div>
         </div>
-        
-        <button type="submit">Apply Filters</button>
-        <a href="/Customer/WorkerShop" style="margin-left: 10px;">Clear Filters</a>
+
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+        <a asp-controller="Customer" asp-action="WorkerShop" class="btn btn-outline-secondary ms-2">Clear Filters</a>
     </form>
 </div>
 
@@ -42,52 +104,68 @@
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div style="color: red; margin-bottom: 15px;">@TempData["ErrorMessage"]</div>
+    <div class="text-danger mb-3">@TempData["ErrorMessage"]</div>
 }
 
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Bio</th>
-            <th>Hourly Rate</th>
-            <th>Services Provided</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (Model != null && Model.Any())
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var worker in Model)
         {
-            foreach (var worker in Model)
-            {
-                <tr>
-                    <td>@worker.FirstName</td>
-                    <td>@worker.Bio</td>
-                    <td>$@worker.HourlyRate / hr</td>
-                    <td>
-                        @if (worker.ProvidesMaidService)
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="mb-2">
+                        <strong>@worker.FirstName</strong>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(worker.ProfilePictureUrl))
+                    {
+                        <div class="mb-2">
+                            <img src="@worker.ProfilePictureUrl" alt="@worker.FirstName" style="max-width:100%; max-height:180px; object-fit:cover;" />
+                        </div>
+                    }
+
+                    <div><strong>City:</strong> @worker.City</div>
+                    <div><strong>Smoker:</strong> @(worker.IsSmoker ? "Yes" : "No")</div>
+                    <div><strong>Min Rate:</strong> @(worker.MinHourlyRate?.ToString("0.00") ?? "-")</div>
+                    <div><strong>Max Rate:</strong> @(worker.MaxHourlyRate?.ToString("0.00") ?? "-")</div>
+                    <div><strong>Average Rate:</strong> @(worker.AverageHourlyRate?.ToString("0.00") ?? "-")</div>
+                    <div><strong>Rating:</strong> @worker.AverageRating (@worker.TotalReviews reviews)</div>
+                    <div><strong>Skills:</strong> @worker.NumberOfSkills</div>
+                    <div><strong>Languages:</strong> @worker.NumberOfLanguages</div>
+
+                    <div class="mt-2">
+                        <strong>Services:</strong><br />
+                        @if (worker.OfferedServices != null && worker.OfferedServices.Any())
                         {
-                            <span>🧹 Maid Service</span><br />
+                            @foreach (var service in worker.OfferedServices)
+                            {
+                                <span class="badge bg-secondary me-1">@service</span>
+                            }
                         }
-                        @if (worker.ProvidesChildcare)
+                        else
                         {
-                            <span>👶 Childcare</span>
+                            <span>No services listed</span>
                         }
-                    </td>
-                    <td>
-                        <a href="/Customer/BookWorker?workerId=@worker.Id" 
-                           style="background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">
+                    </div>
+
+                    <div class="mt-3">
+                        <a asp-controller="Customer" asp-action="WorkerDetails" asp-route-workerId="@worker.Id"
+                           class="btn btn-outline-primary btn-sm">
+                            View Details
+                        </a>
+
+                        <a asp-controller="Customer" asp-action="BookWorker" asp-route-workerId="@worker.Id"
+                           class="btn btn-success btn-sm">
                             Book Worker
                         </a>
-                    </td>
-                </tr>
-            }
+                    </div>
+                </div>
+            </div>
         }
-        else
-        {
-            <tr>
-                <td colspan="5">No workers match your current filters. Try adjusting your search!</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    </div>
+}
+else
+{
+    <div>No workers match your current filters. Try adjusting your search.</div>
+}

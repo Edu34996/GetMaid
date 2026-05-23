@@ -5,17 +5,14 @@ namespace Core.Concretes.Entities
 {
     public class Child : BaseEntity
     {
-        [Required]
-        [MaxLength(50)]
-        public string FirstName { get; set; } = null!;
+        public int? Age { get; set; }
 
-        public int Age { get; set; }
+        [MaxLength(1000)]
+        public string? Bio { get; set; }
 
         [MaxLength(500)]
         public string? SpecialCareInstructions { get; set; }
 
-        // Foreign Key linking back to the Customer
-        // Note: IdentityUser primary keys are strings by default
         [Required]
         public string CustomerId { get; set; } = null!; 
 

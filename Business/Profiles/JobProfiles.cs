@@ -8,13 +8,26 @@ namespace Business.Profiles
     {
         public JobProfiles()
         {
-            // Mapping from the Create Form to the Database Entity
-            CreateMap<JobPostingCreateDTO, JobPosting>();
+            // Entity -> lightweight card for list screens
+            CreateMap<JobPosting, JobPostingCardDTO>();
 
-            // Mapping from the Database Entity to the View DTO
-            // We map the Customer's FirstName to the CustomerName property
-            CreateMap<JobPosting, JobPostingDTO>()
-                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer != null ? src.Customer.FirstName : "Unknown"));
+            // Entity -> detail view
+            CreateMap<JobPosting, JobPostingDetailDTO>()
+                .ForMember(
+                    dest => dest.CustomerName,
+                    opt => opt.MapFrom(src => src.Customer != null ? src.Customer.FirstName : "Unknown")
+                );
+
+            // Optional: create/update from service request DTO to entity.
+            // Useful if you later switch CreateJobPostingAsync to use _mapper.Map<JobPosting>(model).
+            CreateMap<ServiceRequestCreateDTO, JobPosting>()
+                .ForMember(dest => dest.CustomerId, opt => opt.Ignore())
+                .ForMember(dest => dest.PostInactive, opt => opt.Ignore())
+                .ForMember(dest => dest.AssignedWorkerId, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.Customer, opt => opt.Ignore())
+                .ForMember(dest => dest.AssignedWorker, opt => opt.Ignore())
+                .ForMember(dest => dest.Applications, opt => opt.Ignore());
         }
     }
 }

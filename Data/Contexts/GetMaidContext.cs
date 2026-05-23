@@ -47,6 +47,17 @@ namespace Data.Contexts
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            builder.Entity<Review>()
+                .HasOne(r => r.Reviewer)
+                .WithMany(u => u.ReviewsGiven)
+                .HasForeignKey(r => r.ReviewerId)
+                .OnDelete(DeleteBehavior.Restrict); // Important to prevent cascade delete loops
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Reviewee)
+                .WithMany(u => u.ReviewsReceived)
+                .HasForeignKey(r => r.RevieweeId)
+                .OnDelete(DeleteBehavior.Restrict);
             // TPH Configuration: EF Core will use a 'Discriminator' column by default 
             // to distinguish between Customer and Worker within the AspNetUsers table.
         }

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Core.Abstracts.Bases;
 
 namespace Core.Concretes.Entities
@@ -12,6 +13,11 @@ namespace Core.Concretes.Entities
         
         public int Rating { get; set; } // 1 to 5 stars
         public string? Comment { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        [ForeignKey("ReviewerId")]
+        public virtual ApplicationUser Reviewer { get; set; } = null!;
+
+        [ForeignKey("RevieweeId")]
+        public virtual ApplicationUser Reviewee { get; set; } = null!;
     }
 }

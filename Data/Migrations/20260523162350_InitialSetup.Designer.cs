@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(GetMaidContext))]
-    [Migration("20260515143459_RefactorJobApplicationStatusToEnum")]
-    partial class RefactorJobApplicationStatusToEnum
+    [Migration("20260523162350_InitialSetup")]
+    partial class InitialSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -146,6 +146,15 @@ namespace Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("BookingInactive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Budget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CommitmentPreference")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -153,21 +162,56 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("DurationHours")
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EstimatedHours")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("ScheduledDate")
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequireNonSmoker")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RequiredSkills")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Requirements")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServiceTypes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("WorkArrangement")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("WorkerId")
                         .IsRequired()
@@ -187,19 +231,18 @@ namespace Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Age")
+                    b.Property<int?>("Age")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CustomerId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
@@ -227,11 +270,25 @@ namespace Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsCurrentlyWorking")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("JobPostingId")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MessageToCustomer")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QuestionsAboutWork")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SoonestAvailableStartDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -263,7 +320,10 @@ namespace Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Budget")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CommitmentPreference")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -272,12 +332,12 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("DateNeeded")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndDate")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EstimatedHours")
@@ -290,9 +350,29 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Status")
+                    b.Property<bool>("PostInactive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RequireNonSmoker")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RequiredSkills")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("Requirements")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServiceTypes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -301,6 +381,9 @@ namespace Data.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("WorkArrangement")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -378,6 +461,10 @@ namespace Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RevieweeId");
+
+                    b.HasIndex("ReviewerId");
 
                     b.ToTable("Reviews");
                 });
@@ -493,10 +580,41 @@ namespace Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("FamilyStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("HasPets")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IdentityDocumentPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IdentityVerificationStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("NumberOfPets")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("WorkerId")
+                        .HasColumnType("TEXT");
+
+                    b.HasIndex("WorkerId");
 
                     b.HasDiscriminator().HasValue("Customer");
                 });
@@ -510,17 +628,97 @@ namespace Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CommitmentPreference")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ExperienceYears")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("HourlyRate")
+                    b.Property<string>("ExperiencedAgeGroups")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("ProvidesChildcare")
+                    b.Property<string>("IdentityDocumentPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IdentityVerificationStatus")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("ProvidesMaidService")
+                    b.Property<string>("IntroductionVideoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSmoker")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("LanguagesSpoken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("MaxDaysPerWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("MaxHourlyRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MaxHoursPerDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("MinHourlyRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OfferedServices")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PreferredArrangement")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PreferredWorkDays")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Skills")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("AspNetUsers", t =>
+                        {
+                            t.Property("Bio")
+                                .HasColumnName("Worker_Bio");
+
+                            t.Property("City")
+                                .HasColumnName("Worker_City");
+
+                            t.Property("IdentityDocumentPath")
+                                .HasColumnName("Worker_IdentityDocumentPath");
+
+                            t.Property("IdentityVerificationStatus")
+                                .HasColumnName("Worker_IdentityVerificationStatus");
+
+                            t.Property("Latitude")
+                                .HasColumnName("Worker_Latitude");
+
+                            t.Property("Longitude")
+                                .HasColumnName("Worker_Longitude");
+                        });
 
                     b.HasDiscriminator().HasValue("Worker");
                 });
@@ -591,6 +789,25 @@ namespace Data.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("Core.Concretes.Entities.Review", b =>
+                {
+                    b.HasOne("Core.Concretes.Entities.ApplicationUser", "Reviewee")
+                        .WithMany("ReviewsReceived")
+                        .HasForeignKey("RevieweeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Core.Concretes.Entities.ApplicationUser", "Reviewer")
+                        .WithMany("ReviewsGiven")
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reviewee");
+
+                    b.Navigation("Reviewer");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Core.Concretes.Entities.ApplicationUserRole", null)
@@ -642,6 +859,20 @@ namespace Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Core.Concretes.Entities.Customer", b =>
+                {
+                    b.HasOne("Core.Concretes.Entities.Worker", null)
+                        .WithMany("References")
+                        .HasForeignKey("WorkerId");
+                });
+
+            modelBuilder.Entity("Core.Concretes.Entities.ApplicationUser", b =>
+                {
+                    b.Navigation("ReviewsGiven");
+
+                    b.Navigation("ReviewsReceived");
+                });
+
             modelBuilder.Entity("Core.Concretes.Entities.JobPosting", b =>
                 {
                     b.Navigation("Applications");
@@ -650,6 +881,11 @@ namespace Data.Migrations
             modelBuilder.Entity("Core.Concretes.Entities.Customer", b =>
                 {
                     b.Navigation("Children");
+                });
+
+            modelBuilder.Entity("Core.Concretes.Entities.Worker", b =>
+                {
+                    b.Navigation("References");
                 });
 #pragma warning restore 612, 618
         }

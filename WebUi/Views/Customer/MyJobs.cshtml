@@ -1,24 +1,37 @@
-@model IEnumerable<Core.Concretes.DTOs.JobPostingDTO>
+@using Core.Concretes.DTOs
+@model IEnumerable<JobPostingCardDTO>
+
+@{
+    ViewData["Title"] = "My Job Postings";
+}
 
 <h1>My Job Postings</h1>
-<a href="/Customer/CreateJob">Post a New Job</a>
+<a asp-controller="Customer" asp-action="CreateJob" class="btn btn-primary btn-sm">Post a New Job</a>
 <hr />
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+    <div class="text-success border border-success p-2 mb-3">
         @TempData["SuccessMessage"]
     </div>
 }
 
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="text-danger border border-danger p-2 mb-3">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<table class="table table-bordered">
     <thead>
     <tr>
         <th>Title</th>
         <th>Location</th>
-        <th>Date Needed</th>
+        <th>Start Date</th>
         <th>Budget</th>
-        <th>Status</th>
+        <th>Services</th>
+        <th>Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -29,26 +42,31 @@
             <tr>
                 <td>@job.Title</td>
                 <td>@job.Location</td>
-                <td>@job.DateNeeded.ToShortDateString()</td>
-                <td>$@job.Budget</td>
+                <td>@job.StartDate.ToShortDateString()</td>
+                <td>@job.Budget.ToString("0.00")</td>
                 <td>
-                    @if (job.Status == "Open")
+                    @if (job.ServiceTypes != null && job.ServiceTypes.Any())
                     {
-                        <a href="/Customer/ReviewApplicants?jobId=@job.Id" 
-                           style="background-color: #17a2b8; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">
-                            Review Applicants
-                        </a>
+                        @foreach (var service in job.ServiceTypes)
+                        {
+                            <span class="badge bg-secondary me-1">@service</span>
+                        }
                     }
-                    else
-                    {
-                        <strong>@job.Status</strong>
-                    }
-                </td>            </tr>
+                </td>
+                <td>
+                    <a asp-controller="Customer" asp-action="ReviewApplicants" asp-route-jobId="@job.Id"
+                       class="btn btn-info btn-sm text-white">
+                        Review Applicants
+                    </a>
+                </td>
+            </tr>
         }
     }
     else
     {
-        <tr><td colspan="5">You haven't posted any jobs yet.</td></tr>
+        <tr>
+            <td colspan="6">You haven't posted any jobs yet.</td>
+        </tr>
     }
     </tbody>
 </table>
