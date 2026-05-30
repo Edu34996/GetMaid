@@ -18,6 +18,8 @@ namespace Core.Concretes.DTOs
         public bool IsSmoker { get; set; }
         public string City { get; set; } = null!;
         
+        public string Address { get; set; } = null!;
+        
         // --- Economics ---
         public decimal? MinHourlyRate { get; set; }
         public decimal? MaxHourlyRate { get; set; }
@@ -26,7 +28,7 @@ namespace Core.Concretes.DTOs
         // --- Media & Status ---
         public string ProfilePictureUrl { get; set; } = null!;
         public string? IntroductionVideoUrl { get; set; }
-        public string IdentityVerificationStatus { get; set; } = "Unverified";
+        public VerificationStatus IdentityVerificationStatus { get; set; } = VerificationStatus.Unverified;
 
         // --- Qualifications & Preferences ---
         public List<ServiceType> OfferedServices { get; set; } = new List<ServiceType>();

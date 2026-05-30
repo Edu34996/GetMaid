@@ -33,33 +33,27 @@ namespace Data.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     FirstName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Longitude = table.Column<double>(type: "REAL", nullable: true),
+                    Address = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    IdentityDocumentPath = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IdentityVerificationStatus = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastLoginDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     Discriminator = table.Column<string>(type: "TEXT", maxLength: 21, nullable: false),
-                    Address = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Latitude = table.Column<double>(type: "REAL", nullable: true),
-                    Longitude = table.Column<double>(type: "REAL", nullable: true),
-                    Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     FamilyStatus = table.Column<int>(type: "INTEGER", nullable: true),
                     HasPets = table.Column<bool>(type: "INTEGER", nullable: true),
                     NumberOfPets = table.Column<int>(type: "INTEGER", nullable: true),
-                    IdentityVerificationStatus = table.Column<int>(type: "INTEGER", nullable: true),
-                    IdentityDocumentPath = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    WorkerId = table.Column<string>(type: "TEXT", nullable: true),
-                    Worker_Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     IsSmoker = table.Column<bool>(type: "INTEGER", nullable: true),
-                    Worker_City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Worker_Latitude = table.Column<double>(type: "REAL", nullable: true),
-                    Worker_Longitude = table.Column<double>(type: "REAL", nullable: true),
                     MinHourlyRate = table.Column<decimal>(type: "TEXT", nullable: true),
                     MaxHourlyRate = table.Column<decimal>(type: "TEXT", nullable: true),
+                    IsExperienced = table.Column<bool>(type: "INTEGER", nullable: true),
                     ExperienceYears = table.Column<int>(type: "INTEGER", nullable: true),
                     ProfilePictureUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     IntroductionVideoUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Worker_IdentityDocumentPath = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Worker_IdentityVerificationStatus = table.Column<int>(type: "INTEGER", nullable: true),
                     OfferedServices = table.Column<string>(type: "TEXT", nullable: true),
                     Skills = table.Column<string>(type: "TEXT", nullable: true),
                     ExperiencedAgeGroups = table.Column<string>(type: "TEXT", nullable: true),
@@ -87,11 +81,6 @@ namespace Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AspNetUsers_AspNetUsers_WorkerId",
-                        column: x => x.WorkerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -359,6 +348,31 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "WorkerReferences",
+                columns: table => new
+                {
+                    WorkerId = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerId = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkerReferences", x => new { x.WorkerId, x.CustomerId });
+                    table.ForeignKey(
+                        name: "FK_WorkerReferences_AspNetUsers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_WorkerReferences_AspNetUsers_WorkerId",
+                        column: x => x.WorkerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "JobApplications",
                 columns: table => new
                 {
@@ -423,11 +437,6 @@ namespace Data.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_WorkerId",
-                table: "AspNetUsers",
-                column: "WorkerId");
-
-            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -477,6 +486,11 @@ namespace Data.Migrations
                 name: "IX_Reviews_ReviewerId",
                 table: "Reviews",
                 column: "ReviewerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkerReferences_CustomerId",
+                table: "WorkerReferences",
+                column: "CustomerId");
         }
 
         /// <inheritdoc />
@@ -511,6 +525,9 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Reviews");
+
+            migrationBuilder.DropTable(
+                name: "WorkerReferences");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

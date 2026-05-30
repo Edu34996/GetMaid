@@ -1,175 +1,789 @@
 @using Core.Concretes.Enums
+@using System.Linq
 @model Core.Concretes.DTOs.WorkerDashboardDTO
 
 @{
     ViewData["Title"] = "Worker Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // --- Dropdown & Checkbox Data ---
+    var allServiceTypes = Enum.GetValues(typeof(ServiceType)).Cast<ServiceType>().ToList();
+    var allSkills = Enum.GetValues(typeof(Skill)).Cast<Skill>().ToList();
+    var allAgeGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
+    var allWorkArrangements = Enum.GetValues(typeof(WorkArrangement)).Cast<WorkArrangement>().ToList();
+    var allCommitments = Enum.GetValues(typeof(CommitmentPreference)).Cast<CommitmentPreference>().ToList();
+    var allDays = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().OrderBy(d => d == DayOfWeek.Sunday ? 7 : (int)d).ToList();
+
+    // --- Selected State ---
+    var selectedServices = Model?.OfferedServices?.Select(x => x.ToString()).ToHashSet() ?? new HashSet<string>();
+    var selectedSkills = Model?.Skills?.Select(x => x.ToString()).ToHashSet() ?? new HashSet<string>();
+    var selectedAgeGroups = Model?.ExperiencedAgeGroups?.Select(x => x.ToString()).ToHashSet() ?? new HashSet<string>();
+    var selectedDays = Model?.PreferredWorkDays?.Select(x => x.ToString()).ToHashSet() ?? new HashSet<string>();
+
+    // --- Tag Columns Calculation (Fixes CS0103) ---
+    int tagCols = 0;
+    if (Model?.OfferedServices?.Any() == true) tagCols++;
+    if (Model?.Skills?.Any() == true) tagCols++;
+    if (Model?.ExperiencedAgeGroups?.Any() == true) tagCols++;
+    if (Model?.LanguagesSpoken?.Any() == true) tagCols++;
 }
 
-<h1>Worker Dashboard</h1>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet" />
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="text-success border border-success p-2 mb-3">
-        @TempData["SuccessMessage"]
-    </div>
+<style>
+/* =========================================================
+   WORKER DASHBOARD – CUSTOM STYLES
+   ========================================================= */
+.wd-layout {
+    margin-left: calc(-1 * var(--bs-gutter-x, 0px));
+    margin-right: calc(-1 * var(--bs-gutter-x, 0px));
+    margin-top: calc(-1 * var(--page-top-offset, 0px));
 }
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="text-danger border border-danger p-2 mb-3">
-        @TempData["ErrorMessage"]
-    </div>
+:root {
+    --wd-sidebar-w: 264px;
+    --wd-topbar-h: 60px;
+    --wd-bg: #f0f2f6;
+    --wd-surface: #ffffff;
+    --wd-border: #e4e8ee;
+    --wd-navy: #0c1224;
+    --wd-navy-mid: #1a2744;
+    --wd-amber: #f59e0b;
+    --wd-amber-dark: #d97706;
+    --wd-text-primary: #0f1e35;
+    --wd-text-mid: #3f4d63;
+    --wd-text-soft: #7a8699;
+    --wd-radius-card: 16px;
+    --wd-radius-sm: 10px;
+    --wd-shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+    --wd-shadow-hover: 0 4px 20px rgba(0,0,0,.12);
+    font-family: 'DM Sans', system-ui, sans-serif;
 }
 
-@if (Model != null)
-{
-    <div class="border rounded p-3 mb-4">
-        <h3>Current Profile</h3>
+.wd-layout { display: flex; min-height: 100vh; background: var(--wd-bg); }
+.wd-sidebar { position: fixed; inset-block: 0; left: 0; width: var(--wd-sidebar-w); background: var(--wd-navy); display: flex; flex-direction: column; z-index: 1050; transition: transform .28s cubic-bezier(.4,0,.2,1); overflow-y: auto; overflow-x: hidden; }
 
-        @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
-        {
-            <div class="mb-3">
-                <img src="@Model.ProfilePictureUrl"
-                     alt="@Model.FirstName"
-                     style="max-width: 180px; max-height: 180px; object-fit: cover;" />
+@@media (max-width: 991.98px) {
+    .wd-sidebar { transform: translateX(-100%); }
+    .wd-sidebar.open { transform: translateX(0); }
+}
+
+.wd-sidebar::-webkit-scrollbar { width: 4px; }
+.wd-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+
+.wd-brand { display: flex; align-items: center; gap: 10px; padding: 22px 20px 18px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.wd-brand-logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--wd-amber), var(--wd-amber-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.05rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(245,158,11,.4); }
+.wd-brand-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.05rem; color: #fff; letter-spacing: -.4px; line-height: 1; }
+.wd-brand-name span { color: var(--wd-amber); }
+
+.wd-sb-profile { padding: 16px 20px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.wd-sb-avatar, .wd-sb-avatar-ph { width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(245,158,11,.4); flex-shrink: 0; }
+.wd-sb-avatar { object-fit: cover; }
+.wd-sb-avatar-ph { background: rgba(245,158,11,.18); display: flex; align-items: center; justify-content: center; color: var(--wd-amber); font-size: 1.25rem; }
+.wd-sb-profile-info { min-width: 0; }
+.wd-sb-name { display: block; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wd-nav { padding: 14px 12px; flex: 1; }
+.wd-nav-section { font-size: .62rem; font-weight: 700; letter-spacing: 1.6px; color: rgba(255,255,255,.28); padding: 10px 8px 6px; }
+.wd-nav-link { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: var(--wd-radius-sm); color: rgba(255,255,255,.6); text-decoration: none !important; font-size: .855rem; font-weight: 500; margin-bottom: 1px; transition: background .18s, color .18s; position: relative; }
+.wd-nav-link i { width: 18px; text-align: center; font-size: .95rem; flex-shrink: 0; }
+.wd-nav-link span { flex: 1; }
+.wd-nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+.wd-nav-link.active { background: rgba(245,158,11,.16); color: var(--wd-amber); border: 1px solid rgba(245,158,11,.22); }
+.wd-nav-link.active i { color: var(--wd-amber); }
+.wd-nav-link.danger { color: rgba(248,113,113,.7); }
+.wd-nav-link.danger:hover { background: rgba(239,68,68,.1); color: #f87171; }
+
+.wd-sb-close { background: none; border: none; color: rgba(255,255,255,.45); font-size: 1.1rem; cursor: pointer; padding: 2px; display: none; }
+@@media (max-width: 991.98px) { .wd-sb-close { display: block; } }
+
+.wd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1040; opacity: 0; visibility: hidden; transition: opacity .28s, visibility .28s; }
+.wd-overlay.open { opacity: 1; visibility: visible; }
+
+.wd-main { margin-left: var(--wd-sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left .28s cubic-bezier(.4,0,.2,1); }
+@@media (max-width: 991.98px) { .wd-main { margin-left: 0; } }
+
+.wd-topbar { position: sticky; top: 0; height: var(--wd-topbar-h); background: var(--wd-surface); border-bottom: 1px solid var(--wd-border); display: flex; align-items: center; gap: 12px; padding: 0 24px; z-index: 200; }
+.wd-topbar-toggle { background: none; border: none; color: var(--wd-text-mid); font-size: 1.35rem; cursor: pointer; padding: 2px; line-height: 1; display: none; }
+@@media (max-width: 991.98px) { .wd-topbar-toggle { display: block; } }
+
+.wd-breadcrumb { flex: 1; font-size: .825rem; color: var(--wd-text-soft); }
+.wd-breadcrumb strong { color: var(--wd-text-primary); }
+
+.wd-content { padding: 28px 28px 64px; flex: 1; }
+@@media (max-width: 767.98px) { .wd-content { padding: 16px 14px 48px; } }
+
+.wd-page-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.55rem; color: var(--wd-text-primary); letter-spacing: -.5px; margin: 0 0 4px; }
+.wd-page-sub { color: var(--wd-text-soft); font-size: .855rem; margin: 0 0 24px; }
+
+.wd-stat { background: var(--wd-surface); border-radius: var(--wd-radius-card); padding: 18px 20px; display: flex; align-items: center; gap: 14px; box-shadow: var(--wd-shadow-card); transition: transform .2s, box-shadow .2s; animation: fadeSlideUp .4s ease both; }
+.wd-stat:hover { transform: translateY(-2px); box-shadow: var(--wd-shadow-hover); }
+.wd-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; background: color-mix(in srgb, var(--icon-clr) 14%, transparent); color: var(--icon-clr); }
+.wd-stat-val { display: block; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.45rem; color: var(--wd-text-primary); line-height: 1; }
+.wd-stat-val small { font-size: .68em; font-weight: 600; color: var(--wd-text-soft); }
+.wd-stat-lbl { display: block; font-size: .73rem; color: var(--wd-text-soft); margin-top: 5px; }
+
+.wd-card { background: var(--wd-surface); border-radius: var(--wd-radius-card); box-shadow: var(--wd-shadow-card); animation: fadeSlideUp .4s ease both; }
+.wd-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px 14px; border-bottom: 1px solid var(--wd-border); }
+.wd-card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .88rem; flex-shrink: 0; background: color-mix(in srgb, var(--icon-clr) 13%, transparent); color: var(--icon-clr); }
+.wd-card-title { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .875rem; color: var(--wd-text-primary); margin: 0; letter-spacing: -.2px; }
+.wd-card-body { padding: 18px 20px; }
+
+.wd-head-actions { margin-left: auto; display: flex; gap: 8px; }
+.wd-edit-btn { border: none; background: #f1f5f9; border: 1px solid var(--wd-border); color: var(--wd-text-mid); width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; transition: all .2s; }
+.wd-edit-btn:hover { background: var(--wd-amber); color: #fff; border-color: var(--wd-amber); }
+
+.wd-profile-card { background: var(--wd-surface); border-radius: var(--wd-radius-card); box-shadow: var(--wd-shadow-card); overflow: hidden; text-align: center; animation: fadeSlideUp .4s ease .05s both; }
+.wd-profile-banner { height: 90px; background: linear-gradient(125deg, var(--wd-navy) 0%, var(--wd-navy-mid) 60%, #1f3561 100%); position: relative; }
+.wd-profile-body { padding: 0 22px 22px; }
+.wd-profile-av, .wd-profile-av-ph { width: 82px; height: 82px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 16px rgba(0,0,0,.14); margin: -41px auto 12px; position: relative; z-index: 1; }
+.wd-profile-av { display: block; object-fit: cover; }
+.wd-profile-av-ph { background: linear-gradient(135deg, var(--wd-amber), var(--wd-amber-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2.1rem; }
+.wd-profile-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--wd-text-primary); margin: 0 0 3px; }
+.wd-profile-email { color: var(--wd-text-soft); font-size: .8rem; margin: 0 0 14px; }
+.wd-stars { display: inline-flex; align-items: center; gap: 2px; margin-bottom: 12px; }
+.wd-star { color: #d1d5db; font-size: .95rem; }
+.wd-star.on { color: var(--wd-amber); }
+.wd-stars-count { color: var(--wd-text-soft); font-size: .75rem; margin-left: 5px; }
+
+.wd-info-list { display: flex; flex-direction: column; gap: 12px; }
+.wd-info-row { display: flex; align-items: flex-start; gap: 10px; }
+.wd-info-ico { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--wd-border); background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: .78rem; color: var(--wd-text-mid); flex-shrink: 0; margin-top: 2px; }
+.wd-info-lbl { display: block; font-size: .67rem; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--wd-text-soft); }
+.wd-info-val { display: block; font-size: .85rem; font-weight: 500; color: var(--wd-text-primary); margin-top: 1px; }
+
+.wd-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.wd-tag { display: inline-block; padding: 4px 11px; border-radius: 20px; font-size: .73rem; font-weight: 600; white-space: nowrap; }
+.wd-tag-blue { background: #dbeafe; color: #1d4ed8; }
+.wd-tag-indigo { background: #e0e7ff; color: #4338ca; }
+.wd-tag-amber { background: #fef3c7; color: #b45309; }
+.wd-tag-teal { background: #d1fae5; color: #047857; }
+
+.wd-days { display: flex; flex-wrap: wrap; gap: 8px; }
+.wd-day { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .2px; background: #f1f5f9; color: #94a3b8; border: 2px solid transparent; }
+.wd-day.on { background: linear-gradient(135deg, var(--wd-amber), var(--wd-amber-dark)); color: #fff; box-shadow: 0 4px 12px rgba(245,158,11,.36); }
+
+.wd-video { width: 100%; max-height: 420px; border-radius: 12px; background: #000; display: block; }
+.wd-bio { line-height: 1.72; color: var(--wd-text-mid); font-size: .885rem; margin: 0; }
+
+.wd-alert-ok { border-radius: 12px; background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; font-size: .86rem; }
+.wd-alert-err { border-radius: 12px; background: #fef2f2; border: 1.5px solid #fecaca; color: #dc2626; font-size: .86rem; }
+
+.wd-label { display: block; font-size: .8rem; font-weight: 700; color: var(--wd-text-mid); margin-bottom: 6px; }
+.wd-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--wd-border); border-radius: var(--wd-radius-sm); font-size: .875rem; font-family: 'DM Sans', sans-serif; color: var(--wd-text-primary); background: #f8fafc; outline: none; transition: all .2s; }
+.wd-input:focus { border-color: var(--wd-amber); background: #fff; box-shadow: 0 0 0 3px rgba(245,158,11,.14); }
+textarea.wd-input { resize: vertical; min-height: 110px; }
+
+.wd-checkbox-wrap { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.wd-checkbox-wrap input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--wd-amber); cursor: pointer; border-radius: 4px; flex-shrink: 0; }
+.wd-checkbox-wrap span { font-size: .875rem; font-weight: 500; color: var(--wd-text-mid); }
+
+.wd-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; text-align: center; color: var(--wd-text-soft); }
+.wd-chipbox { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border: 1.5px solid var(--wd-border); border-radius: 10px; background: #f8fafc; min-height: 48px; }
+.wd-chip { background: #e2e8f0; border-radius: 20px; padding: 5px 12px; font-size: .8rem; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; color: var(--wd-text-primary); }
+.wd-chip button { border: none; background: transparent; color: #64748b; padding: 0 2px; font-size: 1rem; line-height: 1; cursor: pointer; }
+.wd-chip button:hover { color: #ef4444; }
+
+@@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(14px);} to {opacity: 1; transform: translateY(0);} }
+</style>
+
+<div class="wd-layout">
+    @* --- SIDEBAR --- *@
+    <aside class="wd-sidebar" id="wdSidebar">
+        <div class="wd-brand">
+            <div class="wd-brand-logo"><i class="bi bi-house-heart-fill"></i></div>
+            <span class="wd-brand-name">Worker<span>Hub</span></span>
+            <button class="wd-sb-close ms-auto" id="sbClose" aria-label="Close sidebar"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="wd-sb-profile">
+            @if (!string.IsNullOrWhiteSpace(Model?.ProfilePictureUrl))
+            {
+                <img src="@Model.ProfilePictureUrl" class="wd-sb-avatar" alt="@Model.FirstName" />
+            }
+            else
+            {
+                <div class="wd-sb-avatar-ph"><i class="bi bi-person-fill"></i></div>
+            }
+            <div class="wd-sb-profile-info">
+                <span class="wd-sb-name">@(Model?.FirstName ?? "Worker")</span>
             </div>
-        }
+        </div>
 
-        <p><strong>Name:</strong> @Model.FirstName</p>
-        <p><strong>Email:</strong> @Model.Email</p>
-        <p><strong>Phone Number:</strong> @Model.PhoneNumber</p>
-        <p><strong>Bio:</strong> @Model.Bio</p>
-        <p><strong>Smoker:</strong> @(Model.IsSmoker ? "Yes" : "No")</p>
-        <p><strong>City:</strong> @Model.City</p>
-        <p><strong>Min Hourly Rate:</strong> @(Model.MinHourlyRate?.ToString("0.00") ?? "-")</p>
-        <p><strong>Max Hourly Rate:</strong> @(Model.MaxHourlyRate?.ToString("0.00") ?? "-")</p>
-        <p><strong>Experience Years:</strong> @Model.ExperienceYears</p>
-        <p><strong>Introduction Video:</strong> @(string.IsNullOrWhiteSpace(Model.IntroductionVideoUrl) ? "-" : Model.IntroductionVideoUrl)</p>
-        <p><strong>Identity Verification:</strong> @Model.IdentityVerificationStatus</p>
-        <p><strong>Preferred Arrangement:</strong> @Model.PreferredArrangement</p>
-        <p><strong>Commitment Preference:</strong> @Model.CommitmentPreference</p>
-        <p><strong>Max Days/Week:</strong> @(Model.MaxDaysPerWeek?.ToString() ?? "-")</p>
-        <p><strong>Max Hours/Day:</strong> @(Model.MaxHoursPerDay?.ToString() ?? "-")</p>
-        <p><strong>Average Rating:</strong> @Model.AverageRating</p>
-        <p><strong>Total Reviews:</strong> @Model.TotalReviews</p>
+        <nav class="wd-nav" id="wdNav">
+            <p class="wd-nav-section">MAIN</p>
+            <a class="wd-nav-link active" href="@Url.Action("Dashboard", "Worker")"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a>
+            <a class="wd-nav-link" href="@Url.Action("MyBookings", "Worker")"><i class="bi bi-calendar2-check-fill"></i><span>My Bookings</span></a>
+            <a class="wd-nav-link" href="@Url.Action("JobBoard", "Worker")"><i class="bi bi-briefcase-fill"></i><span>Job Board</span></a>
+            <p class="wd-nav-section">ACCOUNT</p>
+            <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="wd-nav-link danger" style="border:none;background:none;width:100%;text-align:left;padding:9px 12px;">
+                    <i class="bi bi-box-arrow-right"></i><span>Sign Out</span>
+                </button>
+            </form>
+        </nav>
+    </aside>
 
-        <div class="mt-3">
-            <strong>Offered Services:</strong><br />
-            @if (Model.OfferedServices != null && Model.OfferedServices.Any())
+    <div class="wd-overlay" id="wdOverlay"></div>
+
+    @* --- MAIN CONTENT --- *@
+    <div class="wd-main">
+        <header class="wd-topbar">
+            <button class="wd-topbar-toggle" id="sbToggle" aria-label="Open sidebar"><i class="bi bi-list"></i></button>
+            <div class="wd-breadcrumb"><span>Worker</span><i class="bi bi-chevron-right mx-2" style="font-size:.65rem;"></i><strong>Overview</strong></div>
+        </header>
+
+        <main class="wd-content">
+            @if (TempData["SuccessMessage"] != null)
             {
-                @foreach (var service in Model.OfferedServices)
-                {
-                    <span class="badge bg-secondary me-1">@service</span>
-                }
+                <div class="alert wd-alert-ok alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert wd-alert-err alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (Model == null)
+            {
+                <div class="wd-empty"><i class="bi bi-person-x"></i><h4>No Profile Data</h4><p>Please complete your profile setup to get started.</p></div>
             }
             else
             {
-                <span>None listed</span>
-            }
-        </div>
+                <h1 class="wd-page-title">Good to see you, @Model.FirstName</h1>
+                <p class="wd-page-sub">Here is a summary of your profile and activity. Click the edit icons to update your information.</p>
 
-        <div class="mt-3">
-            <strong>Skills:</strong><br />
-            @if (Model.Skills != null && Model.Skills.Any())
-            {
-                @foreach (var skill in Model.Skills)
-                {
-                    <span class="badge bg-info text-dark me-1">@skill</span>
-                }
-            }
-            else
-            {
-                <span>None listed</span>
-            }
-        </div>
+                @* ── SINGLE FORM WRAPPER FOR ALL MODALS ── *@
+                <form asp-controller="Worker" asp-action="UpdateProfile" method="post" id="profileForm">
+                    @Html.AntiForgeryToken()
 
-        <div class="mt-3">
-            <strong>Experienced Age Groups:</strong><br />
-            @if (Model.ExperiencedAgeGroups != null && Model.ExperiencedAgeGroups.Any())
-            {
-                @foreach (var ageGroup in Model.ExperiencedAgeGroups)
-                {
-                    <span class="badge bg-warning text-dark me-1">@ageGroup</span>
-                }
-            }
-            else
-            {
-                <span>None listed</span>
-            }
-        </div>
+                    @* STATS ROW *@
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3"><div class="wd-stat"><div class="wd-stat-icon" style="--icon-clr:#f59e0b"><i class="bi bi-star-fill"></i></div><div><span class="wd-stat-val">@Model.AverageRating.ToString("0.0")</span><span class="wd-stat-lbl">Avg. Rating</span></div></div></div>
+                        <div class="col-6 col-md-3"><div class="wd-stat"><div class="wd-stat-icon" style="--icon-clr:#6366f1"><i class="bi bi-chat-quote-fill"></i></div><div><span class="wd-stat-val">@Model.TotalReviews</span><span class="wd-stat-lbl">Total Reviews</span></div></div></div>
+                        <div class="col-6 col-md-3"><div class="wd-stat"><div class="wd-stat-icon" style="--icon-clr:#10b981"><i class="bi bi-calendar2-week-fill"></i></div><div><span class="wd-stat-val">@(Model.ExperienceYears.ToString() ?? "—")<small> yr</small></span><span class="wd-stat-lbl">Experience</span></div></div></div>
+                        <div class="col-6 col-md-3"><div class="wd-stat"><div class="wd-stat-icon" style="--icon-clr:#3b82f6"><i class="bi bi-currency-dollar"></i></div><div><span class="wd-stat-val">@(Model.MinHourlyRate?.ToString("$0") ?? "—")<small>/hr</small></span><span class="wd-stat-lbl">Min. Rate</span></div></div></div>
+                    </div>
 
-        <div class="mt-3">
-            <strong>Languages Spoken:</strong><br />
-            @if (Model.LanguagesSpoken != null && Model.LanguagesSpoken.Any())
-            {
-                @foreach (var language in Model.LanguagesSpoken)
-                {
-                    <span class="badge bg-light text-dark border me-1">@language</span>
-                }
-            }
-            else
-            {
-                <span>None listed</span>
-            }
-        </div>
+                    @* MAIN PROFILE GRID *@
+                    <div class="row g-4 mb-4">
+                        
+                        @* Profile Overview Card *@
+                        <div class="col-lg-4">
+                            <div class="wd-profile-card h-100">
+                                <div class="wd-profile-banner"></div>
+                                <div class="wd-profile-body">
+                                    @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl)) { <img src="@Model.ProfilePictureUrl" class="wd-profile-av" alt="@Model.FirstName" /> }
+                                    else { <div class="wd-profile-av-ph"><i class="bi bi-person-fill"></i></div> }
+                                    <h3 class="wd-profile-name">@Model.FirstName</h3>
+                                    <p class="wd-profile-email">@Model.Email</p>
+                                    <div class="wd-stars mt-2">
+                                        @for (int s = 1; s <= 5; s++){ <i class="bi bi-star@(s <= Math.Round(Model.AverageRating) ? "-fill" : "") wd-star@(s <= Math.Round(Model.AverageRating) ? " on" : "")"></i> }
+                                        <span class="wd-stars-count">(@Model.TotalReviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="mt-3">
-            <strong>Preferred Work Days:</strong><br />
-            @if (Model.PreferredWorkDays != null && Model.PreferredWorkDays.Any())
-            {
-                @foreach (var day in Model.PreferredWorkDays)
-                {
-                    <span class="badge bg-dark me-1">@day</span>
-                }
+                        @* Basic Information Card *@
+                        <div class="col-lg-4">
+                            <div class="wd-card h-100">
+                                <div class="wd-card-head">
+                                    <span class="wd-card-icon" style="--icon-clr:#6366f1"><i class="bi bi-person-lines-fill"></i></span>
+                                    <h6 class="wd-card-title">Basic Info</h6>
+                                    <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#basicInfoModal" title="Edit Basic Info"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="wd-card-body">
+                                    <div class="wd-info-list">
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-telephone-fill"></i></span><div><span class="wd-info-lbl">Phone</span><span class="wd-info-val">@(Model.PhoneNumber ?? "Not provided")</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-geo-alt-fill"></i></span><div><span class="wd-info-lbl">City</span><span class="wd-info-val">@(Model.City ?? "—")</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-wind"></i></span><div><span class="wd-info-lbl">Smoker</span><span class="wd-info-val">@(Model.IsSmoker ? "Yes" : "No")</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Work Preferences Card *@
+                        <div class="col-lg-4">
+                            <div class="wd-card h-100">
+                                <div class="wd-card-head">
+                                    <span class="wd-card-icon" style="--icon-clr:#f59e0b"><i class="bi bi-sliders"></i></span>
+                                    <h6 class="wd-card-title">Preferences</h6>
+                                    <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#prefsModal" title="Edit Preferences"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="wd-card-body">
+                                    <div class="wd-info-list">
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-house-door-fill"></i></span><div><span class="wd-info-lbl">Arrangement</span><span class="wd-info-val">@Model.PreferredArrangement</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-clock-history"></i></span><div><span class="wd-info-lbl">Commitment</span><span class="wd-info-val">@Model.CommitmentPreference</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-calendar3"></i></span><div><span class="wd-info-lbl">Max Days / Week</span><span class="wd-info-val">@(Model.MaxDaysPerWeek?.ToString() ?? "—")</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-hourglass-split"></i></span><div><span class="wd-info-lbl">Max Hours / Day</span><span class="wd-info-val">@(Model.MaxHoursPerDay?.ToString() ?? "—")</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* SECOND ROW: Professional Rates & Bio *@
+                    <div class="row g-4 mb-4">
+                        @* Professional Details (Rates/Exp) *@
+                        <div class="col-lg-4">
+                            <div class="wd-card h-100">
+                                <div class="wd-card-head">
+                                    <span class="wd-card-icon" style="--icon-clr:#10b981"><i class="bi bi-briefcase-fill"></i></span>
+                                    <h6 class="wd-card-title">Professional Details</h6>
+                                    <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#proModal" title="Edit Professional Details"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="wd-card-body">
+                                    <div class="wd-info-list">
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-award-fill"></i></span><div><span class="wd-info-lbl">Experience</span><span class="wd-info-val">@(Model.ExperienceYears.ToString() ?? "—") Years</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-cash"></i></span><div><span class="wd-info-lbl">Min. Hourly Rate</span><span class="wd-info-val">@(Model.MinHourlyRate?.ToString("$0.00") ?? "—")</span></div></div>
+                                        <div class="wd-info-row"><span class="wd-info-ico"><i class="bi bi-cash-stack"></i></span><div><span class="wd-info-lbl">Max. Hourly Rate</span><span class="wd-info-val">@(Model.MaxHourlyRate?.ToString("$0.00") ?? "—")</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* About Me (Bio) *@
+                        <div class="col-lg-8">
+                            <div class="wd-card h-100">
+                                <div class="wd-card-head">
+                                    <span class="wd-card-icon" style="--icon-clr:#3b82f6"><i class="bi bi-file-earmark-person-fill"></i></span>
+                                    <h6 class="wd-card-title">About Me</h6>
+                                    <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#bioModal" title="Edit Bio"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="wd-card-body">
+                                    @if (!string.IsNullOrWhiteSpace(Model.Bio)) { <p class="wd-bio">@Model.Bio</p> }
+                                    else { <p class="wd-bio" style="color:var(--wd-text-soft);font-style:italic;">No bio provided yet. Add one to stand out to clients!</p> }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* TAGS ROW *@
+                    @if (tagCols > 0)
+                    {
+                        <div class="row g-4 mb-4">
+                            @if (Model.OfferedServices?.Any() == true)
+                            {
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="wd-card h-100">
+                                        <div class="wd-card-head">
+                                            <span class="wd-card-icon" style="--icon-clr:#3b82f6"><i class="bi bi-tools"></i></span>
+                                            <h6 class="wd-card-title">Services</h6>
+                                            <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#servicesModal"><i class="bi bi-pencil-square"></i></button></div>
+                                        </div>
+                                        <div class="wd-card-body"><div class="wd-tags">@foreach (var svc in Model.OfferedServices) { <span class="wd-tag wd-tag-blue">@svc</span> }</div></div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (Model.Skills?.Any() == true)
+                            {
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="wd-card h-100">
+                                        <div class="wd-card-head">
+                                            <span class="wd-card-icon" style="--icon-clr:#6366f1"><i class="bi bi-lightning-charge-fill"></i></span>
+                                            <h6 class="wd-card-title">Skills</h6>
+                                            <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#skillsModal"><i class="bi bi-pencil-square"></i></button></div>
+                                        </div>
+                                        <div class="wd-card-body"><div class="wd-tags">@foreach (var skill in Model.Skills) { <span class="wd-tag wd-tag-indigo">@skill</span> }</div></div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (Model.ExperiencedAgeGroups?.Any() == true)
+                            {
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="wd-card h-100">
+                                        <div class="wd-card-head">
+                                            <span class="wd-card-icon" style="--icon-clr:#f59e0b"><i class="bi bi-people-fill"></i></span>
+                                            <h6 class="wd-card-title">Age Groups</h6>
+                                            <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#ageGroupsModal"><i class="bi bi-pencil-square"></i></button></div>
+                                        </div>
+                                        <div class="wd-card-body"><div class="wd-tags">@foreach (var ag in Model.ExperiencedAgeGroups) { <span class="wd-tag wd-tag-amber">@ag</span> }</div></div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (Model.LanguagesSpoken?.Any() == true)
+                            {
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="wd-card h-100">
+                                        <div class="wd-card-head">
+                                            <span class="wd-card-icon" style="--icon-clr:#10b981"><i class="bi bi-translate"></i></span>
+                                            <h6 class="wd-card-title">Languages</h6>
+                                            <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#languagesModal"><i class="bi bi-pencil-square"></i></button></div>
+                                        </div>
+                                        <div class="wd-card-body"><div class="wd-tags">@foreach (var lang in Model.LanguagesSpoken) { <span class="wd-tag wd-tag-teal">@lang</span> }</div></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                         <div class="wd-card mb-4">
+                            <div class="wd-card-body text-center py-4">
+                                <p class="text-muted mb-3">You haven't added any specific services, skills, or languages yet.</p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#servicesModal">Add Services</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#skillsModal">Add Skills</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#languagesModal">Add Languages</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @* BOTTOM ROW: Days & Video *@
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="wd-card h-100">
+                                <div class="wd-card-head">
+                                    <span class="wd-card-icon" style="--icon-clr:#3b82f6"><i class="bi bi-calendar-week-fill"></i></span>
+                                    <h6 class="wd-card-title">Preferred Work Days</h6>
+                                    <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#daysModal"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="wd-card-body">
+                                    <div class="wd-days">
+                                        @foreach (var day in allDays)
+                                        {
+                                            var isOn = selectedDays.Contains(day.ToString());
+                                            <div class="wd-day @(isOn ? "on" : "")">@day.ToString()[..3]</div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="wd-card h-100">
+                                <div class="wd-card-head">
+                                    <span class="wd-card-icon" style="--icon-clr:#ef4444"><i class="bi bi-play-circle-fill"></i></span>
+                                    <h6 class="wd-card-title">Introduction Video</h6>
+                                    <div class="wd-head-actions"><button type="button" class="wd-edit-btn" data-bs-toggle="modal" data-bs-target="#videoModal"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="wd-card-body">
+                                    @if (!string.IsNullOrWhiteSpace(Model.IntroductionVideoUrl)) {
+                                        <video class="wd-video" controls><source src="@Model.IntroductionVideoUrl" type="video/mp4" />Browser not supported.</video>
+                                    } else {
+                                        <p class="wd-bio" style="color:var(--wd-text-soft);font-style:italic;">No introduction video provided. A video helps build trust with families!</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @* ============================================================================== 
+                       MODALS: (These all live inside the main form. Hitting "Save" submits everything) 
+                       ============================================================================== *@
+                    
+                    <div class="modal fade" id="basicInfoModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Basic Information</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <div class="mb-3"><label class="wd-label">Phone Number</label><input type="text" name="PhoneNumber" value="@Model.PhoneNumber" class="wd-input" /></div>
+                                <div class="mb-3"><label class="wd-label">City</label><input type="text" name="City" value="@Model.City" class="wd-input" /></div>
+                                
+                                <div class="mb-2">
+                                    <label class="wd-checkbox-wrap">
+                                        <input type="checkbox" name="IsSmoker" value="true" @(Model.IsSmoker ? "checked" : "") />
+                                        <span>I am a smoker</span>
+                                    </label>
+                                    <input type="hidden" name="IsSmoker" value="false" />
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="proModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Professional Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <div class="mb-3"><label class="wd-label">Experience (Years)</label><input type="number" name="ExperienceYears" value="@Model.ExperienceYears" class="wd-input" min="0" /></div>
+                                <div class="row g-2">
+                                    <div class="col-6"><label class="wd-label">Min Hourly Rate ($)</label><input type="number" step="0.01" name="MinHourlyRate" value="@Model.MinHourlyRate" class="wd-input" min="0" /></div>
+                                    <div class="col-6"><label class="wd-label">Max Hourly Rate ($)</label><input type="number" step="0.01" name="MaxHourlyRate" value="@Model.MaxHourlyRate" class="wd-input" min="0" /></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="prefsModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Work Preferences</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <div class="mb-3"><label class="wd-label">Preferred Arrangement</label><select class="wd-input" name="PreferredArrangement">@foreach (var wa in allWorkArrangements){<option value="@wa" selected="@(Model.PreferredArrangement == wa)">@wa</option>}</select></div>
+                                <div class="mb-3"><label class="wd-label">Commitment Preference</label><select class="wd-input" name="CommitmentPreference">@foreach (var cp in allCommitments){<option value="@cp" selected="@(Model.CommitmentPreference == cp)">@cp</option>}</select></div>
+                                <div class="row g-2">
+                                    <div class="col-6"><label class="wd-label">Max Days / Week</label><input type="number" name="MaxDaysPerWeek" value="@Model.MaxDaysPerWeek" class="wd-input" min="1" max="7" /></div>
+                                    <div class="col-6"><label class="wd-label">Max Hours / Day</label><input type="number" name="MaxHoursPerDay" value="@Model.MaxHoursPerDay" class="wd-input" min="1" max="24" /></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="bioModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">About Me</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <label class="wd-label">Biography</label>
+                                <textarea name="Bio" class="wd-input" rows="6" placeholder="Tell families about yourself, your background, and your approach to care...">@Model.Bio</textarea>
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Introduction Video</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <label class="wd-label">Video URL (MP4 link)</label>
+                                <input type="text" name="IntroductionVideoUrl" value="@Model.IntroductionVideoUrl" class="wd-input" placeholder="https://..." />
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="daysModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Preferred Work Days</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    @foreach (var d in allDays)
+                                    {
+                                        var dayName = d.ToString();
+                                        <div class="col-6">
+                                            <label class="wd-checkbox-wrap">
+                                                <input type="checkbox" name="PreferredWorkDays" value="@dayName" @(selectedDays.Contains(dayName) ? "checked" : "") />
+                                                <span>@dayName</span>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="servicesModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Services</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                @foreach (var item in allServiceTypes)
+                                {
+                                    var value = item.ToString();
+                                    <label class="wd-checkbox-wrap mb-3">
+                                        <input type="checkbox" name="OfferedServices" value="@value" @(selectedServices.Contains(value) ? "checked" : "") />
+                                        <span>@value</span>
+                                    </label>
+                                }
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="skillsModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Skills</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                @foreach (var item in allSkills)
+                                {
+                                    var value = item.ToString();
+                                    <label class="wd-checkbox-wrap mb-3">
+                                        <input type="checkbox" name="Skills" value="@value" @(selectedSkills.Contains(value) ? "checked" : "") />
+                                        <span>@value</span>
+                                    </label>
+                                }
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="ageGroupsModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Age Groups</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                @foreach (var item in allAgeGroups)
+                                {
+                                    var value = item.ToString();
+                                    <label class="wd-checkbox-wrap mb-3">
+                                        <input type="checkbox" name="ExperiencedAgeGroups" value="@value" @(selectedAgeGroups.Contains(value) ? "checked" : "") />
+                                        <span>@value</span>
+                                    </label>
+                                }
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                    <div class="modal fade" id="languagesModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header"><h5 class="modal-title fw-bold">Languages</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body">
+                                <label class="wd-label">Add language</label>
+                                <div class="d-flex gap-2 mb-3">
+                                    <input type="text" id="languageInput" class="wd-input" list="languageSuggestions" placeholder="Type language..." />
+                                    <button type="button" class="btn btn-outline-primary" id="addLanguageBtn">Add</button>
+                                </div>
+                                <datalist id="languageSuggestions"></datalist>
+
+                                <div class="wd-chipbox" id="languageChips">
+                                    @foreach (var lang in Model?.LanguagesSpoken ?? new List<string>())
+                                    {
+                                        <span class="wd-chip" data-lang="@lang">@lang <button type="button" class="remove-lang">&times;</button></span>
+                                    }
+                                </div>
+
+                                <div id="languageHiddenInputs">
+                                    @foreach (var lang in Model?.LanguagesSpoken ?? new List<string>())
+                                    {
+                                        <input type="hidden" name="LanguagesSpoken" value="@lang" />
+                                    }
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4">Save</button></div>
+                        </div></div>
+                    </div>
+
+                </form> @* END SINGLE FORM WRAPPER *@
             }
-            else
-            {
-                <span>None listed</span>
-            }
-        </div>
+        </main>
     </div>
-}
-
-<div class="border rounded p-3">
-    <h3>Update Profile</h3>
-    <p class="text-muted">
-        This form updates only editable worker profile fields supported by your current update action.
-    </p>
-
-    <form asp-controller="Worker" asp-action="UpdateProfile" method="post">
-        @Html.AntiForgeryToken()
-
-        <div class="mb-3">
-            <label class="form-label">Bio</label>
-            <textarea name="Bio" rows="4" class="form-control">@Model?.Bio</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">City</label>
-            <input type="text" name="City" value="@Model?.City" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Minimum Hourly Rate</label>
-            <input type="number" step="0.01" name="MinHourlyRate" value="@Model?.MinHourlyRate" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Maximum Hourly Rate</label>
-            <input type="number" step="0.01" name="MaxHourlyRate" value="@Model?.MaxHourlyRate" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Introduction Video URL</label>
-            <input type="text" name="IntroductionVideoUrl" value="@Model?.IntroductionVideoUrl" class="form-control" />
-        </div>
-
-        <div class="form-check mb-3">
-            <input type="checkbox" name="IsSmoker" value="true" class="form-check-input" @(Model != null && Model.IsSmoker ? "checked" : "") />
-            <label class="form-check-label">Are you a smoker?</label>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-    </form>
 </div>
+
+<script>
+(function () {
+    const sidebar = document.getElementById('wdSidebar');
+    const overlay = document.getElementById('wdOverlay');
+    const toggle = document.getElementById('sbToggle');
+    const close = document.getElementById('sbClose');
+
+    function openSb(){ sidebar && sidebar.classList.add('open'); overlay && overlay.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function shutSb(){ sidebar && sidebar.classList.remove('open'); overlay && overlay.classList.remove('open'); document.body.style.overflow = ''; }
+
+    toggle && toggle.addEventListener('click', openSb);
+    close && close.addEventListener('click', shutSb);
+    overlay && overlay.addEventListener('click', shutSb);
+
+    // --- Language autocomplete + typo correction ---
+    const commonLanguages = [
+        "English","Spanish","French","German","Italian","Portuguese","Arabic","Hindi","Urdu","Bengali","Mandarin","Cantonese",
+        "Japanese","Korean","Russian","Turkish","Dutch","Swedish","Norwegian","Danish","Polish","Ukrainian","Greek","Hebrew",
+        "Persian","Vietnamese","Thai","Malay","Indonesian","Tagalog","Swahili","Yoruba","Igbo","Hausa","Amharic","Somali"
+    ];
+
+    const languageInput = document.getElementById('languageInput');
+    const languageSuggestions = document.getElementById('languageSuggestions');
+    const addLanguageBtn = document.getElementById('addLanguageBtn');
+    const chipsBox = document.getElementById('languageChips');
+    const hiddenInputsBox = document.getElementById('languageHiddenInputs');
+
+    function norm(v){ return (v || '').trim().toLowerCase(); }
+
+    function toTitleCase(str){
+        return str.toLowerCase().split(' ').filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    function levenshtein(a,b){
+        a = norm(a); b = norm(b);
+        if (!a.length) return b.length;
+        if (!b.length) return a.length;
+        const m = Array.from({length:a.length+1}, () => []);
+        for (let i=0;i<=a.length;i++) m[i][0]=i;
+        for (let j=0;j<=b.length;j++) m[0][j]=j;
+        for (let i=1;i<=a.length;i++){
+            for (let j=1;j<=b.length;j++){
+                const cost = a[i-1] === b[j-1] ? 0 : 1;
+                m[i][j] = Math.min(m[i-1][j]+1, m[i][j-1]+1, m[i-1][j-1]+cost);
+            }
+        }
+        return m[a.length][b.length];
+    }
+
+    function bestLanguageMatch(input){
+        const n = norm(input);
+        if (!n) return "";
+        let best = "";
+        let bestScore = 999;
+        for (const lang of commonLanguages){
+            const d = levenshtein(n, lang);
+            if (d < bestScore){ bestScore = d; best = lang; }
+        }
+        if (bestScore <= 2 || best.toLowerCase().startsWith(n) || n.startsWith(best.toLowerCase())) return best;
+        return toTitleCase(input);
+    }
+
+    function refreshSuggestions(){
+        if (!languageSuggestions) return;
+        languageSuggestions.innerHTML = "";
+        commonLanguages.forEach(l => {
+            const opt = document.createElement("option");
+            opt.value = l;
+            languageSuggestions.appendChild(opt);
+        });
+    }
+
+    function getCurrentLangSet(){
+        const set = new Set();
+        hiddenInputsBox.querySelectorAll('input[name="LanguagesSpoken"]').forEach(i => set.add(norm(i.value)));
+        return set;
+    }
+
+    function addLanguage(raw){
+        const fixed = bestLanguageMatch(raw);
+        if (!fixed) return;
+        const set = getCurrentLangSet();
+        if (set.has(norm(fixed))) return;
+
+        const chip = document.createElement('span');
+        chip.className = 'wd-chip';
+        chip.setAttribute('data-lang', fixed);
+        chip.innerHTML = fixed + ' <button type="button" class="remove-lang">&times;</button>';
+        chipsBox.appendChild(chip);
+
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'LanguagesSpoken';
+        hidden.value = fixed;
+        hiddenInputsBox.appendChild(hidden);
+    }
+
+    addLanguageBtn && addLanguageBtn.addEventListener('click', function(){
+        addLanguage(languageInput.value);
+        languageInput.value = '';
+        languageInput.focus();
+    });
+
+    languageInput && languageInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter'){ e.preventDefault(); addLanguage(languageInput.value); languageInput.value = ''; }
+    });
+
+    chipsBox && chipsBox.addEventListener('click', function(e){
+        const btn = e.target.closest('.remove-lang');
+        if (!btn) return;
+        const chip = btn.closest('.wd-chip');
+        if (!chip) return;
+        const lang = chip.getAttribute('data-lang');
+        chip.remove();
+
+        const inputs = hiddenInputsBox.querySelectorAll('input[name="LanguagesSpoken"]');
+        for (const i of inputs){
+            if (norm(i.value) === norm(lang)){ i.remove(); break; }
+        }
+    });
+
+    refreshSuggestions();
+})();
+</script>

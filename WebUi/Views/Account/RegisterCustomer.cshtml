@@ -1,16 +1,295 @@
 @model Core.Concretes.DTOs.CustomerRegisterDTO
+@using Core.Concretes.Enums
 
-<h2>Register as Customer</h2>
+@{
+    ViewData["Title"] = "Register Customer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<form asp-action="RegisterCustomer" method="post">
-    <div asp-validation-summary="All" style="color:red"></div>
-    
-    <input asp-for="FirstName" placeholder="First Name" /><br />
-    <input asp-for="LastName" placeholder="Last Name" /><br />
-    <input asp-for="Email" placeholder="Email" /><br />
-    <input asp-for="Password" type="password" placeholder="Password" /><br />
-    <input asp-for="Address" placeholder="Address" /><br />
-    <input asp-for="City" placeholder="City" /><br />
-    
-    <button type="submit">Create Customer Account</button>
-</form>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+.rc-wrap {
+    max-width: 980px;
+    margin: 24px auto 48px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+}
+.rc-shell {
+    background: #fff;
+    border: 1px solid #e4e8ee;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+    overflow: hidden;
+}
+.rc-head {
+    background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+    color: #fff;
+    padding: 22px 24px;
+}
+.rc-title { font-family: 'Nunito', sans-serif; font-size: 1.45rem; font-weight: 800; margin: 0; }
+.rc-sub { opacity: .85; margin: 4px 0 0; }
+
+.rc-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e4e8ee;
+}
+.rc-step {
+    text-align: center;
+    padding: 8px 6px;
+    border-radius: 10px;
+    font-size: .82rem;
+    color: #7a8699;
+    border: 1px solid transparent;
+}
+.rc-step.active {
+    background: rgba(245,158,11,.12);
+    color: #b45309;
+    border-color: rgba(245,158,11,.35);
+    font-weight: 700;
+}
+
+.rc-body { padding: 22px; }
+.rc-page { display: none; }
+.rc-page.active { display: block; }
+
+.rc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@@media (max-width: 768px) { .rc-grid { grid-template-columns: 1fr; } .rc-steps { grid-template-columns: repeat(2, 1fr); } }
+
+.rc-field label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #3f4d63;
+    margin-bottom: 6px;
+}
+.rc-field input, .rc-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #e4e8ee;
+    border-radius: 10px;
+    background: #f8fafc;
+    outline: none;
+}
+.rc-field input:focus, .rc-field select:focus {
+    border-color: #f59e0b;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+}
+.rc-error { color: #dc2626; font-size: .8rem; margin-top: 4px; display: block; }
+
+.rc-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 18px;
+}
+.rc-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.rc-btn-prev { background: #e5e7eb; color: #111827; }
+.rc-btn-next, .rc-btn-submit {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+}
+.rc-summary {
+    background: #f8fafc;
+    border: 1px solid #e4e8ee;
+    border-radius: 12px;
+    padding: 14px;
+    line-height: 1.7;
+}
+</style>
+
+<div class="rc-wrap">
+    <div class="rc-shell">
+        <div class="rc-head">
+            <h1 class="rc-title">Customer Registration</h1>
+            <p class="rc-sub">Create your profile in a few easy steps.</p>
+        </div>
+
+        <div class="rc-steps">
+            <div class="rc-step active" data-step-indicator="0">Basic Info</div>
+            <div class="rc-step" data-step-indicator="1">Contact</div>
+            <div class="rc-step" data-step-indicator="2">Family</div>
+            <div class="rc-step" data-step-indicator="3">Review</div>
+        </div>
+
+        <div class="rc-body">
+            <form asp-action="RegisterCustomer" method="post" id="customerWizardForm">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="rc-error"></div>
+
+                <section class="rc-page active" data-step="0">
+                    <div class="rc-grid">
+                        <div class="rc-field">
+                            <label asp-for="FirstName"></label>
+                            <input asp-for="FirstName" />
+                            <span asp-validation-for="FirstName" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="LastName"></label>
+                            <input asp-for="LastName" />
+                            <span asp-validation-for="LastName" class="rc-error"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rc-page" data-step="1">
+                    <div class="rc-grid">
+                        <div class="rc-field">
+                            <label asp-for="Email"></label>
+                            <input asp-for="Email" />
+                            <span asp-validation-for="Email" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="PhoneNumber"></label>
+                            <input asp-for="PhoneNumber" />
+                            <span asp-validation-for="PhoneNumber" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="Password"></label>
+                            <input asp-for="Password" type="password" />
+                            <span asp-validation-for="Password" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label>Confirm Password</label>
+                            <input name="ConfirmPassword" type="password" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rc-page" data-step="2">
+                    <div class="rc-grid">
+                        <div class="rc-field">
+                            <label asp-for="Address"></label>
+                            <input asp-for="Address" />
+                            <span asp-validation-for="Address" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="City"></label>
+                            <input asp-for="City" />
+                            <span asp-validation-for="City" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="FamilyStatus"></label>
+                            <select asp-for="FamilyStatus" asp-items="Html.GetEnumSelectList<FamilyStatus>()"></select>
+                            <span asp-validation-for="FamilyStatus" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="HasPets"></label>
+                            <select asp-for="HasPets">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                            <span asp-validation-for="HasPets" class="rc-error"></span>
+                        </div>
+                        <div class="rc-field">
+                            <label asp-for="NumberOfPets"></label>
+                            <input asp-for="NumberOfPets" type="number" min="0" />
+                            <span asp-validation-for="NumberOfPets" class="rc-error"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rc-page" data-step="3">
+                    <div class="rc-summary">
+                        <strong>Review your info and submit.</strong><br />
+                        You can go back to edit any step before creating the account.
+                    </div>
+                </section>
+
+                <div class="rc-nav">
+                    <button type="button" class="rc-btn rc-btn-prev" id="rcPrev">Back</button>
+                    <button type="button" class="rc-btn rc-btn-next" id="rcNext">Next</button>
+                    <button type="submit" class="rc-btn rc-btn-submit" id="rcSubmit" style="display:none;">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('customerWizardForm');
+            const pages = Array.from(document.querySelectorAll('.rc-page'));
+            const indicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
+            const prevBtn = document.getElementById('rcPrev');
+            const nextBtn = document.getElementById('rcNext');
+            const submitBtn = document.getElementById('rcSubmit');
+            let step = 0;
+
+            function setActiveStep(targetStep) {
+                step = targetStep;
+                pages.forEach((p, i) => p.classList.toggle('active', i === step));
+                indicators.forEach((i, idx) => i.classList.toggle('active', idx === step));
+                prevBtn.style.visibility = step === 0 ? 'hidden' : 'visible';
+                nextBtn.style.display = step === pages.length - 1 ? 'none' : 'inline-block';
+                submitBtn.style.display = step === pages.length - 1 ? 'inline-block' : 'none';
+            }
+
+            function validateCurrentStep() {
+                // Only validate visible step fields
+                const currentPage = pages[step];
+                if (!currentPage) return true;
+
+                const fields = currentPage.querySelectorAll('input, select, textarea');
+                let valid = true;
+
+                fields.forEach(field => {
+                    // Skip non-form controls
+                    if (!field.name) return;
+
+                    // HTML5 check
+                    if (!field.checkValidity()) valid = false;
+                });
+
+                // Trigger unobtrusive validation message updates
+                if (window.jQuery && window.jQuery.validator && window.jQuery(form).data("validator")) {
+                    const validator = window.jQuery(form).validate();
+                    fields.forEach(field => {
+                        if (field.name) validator.element(field);
+                    });
+                    valid = valid && window.jQuery(form).valid();
+                }
+
+                return valid;
+            }
+
+            // Next/Back buttons
+            prevBtn.addEventListener('click', () => {
+                if (step > 0) setActiveStep(step - 1);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (!validateCurrentStep()) return;
+                if (step < pages.length - 1) setActiveStep(step + 1);
+            });
+
+            // Clickable top tabs
+            indicators.forEach((tab, idx) => {
+                tab.style.cursor = 'pointer';
+                tab.addEventListener('click', () => {
+                    if (idx === step) return;
+
+                    // Moving forward requires current step valid
+                    if (idx > step && !validateCurrentStep()) return;
+
+                    setActiveStep(idx);
+                });
+            });
+
+            setActiveStep(0);
+        })();
+    </script>
+}

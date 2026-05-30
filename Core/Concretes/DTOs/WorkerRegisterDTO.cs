@@ -65,14 +65,10 @@ namespace Core.Concretes.DTOs
         [Required(ErrorMessage = "City/Base Location is required.")]
         [MaxLength(100)]
         public string City { get; set; } = null!;
-
-        // These will be hidden inputs on your form populated by JS
-        [Required(ErrorMessage = "Location mapping failed. Please select a valid city from the dropdown.")]
-        public double Latitude { get; set; }
         
-        [Required(ErrorMessage = "Location mapping failed. Please select a valid city from the dropdown.")]
-        public double Longitude { get; set; }
-
+        [MaxLength(200)]
+        public string? Address { get; set; }
+        
         [Display(Name = "Minimum Hourly Rate (Optional)")]
         [Range(0.01, 10000, ErrorMessage = "Rate must be greater than zero.")]
         public decimal? MinHourlyRate { get; set; }

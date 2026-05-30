@@ -24,7 +24,9 @@ namespace Data.Contexts
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Message> Messages { get; set; } = null!;
         public DbSet<JobApplication> JobApplications { get; set; } = null!;
-
+        public DbSet<WorkerReference> WorkerReferences { get; set; } = null!;
+        
+        
         protected override void OnModelCreating(ModelBuilder builder)
         {
             // Essential: Configures the schema for Identity (AspNetUsers, AspNetRoles, etc.)
@@ -60,6 +62,21 @@ namespace Data.Contexts
                 .OnDelete(DeleteBehavior.Restrict);
             // TPH Configuration: EF Core will use a 'Discriminator' column by default 
             // to distinguish between Customer and Worker within the AspNetUsers table.
+            
+            builder.Entity<WorkerReference>(entity =>
+            {
+                entity.HasKey(r => new { r.WorkerId, r.CustomerId }); // composite PK
+
+                entity.HasOne(r => r.Worker)
+                    .WithMany(w => w.References)
+                    .HasForeignKey(r => r.WorkerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(r => r.Customer)
+                    .WithMany(c => c.WorkerReferences)
+                    .HasForeignKey(r => r.CustomerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

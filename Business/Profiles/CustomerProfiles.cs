@@ -8,14 +8,33 @@ namespace Business.Profiles
     {
         public CustomerProfiles()
         {
-            // Map Entity to Dashboard DTO
+            // Register → Entity
+            CreateMap<CustomerRegisterDTO, Customer>();
+
+            // Entity → Dashboard
             CreateMap<Customer, CustomerDashboardDTO>();
 
-            // Map Update DTO to Entity
-            CreateMap<CustomerProfileUpdateDTO, Customer>();
+            // Entity → Details (public)
+            CreateMap<Customer, CustomerDetailsDTO>()
+                .ForMember(d => d.MemberSince, o => o.MapFrom(s => s.CreatedAt));
 
-            // Map Child Entity to Child DTO (ReverseMap allows bi-directional mapping)
-            CreateMap<Child, ChildDTO>().ReverseMap();
+            // Entity → Card
+            CreateMap<Customer, CustomerCardDTO>();
+
+            // Update DTO → Entity
+            CreateMap<CustomerProfileUpdateDTO, Customer>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            
+            // Child mappings
+            // Entity -> DTO
+            CreateMap<Child, ChildDTO>();
+
+            // DTO -> Entity
+            // Ignore null source members so optional fields don't wipe existing values on edit.
+            // Ignore Id so EF keeps tracked entity identity untouched on updates.
+            CreateMap<ChildDTO, Child>()
+                .ForMember(d => d.Id, o => o.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

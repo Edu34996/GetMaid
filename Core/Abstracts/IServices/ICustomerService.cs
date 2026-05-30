@@ -26,6 +26,10 @@ namespace Core.Abstracts.IServices
        
         Task<IResult<List<ChildDTO>>> GetMyChildrenAsync(string customerId);
         
+        Task<IResult<ChildDTO>> GetChildByIdAsync(string childId, string customerId);
+        
+        Task<IResult> UpdateChildAsync(ChildDTO model, string customerId);
+        
         Task<IResult> RemoveChildAsync(string childId, string customerId);
  
         Task<IResult<IEnumerable<WorkerCardDTO>>> BrowseWorkersAsync(WorkerSearchFilterDTO filter);

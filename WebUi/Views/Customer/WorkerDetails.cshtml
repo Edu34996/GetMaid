@@ -1,0 +1,240 @@
+@using Core.Concretes.Enums
+@model Core.Concretes.DTOs.WorkerDetailsDTO
+
+@{
+    ViewData["Title"] = $"{Model.FirstName} - Worker Details";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Column: Profile & Basic Info -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <!-- Profile Picture -->
+                @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
+                {
+                    <img src="@Model.ProfilePictureUrl" alt="@Model.FirstName" class="card-img-top" style="height: 300px; object-fit: cover;" />
+                }
+                else
+                {
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 300px; color: white; font-size: 48px;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                }
+
+                <div class="card-body">
+                    <h2 class="card-title">@Model.FirstName</h2>
+                    
+                    <!-- Rating & Reviews -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning text-dark">
+                                ⭐ @Model.AverageRating.ToString("0.0") / 5.0
+                            </span>
+                            <small class="text-muted">(@Model.TotalReviews reviews)</small>
+                        </div>
+                    </div>
+
+                    <!-- Location & Status -->
+                    <div class="mb-3">
+                        <p class="mb-1"><strong>📍 City:</strong> @Model.City</p>
+                        <p class="mb-1"><strong>🚬 Smoker:</strong> @(Model.IsSmoker ? "Yes" : "No")</p>
+                    </div>
+
+                    <!-- Hourly Rates -->
+                    <div class="mb-3">
+                        <p class="mb-1">
+                            <strong>💰 Hourly Rate:</strong><br />
+                            @if (Model.MinHourlyRate.HasValue || Model.MaxHourlyRate.HasValue)
+                            {
+                                <span>
+                                    @(Model.MinHourlyRate?.ToString("$0.00") ?? "-") 
+                                    to 
+                                    @(Model.MaxHourlyRate?.ToString("$0.00") ?? "-")
+                                </span>
+                            }
+                            else
+                            {
+                                <span>Not specified</span>
+                            }
+                        </p>
+                    </div>
+
+                    <!-- Experience -->
+                    <div class="mb-3">
+                        <p><strong>📅 Experience:</strong> @Model.ExperienceYears years</p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Customer" asp-action="BookWorker" asp-route-workerId="@Model.Id"
+                           class="btn btn-success btn-lg">
+                            📋 Book This Worker
+                        </a>
+                        <a asp-controller="Customer" asp-action="WorkerShop"
+                           class="btn btn-outline-secondary">
+                            ← Back to Workers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Detailed Information -->
+        <div class="col-md-8">
+            <!-- Bio Section -->
+            @if (!string.IsNullOrWhiteSpace(Model.Bio))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">About</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Bio</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Introduction Video -->
+            @if (!string.IsNullOrWhiteSpace(Model.IntroductionVideoUrl))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Introduction Video</h5>
+                    </div>
+                    <div class="card-body">
+                        <video width="100%" height="400" controls style="border-radius: 8px;">
+                            <source src="@Model.IntroductionVideoUrl" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+            }
+
+            <!-- Services Offered -->
+            @if (Model.OfferedServices != null && Model.OfferedServices.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Services</h5>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            @foreach (var service in Model.OfferedServices)
+                            {
+                                <span class="badge bg-info me-2 mb-2">@service</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Skills -->
+            @if (Model.Skills != null && Model.Skills.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Skills</h5>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            @foreach (var skill in Model.Skills)
+                            {
+                                <span class="badge bg-success me-2 mb-2">@skill</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Age Groups Experience -->
+            @if (Model.ExperiencedAgeGroups != null && Model.ExperiencedAgeGroups.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Experience with Age Groups</h5>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            @foreach (var ageGroup in Model.ExperiencedAgeGroups)
+                            {
+                                <span class="badge bg-secondary me-2 mb-2">@ageGroup</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Languages -->
+            @if (Model.LanguagesSpoken != null && Model.LanguagesSpoken.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Languages</h5>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            @foreach (var language in Model.LanguagesSpoken)
+                            {
+                                <span class="badge bg-warning text-dark me-2 mb-2">@language</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Work Preferences -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Work Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Arrangement:</strong> @Model.PreferredArrangement</p>
+                    <p><strong>Commitment:</strong> @Model.CommitmentPreference</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section (Full Width) -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Reviews (@Model.TotalReviews)</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TotalReviews > 0)
+                    {
+                        <p class="text-muted">Reviews will be displayed here (implement review listing)</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No reviews yet. Be the first to review this worker!</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .card-header {
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-lg {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+    }
+</style>

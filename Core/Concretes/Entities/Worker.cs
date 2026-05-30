@@ -9,22 +9,15 @@ namespace Core.Concretes.Entities
     public class Worker : ApplicationUser
     {
         // --- Core Profile Details ---
-        [MaxLength(1000)]
-        public string Bio { get; set; } = string.Empty;
-        
         public bool IsSmoker { get; set; }
-        
-        [Required]
-        [MaxLength(100)]
-        public string City { get; set; } = null!; // ADDED for local matching
-        
-        public double? Latitude { get; set; }
-        public double? Longitude { get; set; }
 
         // Optional hourly rate range
         public decimal? MinHourlyRate { get; set; }
-        public decimal? MaxHourlyRate { get; set; }        
-        public int ExperienceYears { get; set; }
+        public decimal? MaxHourlyRate { get; set; }     
+        
+        public bool IsExperienced { get; set; }
+        
+        public int? ExperienceYears { get; set; }
 
         // --- Media & Trust Properties ---
         //[Required]
@@ -33,12 +26,7 @@ namespace Core.Concretes.Entities
 
         [MaxLength(500)]
         public string? IntroductionVideoUrl { get; set; }
-
-        [MaxLength(500)]
-        public string? IdentityDocumentPath { get; set; }
-
-        public VerificationStatus IdentityVerificationStatus { get; set; } = VerificationStatus.Unverified;
-
+        
         // --- Qualifications, Services & Arrangements ---
         public List<ServiceType> OfferedServices { get; set; } = new List<ServiceType>();
         
@@ -58,8 +46,7 @@ namespace Core.Concretes.Entities
         public List<DayOfWeek> PreferredWorkDays { get; set; } = new List<DayOfWeek>();
 
         // --- References & Reputation ---
-        public virtual ICollection<Customer> References { get; set; } = new List<Customer>();
-
+        public virtual ICollection<WorkerReference> References { get; set; } = new List<WorkerReference>();
         
     }
 }

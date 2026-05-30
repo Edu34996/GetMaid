@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Utils.Helpers;
 
 
 namespace Business
@@ -42,6 +43,8 @@ namespace Business
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IWorkerService, WorkerService>();
             services.AddScoped<IMessageService, MessageService>();
+            
+            services.AddHttpClient<IGeocodingService, GeocodingService>();
             
             return services;
         }

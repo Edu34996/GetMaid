@@ -2,286 +2,307 @@
 @using Core.Concretes.Enums
 
 @{
-    ViewData["Title"] = "Register as Worker";
+ViewData["Title"] = "Register Worker";
+Layout = "~/Views/Shared/_Layout.cshtml";
+
+var serviceValues = Enum.GetValues(typeof(ServiceType)).Cast<ServiceType>().ToList();
+var skillValues = Enum.GetValues(typeof(Skill)).Cast<Skill>().ToList();
+var ageGroupValues = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
+var dayValues = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
 }
 
-<h2>Register as Worker</h2>
-<p>Please complete all steps to finish registration.</p>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-<form asp-action="RegisterWorker" method="post" id="workerRegisterForm">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
+<style>
+    .rw-wrap { max-width: 1100px; margin: 24px auto 48px; font-family: 'DM Sans', system-ui, sans-serif; }
+    .rw-shell { background: #fff; border: 1px solid #e4e8ee; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05); overflow: hidden; }
+    .rw-head { background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%); color: #fff; padding: 22px 24px; }
+    .rw-title { font-family: 'Nunito', sans-serif; font-size: 1.45rem; font-weight: 800; margin: 0; }
+    .rw-sub { opacity: .85; margin: 4px 0 0; }
 
-    <div class="wizard-steps mb-3">
-        <span class="step-indicator active" data-step="1">1. Account</span>
-        <span class="step-indicator" data-step="2">2. Media & Location</span>
-        <span class="step-indicator" data-step="3">3. Availability</span>
-        <span class="step-indicator" data-step="4">4. Skills & Submit</span>
+    .rw-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 14px 16px; background: #f8fafc; border-bottom: 1px solid #e4e8ee; }
+    .rw-step { text-align: center; padding: 8px 6px; border-radius: 10px; font-size: .82rem; color: #7a8699; border: 1px solid transparent; cursor: pointer; user-select: none; }
+    .rw-step.active { background: rgba(245,158,11,.12); color: #b45309; border-color: rgba(245,158,11,.35); font-weight: 700; }
+    @@media (max-width: 860px) { .rw-steps { grid-template-columns: repeat(2, 1fr); } }
+
+    .rw-body { padding: 22px; }
+    .rw-page { display: none; }
+    .rw-page.active { display: block; }
+
+    .rw-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    @@media (max-width: 768px) { .rw-grid { grid-template-columns: 1fr; } }
+
+    .rw-field label { display: block; font-size: .8rem; font-weight: 700; color: #3f4d63; margin-bottom: 6px; }
+    .rw-field input, .rw-field select, .rw-field textarea {
+        width: 100%; padding: 10px 12px; border: 1.5px solid #e4e8ee; border-radius: 10px; background: #f8fafc; outline: none;
+    }
+    .rw-field input:focus, .rw-field select:focus, .rw-field textarea:focus {
+        border-color: #f59e0b; background: #fff; box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+    }
+    .rw-field textarea { min-height: 100px; resize: vertical; }
+
+    .rw-check-group {
+        border: 1px solid #e4e8ee;
+        border-radius: 10px;
+        padding: 10px;
+        max-height: 190px;
+        overflow: auto;
+        background: #f8fafc;
+    }
+    .rw-check-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+    .rw-error { color: #dc2626; font-size: .8rem; margin-top: 4px; display: block; }
+
+    .rw-nav { display: flex; justify-content: space-between; margin-top: 18px; }
+    .rw-btn { border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+    .rw-btn-prev { background: #e5e7eb; color: #111827; }
+    .rw-btn-next, .rw-btn-submit { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .rw-summary { background: #f8fafc; border: 1px solid #e4e8ee; border-radius: 12px; padding: 14px; line-height: 1.7; }
+</style>
+
+<div class="rw-wrap">
+    <div class="rw-shell">
+        <div class="rw-head">
+            <h1 class="rw-title">Worker Registration</h1>
+            <p class="rw-sub">Set up your profile step by step.</p>
+        </div>
+
+        <div class="rw-steps">
+            <div class="rw-step active" data-step-indicator="0">Basic Info</div>
+            <div class="rw-step" data-step-indicator="1">Skills</div>
+            <div class="rw-step" data-step-indicator="2">Services, Location & Schedule</div>
+            <div class="rw-step" data-step-indicator="3">Profile & Trust</div>
+            <div class="rw-step" data-step-indicator="4">Review</div>
+        </div>
+
+        <div class="rw-body">
+            <form asp-action="RegisterWorker" method="post" id="workerWizardForm">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="rw-error"></div>
+
+                <!-- Step 1: Basic Info (NO smoker) -->
+                <section class="rw-page active" data-step="0">
+                    <div class="rw-grid">
+                        <div class="rw-field"><label asp-for="FirstName"></label><input asp-for="FirstName" /><span asp-validation-for="FirstName" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="LastName"></label><input asp-for="LastName" /><span asp-validation-for="LastName" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="Email"></label><input asp-for="Email" /><span asp-validation-for="Email" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="PhoneNumber"></label><input asp-for="PhoneNumber" /><span asp-validation-for="PhoneNumber" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="Password"></label><input asp-for="Password" type="password" /><span asp-validation-for="Password" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="ConfirmPassword"></label><input asp-for="ConfirmPassword" type="password" /><span asp-validation-for="ConfirmPassword" class="rw-error"></span></div>
+                    </div>
+                </section>
+
+                <!-- Step 2: Skills + Smoker + Experience + Languages + Age Groups -->
+                <section class="rw-page" data-step="1">
+                    <div class="rw-grid">
+                        <div class="rw-field">
+                            <label asp-for="IsSmoker"></label>
+                            <select asp-for="IsSmoker">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+
+                        <div class="rw-field">
+                            <label asp-for="ExperienceYears"></label>
+                            <input asp-for="ExperienceYears" type="number" min="0" />
+                            <span asp-validation-for="ExperienceYears" class="rw-error"></span>
+                        </div>
+
+                        <div class="rw-field">
+                            <label>Skills</label>
+                            <div class="rw-check-group">
+                                @foreach (var s in skillValues)
+                                {
+                                <label class="rw-check-item">
+                                    <input type="checkbox" name="Skills" value="@s" />
+                                    <span>@s</span>
+                                </label>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="rw-field">
+                            <label>Experienced Age Groups</label>
+                            <div class="rw-check-group">
+                                @foreach (var g in ageGroupValues)
+                                {
+                                <label class="rw-check-item">
+                                    <input type="checkbox" name="ExperiencedAgeGroups" value="@g" />
+                                    <span>@g</span>
+                                </label>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="rw-field" style="grid-column: 1 / -1;">
+                            <label>Languages Spoken (comma separated)</label>
+                            <input type="text" id="languagesInput" placeholder="e.g. English, Spanish, French" />
+                            <small style="color:#7a8699;">Will be split by commas on submit.</small>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 3: Services + Location + Schedule -->
+                <section class="rw-page" data-step="2">
+                    <div class="rw-grid">
+                        <div class="rw-field">
+                            <label>Offered Services</label>
+                            <div class="rw-check-group">
+                                @foreach (var s in serviceValues)
+                                {
+                                <label class="rw-check-item">
+                                    <input type="checkbox" name="OfferedServices" value="@s" />
+                                    <span>@s</span>
+                                </label>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="rw-field">
+                            <label asp-for="City"></label>
+                            <input asp-for="City" />
+                            <span asp-validation-for="City" class="rw-error"></span>
+                        </div>
+
+                        <div class="rw-field">
+                            <label asp-for="Address"></label>
+                            <input asp-for="Address" id="addressInput" placeholder="Street, City, Country" />
+                        </div>
+                        
+                        <div class="rw-field">
+                            <label asp-for="PreferredArrangement"></label>
+                            <select asp-for="PreferredArrangement" asp-items="Html.GetEnumSelectList<WorkArrangement>()"></select>
+                            <span asp-validation-for="PreferredArrangement" class="rw-error"></span>
+                        </div>
+
+                        <div class="rw-field">
+                            <label asp-for="CommitmentPreference"></label>
+                            <select asp-for="CommitmentPreference" asp-items="Html.GetEnumSelectList<CommitmentPreference>()"></select>
+                            <span asp-validation-for="CommitmentPreference" class="rw-error"></span>
+                        </div>
+
+                        <div class="rw-field"><label asp-for="MinHourlyRate"></label><input asp-for="MinHourlyRate" type="number" step="0.01" min="0" /><span asp-validation-for="MinHourlyRate" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="MaxHourlyRate"></label><input asp-for="MaxHourlyRate" type="number" step="0.01" min="0" /><span asp-validation-for="MaxHourlyRate" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="MaxDaysPerWeek"></label><input asp-for="MaxDaysPerWeek" type="number" min="1" max="7" /><span asp-validation-for="MaxDaysPerWeek" class="rw-error"></span></div>
+                        <div class="rw-field"><label asp-for="MaxHoursPerDay"></label><input asp-for="MaxHoursPerDay" type="number" min="1" max="24" /><span asp-validation-for="MaxHoursPerDay" class="rw-error"></span></div>
+                        
+                    </div>
+
+                    <div class="rw-field" style="margin-top:14px;">
+                        <label>Preferred Work Days</label>
+                        <div class="rw-check-group">
+                            @foreach (var day in dayValues)
+                            {
+                            <label class="rw-check-item">
+                                <input type="checkbox" name="PreferredWorkDays" value="@day" />
+                                <span>@day</span>
+                            </label>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 4: Profile & Trust -->
+                <section class="rw-page" data-step="3">
+                    <div class="rw-grid">
+                        <div class="rw-field" style="grid-column: 1 / -1;">
+                            <label asp-for="Bio"></label>
+                            <textarea asp-for="Bio"></textarea>
+                            <span asp-validation-for="Bio" class="rw-error"></span>
+                        </div>
+                        <div class="rw-field">
+                            <label asp-for="ProfilePictureUrl"></label>
+                            <input asp-for="ProfilePictureUrl" />
+                            <span asp-validation-for="ProfilePictureUrl" class="rw-error"></span>
+                        </div>
+                        <div class="rw-field">
+                            <label asp-for="IntroductionVideoUrl"></label>
+                            <input asp-for="IntroductionVideoUrl" />
+                            <span asp-validation-for="IntroductionVideoUrl" class="rw-error"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 5: Review -->
+                <section class="rw-page" data-step="4">
+                    <div class="rw-summary">
+                        <strong>Review your profile and submit.</strong><br />
+                        You can jump to any previous step using the tabs above.
+                    </div>
+                </section>
+
+                <div class="rw-nav">
+                    <button type="button" class="rw-btn rw-btn-prev" id="rwPrev">Back</button>
+                    <button type="button" class="rw-btn rw-btn-next" id="rwNext">Next</button>
+                    <button type="submit" class="rw-btn rw-btn-submit" id="rwSubmit" style="display:none;">Create Account</button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <!-- STEP 1 -->
-    <section class="form-step" data-step="1">
-        <h4>Step 1: Basic Account Information</h4>
-
-        <div class="mb-2">
-            <label asp-for="FirstName"></label>
-            <input asp-for="FirstName" class="form-control" />
-            <span asp-validation-for="FirstName" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="LastName"></label>
-            <input asp-for="LastName" class="form-control" />
-            <span asp-validation-for="LastName" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="Email"></label>
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="PhoneNumber"></label>
-            <input asp-for="PhoneNumber" class="form-control" />
-            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="Password"></label>
-            <input asp-for="Password" type="password" class="form-control" />
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="ConfirmPassword"></label>
-            <input asp-for="ConfirmPassword" type="password" class="form-control" />
-            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-        </div>
-
-        <div class="form-check mb-2">
-            <input asp-for="IsSmoker" class="form-check-input" />
-            <label asp-for="IsSmoker" class="form-check-label"></label>
-        </div>
-    </section>
-
-    <!-- STEP 2 -->
-    <section class="form-step d-none" data-step="2">
-        <h4>Step 2: Media and Location</h4>
-
-        <div class="mb-2">
-            <label asp-for="Bio"></label>
-            <textarea asp-for="Bio" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Bio" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="IntroductionVideoUrl"></label>
-            <input asp-for="IntroductionVideoUrl" class="form-control" />
-            <span asp-validation-for="IntroductionVideoUrl" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="ProfilePictureUrl"></label>
-            <input asp-for="ProfilePictureUrl" class="form-control" />
-            <span asp-validation-for="ProfilePictureUrl" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="City"></label>
-            <input asp-for="City" class="form-control" placeholder="e.g. Cairo" />
-            <span asp-validation-for="City" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="Latitude"></label>
-            <input asp-for="Latitude" class="form-control" type="number" step="any" />
-            <span asp-validation-for="Latitude" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="Longitude"></label>
-            <input asp-for="Longitude" class="form-control" type="number" step="any" />
-            <span asp-validation-for="Longitude" class="text-danger"></span>
-        </div>
-    </section>
-
-    <!-- STEP 3 -->
-    <section class="form-step d-none" data-step="3">
-        <h4>Step 3: Availability and Work Preferences</h4>
-
-        <div class="mb-2">
-            <label asp-for="MinHourlyRate"></label>
-            <input asp-for="MinHourlyRate" class="form-control" type="number" step="0.01" />
-            <span asp-validation-for="MinHourlyRate" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="MaxHourlyRate"></label>
-            <input asp-for="MaxHourlyRate" class="form-control" type="number" step="0.01" />
-            <span asp-validation-for="MaxHourlyRate" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="PreferredArrangement"></label>
-            <select asp-for="PreferredArrangement"
-                    asp-items="Html.GetEnumSelectList<WorkArrangement>()"
-                    class="form-select">
-                <option value="">-- Select Arrangement --</option>
-            </select>
-            <span asp-validation-for="PreferredArrangement" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="MaxDaysPerWeek"></label>
-            <input asp-for="MaxDaysPerWeek" class="form-control" type="number" />
-            <span asp-validation-for="MaxDaysPerWeek" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="MaxHoursPerDay"></label>
-            <input asp-for="MaxHoursPerDay" class="form-control" type="number" />
-            <span asp-validation-for="MaxHoursPerDay" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label>Preferred Work Days</label>
-            <div class="border rounded p-2">
-                @foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
-                {
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               name="PreferredWorkDays"
-                               value="@day"
-                               id="pwd_@day" />
-                        <label class="form-check-label" for="pwd_@day">@day</label>
-                    </div>
-                }
-            </div>
-        </div>
-    </section>
-
-    <!-- STEP 4 -->
-    <section class="form-step d-none" data-step="4">
-        <h4>Step 4: Skills, Services and Experience</h4>
-
-        <div class="mb-2">
-            <label asp-for="ExperienceYears"></label>
-            <input asp-for="ExperienceYears" class="form-control" type="number" />
-            <span asp-validation-for="ExperienceYears" class="text-danger"></span>
-        </div>
-
-        <div class="mb-2">
-            <label>Services Offered</label>
-            <div class="border rounded p-2">
-                @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
-                {
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               name="OfferedServices"
-                               value="@service"
-                               id="svc_@service" />
-                        <label class="form-check-label" for="svc_@service">@service</label>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <div class="mb-2">
-            <label>Specific Skills</label>
-            <div class="border rounded p-2">
-                @foreach (Skill skill in Enum.GetValues(typeof(Skill)))
-                {
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               name="Skills"
-                               value="@skill"
-                               id="skill_@skill" />
-                        <label class="form-check-label" for="skill_@skill">@skill</label>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <div class="mb-2">
-            <label>Experienced Age Groups</label>
-            <div class="border rounded p-2">
-                @foreach (AgeGroup ageGroup in Enum.GetValues(typeof(AgeGroup)))
-                {
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               name="ExperiencedAgeGroups"
-                               value="@ageGroup"
-                               id="age_@ageGroup" />
-                        <label class="form-check-label" for="age_@ageGroup">@ageGroup</label>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <div class="mb-2">
-            <label>Languages Spoken (comma-separated)</label>
-            <input type="text" id="languagesInput" class="form-control" placeholder="English, Arabic" />
-            <small class="text-muted">These are converted to hidden fields before submit.</small>
-            <div id="languagesHiddenContainer"></div>
-        </div>
-
-        <div class="mb-2">
-            <label asp-for="CommitmentPreference"></label>
-            <select asp-for="CommitmentPreference"
-                    asp-items="Html.GetEnumSelectList<CommitmentPreference>()"
-                    class="form-select">
-                <option value="">-- Select Commitment --</option>
-            </select>
-            <span asp-validation-for="CommitmentPreference" class="text-danger"></span>
-        </div>
-    </section>
-
-    <div class="mt-3 d-flex gap-2">
-        <button type="button" id="prevBtn" class="btn btn-secondary" disabled>Previous</button>
-        <button type="button" id="nextBtn" class="btn btn-primary">Next</button>
-        <button type="submit" id="submitBtn" class="btn btn-success d-none">Complete Registration</button>
-    </div>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-            let currentStep = 1;
-            const totalSteps = 4;
-
-            const form = document.getElementById('workerRegisterForm');
-            const stepElements = document.querySelectorAll('.form-step');
-            const indicators = document.querySelectorAll('.step-indicator');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const submitBtn = document.getElementById('submitBtn');
+            const pages = Array.from(document.querySelectorAll('.rw-page'));
+            const indicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
+            const prevBtn = document.getElementById('rwPrev');
+            const nextBtn = document.getElementById('rwNext');
+            const submitBtn = document.getElementById('rwSubmit');
+            const form = document.getElementById('workerWizardForm');
             const languagesInput = document.getElementById('languagesInput');
-            const languagesContainer = document.getElementById('languagesHiddenContainer');
 
-            function showStep(step) {
-                stepElements.forEach(s => s.classList.add('d-none'));
-                document.querySelector(`.form-step[data-step="${step}"]`).classList.remove('d-none');
+            let step = 0;
 
-                indicators.forEach(i => i.classList.remove('active'));
-                document.querySelector(`.step-indicator[data-step="${step}"]`)?.classList.add('active');
-
-                prevBtn.disabled = step === 1;
-                nextBtn.classList.toggle('d-none', step === totalSteps);
-                submitBtn.classList.toggle('d-none', step !== totalSteps);
+            function setStep(target) {
+                if (target < 0 || target >= pages.length) return;
+                step = target;
+                pages.forEach((p, i) => p.classList.toggle('active', i === step));
+                indicators.forEach((i, idx) => i.classList.toggle('active', idx === step));
+                prevBtn.style.visibility = step === 0 ? 'hidden' : 'visible';
+                nextBtn.style.display = step === pages.length - 1 ? 'none' : 'inline-block';
+                submitBtn.style.display = step === pages.length - 1 ? 'inline-block' : 'none';
             }
 
-            function buildLanguageHiddenInputs() {
-                languagesContainer.innerHTML = '';
-                const raw = (languagesInput.value || '').trim();
-                if (!raw) return;
+            function validateCurrentStep() {
+                const currentPage = pages[step];
+                if (!currentPage) return true;
 
-                raw.split(',')
+                let valid = true;
+                const fields = currentPage.querySelectorAll('input, select, textarea');
+
+                // Native validation on current visible page only
+                fields.forEach(field => {
+                    if (!field.name) return;
+                    if (field.type === 'checkbox') return;
+                    if (!field.checkValidity()) valid = false;
+                });
+
+                // jQuery unobtrusive: validate current fields only (not whole form)
+                if (window.jQuery && window.jQuery.validator && window.jQuery(form).data("validator")) {
+                    const validator = window.jQuery(form).validate();
+                    fields.forEach(field => {
+                        if (!field.name) return;
+                        if (field.type === 'checkbox') return;
+                        validator.element(field);
+                    });
+                }
+
+                return valid;
+            }
+
+            function injectLanguagesHiddenInputs() {
+                const existing = form.querySelectorAll('input[name="LanguagesSpoken"]');
+                existing.forEach(x => x.remove());
+
+                const text = (languagesInput?.value || '').trim();
+                if (!text) return;
+
+                text.split(',')
                     .map(x => x.trim())
                     .filter(x => x.length > 0)
                     .forEach(lang => {
@@ -289,64 +310,39 @@
                         hidden.type = 'hidden';
                         hidden.name = 'LanguagesSpoken';
                         hidden.value = lang;
-                        languagesContainer.appendChild(hidden);
+                        form.appendChild(hidden);
                     });
             }
 
-            function validateCurrentStep() {
-                const currentSection = document.querySelector(`.form-step[data-step="${currentStep}"]`);
-                if (!currentSection) return true;
-
-                const requiredInputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
-                for (const el of requiredInputs) {
-                    if (!el.value || (el.type === 'checkbox' && !el.checked)) {
-                        el.focus();
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            nextBtn.addEventListener('click', function () {
-                if (!validateCurrentStep()) return;
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    showStep(currentStep);
-                }
+            prevBtn.addEventListener('click', () => {
+                if (step > 0) setStep(step - 1);
             });
 
-            prevBtn.addEventListener('click', function () {
-                if (currentStep > 1) {
-                    currentStep--;
-                    showStep(currentStep);
-                }
+            nextBtn.addEventListener('click', () => {
+                if (!validateCurrentStep()) return;
+                if (step < pages.length - 1) setStep(step + 1);
+            });
+
+            indicators.forEach((tab, idx) => {
+                tab.addEventListener('click', () => {
+                    if (idx === step) return;
+                    if (idx > step && !validateCurrentStep()) return;
+                    setStep(idx);
+                });
             });
 
             form.addEventListener('submit', function () {
-                buildLanguageHiddenInputs();
+                injectLanguagesHiddenInputs();
             });
 
-            showStep(currentStep);
+            // On server-side validation failure after postback, jump to first step with error
+            const firstError = form.querySelector('.input-validation-error, .field-validation-error');
+            if (firstError) {
+                const errorStep = pages.findIndex(p => p.contains(firstError));
+                setStep(errorStep >= 0 ? errorStep : 0);
+            } else {
+                setStep(0);
+            }
         })();
     </script>
-
-    <style>
-        .wizard-steps {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .step-indicator {
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: #eee;
-            font-size: 0.9rem;
-        }
-
-        .step-indicator.active {
-            background: #0d6efd;
-            color: #fff;
-        }
-    </style>
 }

@@ -5,6 +5,10 @@ namespace Core.Concretes.Entities
 {
     public class Child : BaseEntity
     {
+        
+        [MaxLength(100)]
+        public string? FirstName { get; set; }
+
         public int? Age { get; set; }
 
         [MaxLength(1000)]
@@ -14,7 +18,7 @@ namespace Core.Concretes.Entities
         public string? SpecialCareInstructions { get; set; }
 
         [Required]
-        public string CustomerId { get; set; } = null!; 
+        public string CustomerId { get; set; } = null!;
 
         public virtual Customer Customer { get; set; } = null!;
     }

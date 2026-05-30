@@ -10,6 +10,7 @@ using Core.Concretes.DTOs;
 using Core.Concretes.Enums;
 using Utils.Responses;
 using Data.Contexts;
+using Utils.Helpers;
 
 namespace Business.Services
 {
@@ -17,11 +18,13 @@ namespace Business.Services
     {
         private readonly GetMaidContext _context; 
         private readonly IMapper _mapper;
+        private readonly IGeocodingService _geocoding;
 
-        public WorkerService(GetMaidContext context, IMapper mapper)
+        public WorkerService(GetMaidContext context, IMapper mapper, IGeocodingService geocoding)
         {
             _context = context;
             _mapper = mapper;
+            _geocoding = geocoding;
         }
         
         public async Task<IResult<WorkerDashboardDTO>> GetDashboardProfileAsync(string workerId)
@@ -54,6 +57,18 @@ namespace Business.Services
                     return Result.Failure("Worker profile not found.", 404);
                 }
                 _mapper.Map(model, worker);
+                
+                var geoQuery = string.IsNullOrWhiteSpace(worker.Address)
+                    ? worker.City
+                    : $"{worker.Address}, {worker.City}";
+
+                if (!string.IsNullOrWhiteSpace(geoQuery))
+                {
+                    var (lat, lon) = await _geocoding.GeocodeAsync(geoQuery);
+                    if (lat.HasValue) worker.Latitude = lat.Value;
+                    if (lon.HasValue) worker.Longitude = lon.Value;
+                }
+                
                 _context.Workers.Update(worker);
                 await _context.SaveChangesAsync();
                 return Result.Success(200, "Profile updated successfully.");

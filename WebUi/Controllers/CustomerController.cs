@@ -17,18 +17,49 @@ namespace WebUi.Controllers
         }
 
         // GET: Customer/Dashboard
+        [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            var result = await _customerService.GetProfileAsync(customerId);
+            var profileResult = await _customerService.GetProfileAsync(customerId);
+            if (!profileResult.IsSuccess || profileResult.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", profileResult.Messages ?? new[] { "Failed to load dashboard." });
+                return View();
+            }
 
-            // For testing purposes, fetch children data simultaneously
             var childrenResult = await _customerService.GetMyChildrenAsync(customerId);
-            ViewBag.Children = childrenResult.Data ?? new List<ChildDTO>();
+            ViewBag.Children = childrenResult.IsSuccess && childrenResult.Data != null
+                ? childrenResult.Data
+                : new List<ChildDTO>();
 
-            return View(result.Data);
+            return View(profileResult.Data);
+        }
+
+        // POST: Customer/UpdateProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(CustomerProfileUpdateDTO model)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Please correct the profile fields and try again.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            var result = await _customerService.UpdateProfileAsync(customerId, model);
+
+            if (result.IsSuccess)
+                TempData["SuccessMessage"] = "Profile updated successfully.";
+            else
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+
+            return RedirectToAction(nameof(Dashboard));
         }
 
         // POST: Customer/AddChild
@@ -39,14 +70,85 @@ namespace WebUi.Controllers
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            var result = await _customerService.AddChildAsync(model, customerId);
+            // Child details are optional by design; do not block with ModelState.
+            var result = await _customerService.AddChildAsync(model ?? new ChildDTO(), customerId);
 
-            if (result.IsSuccess) return RedirectToAction(nameof(Dashboard));
+            if (result.IsSuccess)
+                TempData["SuccessMessage"] = "Child added successfully.";
+            else
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
 
-            return View("Dashboard");
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // GET: Customer/EditChild
+        [HttpGet]
+        public async Task<IActionResult> EditChild(string childId)
+        {
+            if (string.IsNullOrWhiteSpace(childId)) return BadRequest("Child ID is required.");
+
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.GetChildByIdAsync(childId, customerId);
+            if (!result.IsSuccess || result.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages ?? new[] { "Child not found." });
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            return View(result.Data);
+        }
+
+        // POST: Customer/EditChild
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditChild(ChildDTO model)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            // Child details are optional; only ensure ID exists for update.
+            if (string.IsNullOrWhiteSpace(model?.Id))
+            {
+                TempData["ErrorMessage"] = "Child ID is required for update.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            var result = await _customerService.UpdateChildAsync(model, customerId);
+
+            if (result.IsSuccess)
+            {
+                TempData["SuccessMessage"] = "Child updated successfully.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
+            return View(model);
+        }
+
+        // POST: Customer/RemoveChild
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveChild(string childId)
+        {
+            if (string.IsNullOrWhiteSpace(childId)) return BadRequest("Child ID is required.");
+
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.RemoveChildAsync(childId, customerId);
+
+            if (result.IsSuccess)
+                TempData["SuccessMessage"] = "Child removed successfully.";
+            else
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+
+            return RedirectToAction(nameof(Dashboard));
         }
 
         // GET: Customer/MyJobs
+        [HttpGet]
         public async Task<IActionResult> MyJobs()
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -80,7 +182,6 @@ namespace WebUi.Controllers
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            // Creating a job posting => ensure no target worker
             model.TargetWorkerId = null;
 
             var result = await _customerService.CreateServiceRequestAsync(model, customerId);
@@ -96,6 +197,7 @@ namespace WebUi.Controllers
         }
 
         // GET: Customer/WorkerShop
+        [HttpGet]
         public async Task<IActionResult> WorkerShop(WorkerSearchFilterDTO filter)
         {
             filter ??= new WorkerSearchFilterDTO();
@@ -156,7 +258,6 @@ namespace WebUi.Controllers
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            // Creating a booking => TargetWorkerId should be present from the form
             var result = await _customerService.CreateServiceRequestAsync(model, customerId);
 
             if (result.IsSuccess)
@@ -170,6 +271,7 @@ namespace WebUi.Controllers
         }
 
         // GET: Customer/MyBookings
+        [HttpGet]
         public async Task<IActionResult> MyBookings()
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -219,13 +321,9 @@ namespace WebUi.Controllers
             var result = await _customerService.HireWorkerForJobAsync(applicationId, customerId);
 
             if (result.IsSuccess)
-            {
                 TempData["SuccessMessage"] = "Worker successfully hired! The job is now assigned.";
-            }
             else
-            {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-            }
 
             return RedirectToAction(nameof(MyJobs));
         }
@@ -240,9 +338,7 @@ namespace WebUi.Controllers
             var existingReview = await _customerService.GetMyReviewByBookingIdAsync(bookingId, customerId);
 
             if (existingReview.IsSuccess)
-            {
                 return RedirectToAction(nameof(EditReview), new { bookingId });
-            }
 
             var model = new ReviewCreateDTO
             {

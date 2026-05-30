@@ -1,13 +1,14 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Core.Abstracts;
 using Core.Abstracts.IServices;
 using Core.Concretes.DTOs;
 using Core.Concretes.Entities;
-using Microsoft.AspNetCore.Identity;
-using Utils.Responses;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Core.Concretes.Enums;
+using Microsoft.AspNetCore.Identity;
+using Utils.Helpers;
+using Utils.Responses;
 
 namespace Business.Services
 {
@@ -17,53 +18,56 @@ namespace Business.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<ApplicationUserRole> _roleManager;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IGeocodingService _geocoding;
 
-        // Classic C# Constructor with RoleManager injected
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<ApplicationUserRole> roleManager,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IGeocodingService geocoding)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _unitOfWork = unitOfWork;
+            _geocoding = geocoding;
         }
 
         public async Task<IResult> LoginAsync(LoginDTO model)
         {
             try
             {
-                var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+                var signInResult = await _signInManager.PasswordSignInAsync(
+                    model.Email,
+                    model.Password,
+                    model.RememberMe,
+                    lockoutOnFailure: false
+                );
 
                 if (signInResult.Succeeded)
                 {
-                    // Update LastLoginDate upon successful login
                     var user = await _userManager.FindByEmailAsync(model.Email);
                     if (user != null)
                     {
                         user.LastLoginDate = DateTime.UtcNow;
                         await _userManager.UpdateAsync(user);
                     }
+
                     return Result.Success();
                 }
-                else if (signInResult.IsLockedOut)
-                {
-                    return Result.Failure(["Your account is locked out, please contact support!"]);
-                }
-                else if (signInResult.IsNotAllowed)
-                {
-                    return Result.Failure(["Your account is not approved yet!"]);
-                }
-                else
-                {
-                    return Result.Failure(["Invalid login attempt!", "Password or email address not correct!"]);
-                }
+
+                if (signInResult.IsLockedOut)
+                    return Result.Failure(new[] { "Your account is locked out, please contact support." });
+
+                if (signInResult.IsNotAllowed)
+                    return Result.Failure(new[] { "Your account is not approved yet." });
+
+                return Result.Failure(new[] { "Invalid login attempt. Email or password is incorrect." });
             }
             catch (Exception ex)
             {
-                return Result.Failure(["System error!", ex.Message]);
+                return Result.Failure(new[] { "System error!", ex.Message });
             }
         }
 
@@ -76,112 +80,144 @@ namespace Business.Services
         {
             try
             {
-                // Manual mapping for Customer
+                var geoQuery = string.IsNullOrWhiteSpace(model.Address)
+                    ? model.City
+                    : $"{model.Address}, {model.City}";
+                var (lat, lon) = await _geocoding.GeocodeAsync(geoQuery);
+
                 var customer = new Customer
                 {
+                    // IdentityUser
                     UserName = model.Email,
                     Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+
+                    // ApplicationUser
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
                     City = model.City,
-                    CreatedAt = DateTime.UtcNow
+                    
+                    Latitude = lat,
+                    Longitude = lon,
+                    
+                    CreatedAt = DateTime.UtcNow,
+                    IdentityVerificationStatus = VerificationStatus.Unverified,
+
+                    // Customer
+                    FamilyStatus = model.FamilyStatus,
+                    HasPets = model.HasPets,
+                    NumberOfPets = model.NumberOfPets
                 };
 
                 var result = await _userManager.CreateAsync(customer, model.Password);
 
-                if (result.Succeeded)
-                {
-                    // Inline Role Creation for Customer
-                    if (!await _roleManager.RoleExistsAsync("Customer"))
-                    {
-                        await _roleManager.CreateAsync(new ApplicationUserRole 
-                        { 
-                            Name = "Customer", 
-                            NormalizedName = "CUSTOMER", 
-                            Description = "Standard access role for Customers" 
-                        });
-                    }
+                if (!result.Succeeded)
+                    return Result.Failure(result.Errors.Select(e => e.Description));
 
-                    await _userManager.AddToRoleAsync(customer, "Customer");
-                    return Result.Success();
+                if (!await _roleManager.RoleExistsAsync("Customer"))
+                {
+                    await _roleManager.CreateAsync(new ApplicationUserRole
+                    {
+                        Name = "Customer",
+                        NormalizedName = "CUSTOMER",
+                        Description = "Standard access role for Customers"
+                    });
                 }
 
-                return Result.Failure(result.Errors.Select(x => x.Description));
+                await _userManager.AddToRoleAsync(customer, "Customer");
+                return Result.Success();
             }
             catch (Exception ex)
             {
-                return Result.Failure(["System error!", ex.Message]);
+                return Result.Failure(new[] { "System error!", ex.Message });
             }
         }
 
         public async Task<IResult> RegisterWorkerAsync(WorkerRegisterDTO model)
         {
+
             try
-            {
-                // Manual mapping for Worker
-                // Manual mapping for Worker
+            {           
+                var geoQuery = string.IsNullOrWhiteSpace(model.Address)
+                    ? model.City
+                    : $"{model.Address}, {model.City}";
+                var (lat, lon) = await _geocoding.GeocodeAsync(geoQuery);
+
+                // Guard against accidental min/max inversion
+                if (model.MinHourlyRate.HasValue &&
+                    model.MaxHourlyRate.HasValue &&
+                    model.MinHourlyRate.Value > model.MaxHourlyRate.Value)
+                {
+                    return Result.Failure(new[] { "Minimum hourly rate cannot be greater than maximum hourly rate." });
+                }
+
                 var worker = new Worker
                 {
-                    // IdentityUser fields
+                    // IdentityUser
                     UserName = model.Email,
                     Email = model.Email,
-    
-                    // ApplicationUser fields
+                    PhoneNumber = model.PhoneNumber,
+
+                    // ApplicationUser
                     FirstName = model.FirstName,
                     LastName = model.LastName,
-    
-                    // Worker specific fields
                     Bio = model.Bio ?? string.Empty,
-                    City = model.City, // Added based on your entity
+                    City = model.City,
+                    Address = model.Address,
+                    
+                    Latitude = lat,
+                    Longitude = lon,
+                    
+                    CreatedAt = DateTime.UtcNow,
+                    IdentityVerificationStatus = VerificationStatus.Unverified,
+
+                    // Worker-specific
                     IsSmoker = model.IsSmoker,
                     ExperienceYears = model.ExperienceYears,
                     MinHourlyRate = model.MinHourlyRate,
                     MaxHourlyRate = model.MaxHourlyRate,
-    
-                    // Defaults for new registration
-                    IdentityVerificationStatus = VerificationStatus.Unverified,
-                    ProfilePictureUrl = model.ProfilePictureUrl ?? "default-avatar.png", // Ensure this isn't null
-    
-                    // Lists (Always initialize to avoid null reference issues)
-                    OfferedServices = model.OfferedServices ?? new List<ServiceType>(),
-                    Skills = model.Skills ?? new List<Skill>(),
-                    ExperiencedAgeGroups = model.ExperiencedAgeGroups ?? new List<AgeGroup>(),
-                    LanguagesSpoken = model.LanguagesSpoken ?? new List<string>(),
-                    PreferredWorkDays = model.PreferredWorkDays ?? new List<DayOfWeek>(),
-    
-                    // Preferences
+                    ProfilePictureUrl = string.IsNullOrWhiteSpace(model.ProfilePictureUrl)
+                        ? null
+                        : model.ProfilePictureUrl,
+                    IntroductionVideoUrl = string.IsNullOrWhiteSpace(model.IntroductionVideoUrl)
+                        ? null
+                        : model.IntroductionVideoUrl,
+
+                    OfferedServices = model.OfferedServices ?? new(),
+                    Skills = model.Skills ?? new(),
+                    ExperiencedAgeGroups = model.ExperiencedAgeGroups ?? new(),
+                    LanguagesSpoken = model.LanguagesSpoken ?? new(),
+
                     PreferredArrangement = model.PreferredArrangement,
                     CommitmentPreference = model.CommitmentPreference,
-    
-                    // BaseEntity default
-                    CreatedAt = DateTime.UtcNow
+
+                    MaxDaysPerWeek = model.MaxDaysPerWeek,
+                    MaxHoursPerDay = model.MaxHoursPerDay,
+                    PreferredWorkDays = model.PreferredWorkDays ?? new()
                 };
 
                 var result = await _userManager.CreateAsync(worker, model.Password);
 
-                if (result.Succeeded)
-                {
-                    // Inline Role Creation for Worker
-                    if (!await _roleManager.RoleExistsAsync("Worker"))
-                    {
-                        await _roleManager.CreateAsync(new ApplicationUserRole 
-                        { 
-                            Name = "Worker", 
-                            NormalizedName = "WORKER", 
-                            Description = "Standard access role for Workers" 
-                        });
-                    }
+                if (!result.Succeeded)
+                    return Result.Failure(result.Errors.Select(e => e.Description));
 
-                    await _userManager.AddToRoleAsync(worker, "Worker");
-                    return Result.Success();
+                if (!await _roleManager.RoleExistsAsync("Worker"))
+                {
+                    await _roleManager.CreateAsync(new ApplicationUserRole
+                    {
+                        Name = "Worker",
+                        NormalizedName = "WORKER",
+                        Description = "Standard access role for Workers"
+                    });
                 }
 
-                return Result.Failure(result.Errors.Select(x => x.Description));
+                await _userManager.AddToRoleAsync(worker, "Worker");
+                return Result.Success();
             }
             catch (Exception ex)
             {
-                return Result.Failure(["System error!", ex.Message]);
+                return Result.Failure(new[] { "System error!", ex.Message });
             }
         }
     }

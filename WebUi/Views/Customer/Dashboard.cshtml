@@ -2,66 +2,468 @@
 
 @{
     ViewData["Title"] = "Customer Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var children = (ViewBag.Children as IEnumerable<Core.Concretes.DTOs.ChildDTO>)?.ToList()
+                   ?? new List<Core.Concretes.DTOs.ChildDTO>();
 }
 
-<h1>Customer Dashboard</h1>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet" />
 
-<h3>My Profile</h3>
-<ul>
-    <li><strong>First Name:</strong> @Model.FirstName</li>
-    <li><strong>Email:</strong> @Model.Email</li>
-    <li><strong>Address:</strong> @Model.Address</li>
-    <li><strong>City:</strong> @Model.City</li>
-</ul>
+<style>
+.cd-layout { margin-left: calc(-1 * var(--bs-gutter-x, 0px)); margin-right: calc(-1 * var(--bs-gutter-x, 0px)); margin-top: calc(-1 * var(--page-top-offset, 0px)); }
+:root {
+    --cd-sidebar-w: 264px; --cd-topbar-h: 60px; --cd-bg: #f0f2f6; --cd-surface: #ffffff; --cd-border: #e4e8ee;
+    --cd-navy: #0c1224; --cd-navy-mid: #1a2744; --cd-amber: #f59e0b; --cd-amber-dark: #d97706;
+    --cd-text-primary: #0f1e35; --cd-text-mid: #3f4d63; --cd-text-soft: #7a8699;
+    --cd-radius-card: 16px; --cd-radius-sm: 10px;
+    --cd-shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05); --cd-shadow-hover: 0 4px 20px rgba(0,0,0,.12);
+    font-family: 'DM Sans', system-ui, sans-serif;
+}
+.cd-layout { display: flex; min-height: 100vh; background: var(--cd-bg); }
+.cd-sidebar { position: fixed; inset-block: 0; left: 0; width: var(--cd-sidebar-w); background: var(--cd-navy); display: flex; flex-direction: column; z-index: 1050; transition: transform .28s cubic-bezier(.4,0,.2,1); overflow-y: auto; overflow-x: hidden; }
+@@media (max-width: 991.98px) { .cd-sidebar { transform: translateX(-100%); } .cd-sidebar.open { transform: translateX(0); } }
+.cd-sidebar::-webkit-scrollbar { width: 4px; }
+.cd-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+.cd-brand { display: flex; align-items: center; gap: 10px; padding: 22px 20px 18px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.cd-brand-logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--cd-amber), var(--cd-amber-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.05rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(245,158,11,.4); }
+.cd-brand-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.05rem; color: #fff; letter-spacing: -.4px; line-height: 1; }
+.cd-brand-name span { color: var(--cd-amber); }
+.cd-sb-profile { padding: 16px 20px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.cd-sb-avatar-ph { width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(245,158,11,.4); background: rgba(245,158,11,.18); display: flex; align-items: center; justify-content: center; color: var(--cd-amber); font-size: 1.25rem; flex-shrink: 0; }
+.cd-sb-name { display: block; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cd-nav { padding: 14px 12px; flex: 1; }
+.cd-nav-section { font-size: .62rem; font-weight: 700; letter-spacing: 1.6px; color: rgba(255,255,255,.28); padding: 10px 8px 6px; }
+.cd-nav-link { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: var(--cd-radius-sm); color: rgba(255,255,255,.6); text-decoration: none !important; font-size: .855rem; font-weight: 500; margin-bottom: 1px; transition: background .18s, color .18s; }
+.cd-nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+.cd-nav-link.active { background: rgba(245,158,11,.16); color: var(--cd-amber); border: 1px solid rgba(245,158,11,.22); }
+.cd-nav-link.danger { color: rgba(248,113,113,.7); }
+.cd-nav-link.danger:hover { background: rgba(239,68,68,.1); color: #f87171; }
+.cd-sb-close { background: none; border: none; color: rgba(255,255,255,.45); font-size: 1.1rem; cursor: pointer; padding: 2px; display: none; }
+@@media (max-width: 991.98px) { .cd-sb-close { display: block; } }
 
-<hr />
+.cd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1040; opacity: 0; visibility: hidden; transition: opacity .28s, visibility .28s; }
+.cd-overlay.open { opacity: 1; visibility: visible; }
 
-<h3>Add a Child</h3>
-<form asp-controller="Customer" asp-action="AddChild" method="post">
-    <div style="margin-bottom: 10px;">
-        <label>First Name:</label><br />
-        <input type="text" name="FirstName" required />
+.cd-main { margin-left: var(--cd-sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left .28s cubic-bezier(.4,0,.2,1); }
+@@media (max-width: 991.98px) { .cd-main { margin-left: 0; } }
+.cd-topbar { position: sticky; top: 0; height: var(--cd-topbar-h); background: var(--cd-surface); border-bottom: 1px solid var(--cd-border); display: flex; align-items: center; gap: 12px; padding: 0 24px; z-index: 200; }
+.cd-topbar-toggle { background: none; border: none; color: var(--cd-text-mid); font-size: 1.35rem; cursor: pointer; padding: 2px; line-height: 1; display: none; }
+@@media (max-width: 991.98px) { .cd-topbar-toggle { display: block; } }
+.cd-breadcrumb { flex: 1; font-size: .825rem; color: var(--cd-text-soft); }
+.cd-breadcrumb strong { color: var(--cd-text-primary); }
+.cd-content { padding: 28px 28px 64px; flex: 1; }
+@@media (max-width: 767.98px) { .cd-content { padding: 16px 14px 48px; } }
+
+.cd-page-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.55rem; color: var(--cd-text-primary); letter-spacing: -.5px; margin: 0 0 4px; }
+.cd-page-sub { color: var(--cd-text-soft); font-size: .855rem; margin: 0 0 24px; }
+
+.cd-stat { background: var(--cd-surface); border-radius: var(--cd-radius-card); padding: 18px 20px; display: flex; align-items: center; gap: 14px; box-shadow: var(--cd-shadow-card); transition: transform .2s, box-shadow .2s; }
+.cd-stat:hover { transform: translateY(-2px); box-shadow: var(--cd-shadow-hover); }
+.cd-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; background: color-mix(in srgb, var(--icon-clr) 14%, transparent); color: var(--icon-clr); }
+.cd-stat-val { display: block; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.45rem; color: var(--cd-text-primary); line-height: 1; }
+.cd-stat-lbl { display: block; font-size: .73rem; color: var(--cd-text-soft); margin-top: 5px; }
+
+.cd-card { background: var(--cd-surface); border-radius: var(--cd-radius-card); box-shadow: var(--cd-shadow-card); }
+.cd-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px 14px; border-bottom: 1px solid var(--cd-border); }
+.cd-card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .88rem; background: color-mix(in srgb, var(--icon-clr) 13%, transparent); color: var(--icon-clr); }
+.cd-card-title { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .875rem; color: var(--cd-text-primary); margin: 0; }
+.cd-card-body { padding: 18px 20px; }
+.cd-head-actions { margin-left: auto; display: flex; gap: 8px; }
+.cd-edit-btn { border: none; background: #f1f5f9; border: 1px solid var(--cd-border); color: var(--cd-text-mid); width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; transition: all .2s; }
+.cd-edit-btn:hover { background: var(--cd-amber); color: #fff; border-color: var(--cd-amber); }
+
+.cd-profile-card { background: var(--cd-surface); border-radius: var(--cd-radius-card); box-shadow: var(--cd-shadow-card); overflow: hidden; text-align: center; }
+.cd-profile-banner { height: 90px; background: linear-gradient(125deg, var(--cd-navy) 0%, var(--cd-navy-mid) 60%, #1f3561 100%); }
+.cd-profile-body { padding: 0 22px 22px; }
+.cd-profile-av-ph { width: 82px; height: 82px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 16px rgba(0,0,0,.14); margin: -41px auto 12px; background: linear-gradient(135deg, var(--cd-amber), var(--cd-amber-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2.1rem; }
+.cd-profile-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--cd-text-primary); margin: 0 0 3px; }
+.cd-profile-email { color: var(--cd-text-soft); font-size: .8rem; margin: 0 0 14px; }
+
+.cd-info-list { display: flex; flex-direction: column; gap: 12px; }
+.cd-info-row { display: flex; align-items: flex-start; gap: 10px; }
+.cd-info-ico { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--cd-border); background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: .78rem; color: var(--cd-text-mid); margin-top: 2px; }
+.cd-info-lbl { display: block; font-size: .67rem; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--cd-text-soft); }
+.cd-info-val { display: block; font-size: .85rem; font-weight: 500; color: var(--cd-text-primary); margin-top: 1px; }
+
+.cd-alert-ok { border-radius: 12px; background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; font-size: .86rem; }
+.cd-alert-err { border-radius: 12px; background: #fef2f2; border: 1.5px solid #fecaca; color: #dc2626; font-size: .86rem; }
+
+.cd-label { display: block; font-size: .8rem; font-weight: 700; color: var(--cd-text-mid); margin-bottom: 6px; }
+.cd-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--cd-border); border-radius: var(--cd-radius-sm); font-size: .875rem; font-family: 'DM Sans', sans-serif; color: var(--cd-text-primary); background: #f8fafc; outline: none; transition: all .2s; }
+.cd-input:focus { border-color: var(--cd-amber); background: #fff; box-shadow: 0 0 0 3px rgba(245,158,11,.14); }
+textarea.cd-input { resize: vertical; min-height: 110px; }
+
+.cd-table { width: 100%; border-collapse: collapse; }
+.cd-table th, .cd-table td { padding: 10px 12px; border-bottom: 1px solid var(--cd-border); text-align: left; vertical-align: middle; }
+.cd-table th { color: var(--cd-text-soft); font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; }
+.cd-table td { color: var(--cd-text-primary); }
+</style>
+
+<div class="cd-layout">
+    <aside class="cd-sidebar" id="cdSidebar">
+        <div class="cd-brand">
+            <div class="cd-brand-logo"><i class="bi bi-house-heart-fill"></i></div>
+            <span class="cd-brand-name">Customer<span>Hub</span></span>
+            <button class="cd-sb-close ms-auto" id="cdSbClose" aria-label="Close sidebar"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="cd-sb-profile">
+            <div class="cd-sb-avatar-ph"><i class="bi bi-person-fill"></i></div>
+            <div><span class="cd-sb-name">@(Model?.FirstName ?? "Customer")</span></div>
+        </div>
+
+        <nav class="cd-nav">
+            <p class="cd-nav-section">MAIN</p>
+            <a class="cd-nav-link active" href="@Url.Action("Dashboard", "Customer")"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a>
+            <a class="cd-nav-link" href="@Url.Action("MyBookings", "Customer")"><i class="bi bi-calendar2-check-fill"></i><span>My Bookings</span></a>
+            <a class="cd-nav-link" href="@Url.Action("MyJobs", "Customer")"><i class="bi bi-briefcase-fill"></i><span>My Job Posts</span></a>
+            <a class="cd-nav-link" href="@Url.Action("WorkerShop", "Customer")"><i class="bi bi-search"></i><span>Find Workers</span></a>
+            <p class="cd-nav-section">ACCOUNT</p>
+            <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="cd-nav-link danger" style="border:none;background:none;width:100%;text-align:left;padding:9px 12px;">
+                    <i class="bi bi-box-arrow-right"></i><span>Sign Out</span>
+                </button>
+            </form>
+        </nav>
+    </aside>
+
+    <div class="cd-overlay" id="cdOverlay"></div>
+
+    <div class="cd-main">
+        <header class="cd-topbar">
+            <button class="cd-topbar-toggle" id="cdSbToggle" aria-label="Open sidebar"><i class="bi bi-list"></i></button>
+            <div class="cd-breadcrumb"><span>Customer</span><i class="bi bi-chevron-right mx-2" style="font-size:.65rem;"></i><strong>Overview</strong></div>
+        </header>
+
+        <main class="cd-content">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert cd-alert-ok alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert cd-alert-err alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (Model == null)
+            {
+                <div class="text-center py-5 text-muted">No profile data available.</div>
+            }
+            else
+            {
+                <h1 class="cd-page-title">Good to see you, @Model.FirstName</h1>
+                <p class="cd-page-sub">Manage your profile and household details.</p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3"><div class="cd-stat"><div class="cd-stat-icon" style="--icon-clr:#3b82f6"><i class="bi bi-geo-alt-fill"></i></div><div><span class="cd-stat-val">@(string.IsNullOrWhiteSpace(Model.City) ? "—" : Model.City)</span><span class="cd-stat-lbl">City</span></div></div></div>
+                    <div class="col-6 col-md-3"><div class="cd-stat"><div class="cd-stat-icon" style="--icon-clr:#10b981"><i class="bi bi-people-fill"></i></div><div><span class="cd-stat-val">@children.Count</span><span class="cd-stat-lbl">Children</span></div></div></div>
+                    <div class="col-6 col-md-3"><div class="cd-stat"><div class="cd-stat-icon" style="--icon-clr:#f59e0b"><i class="bi bi-heart-fill"></i></div><div><span class="cd-stat-val">@(Model.HasPets ? "Yes" : "No")</span><span class="cd-stat-lbl">Has Pets</span></div></div></div>
+                    <div class="col-6 col-md-3"><div class="cd-stat"><div class="cd-stat-icon" style="--icon-clr:#6366f1"><i class="bi bi-shield-check"></i></div><div><span class="cd-stat-val">@Model.IdentityVerificationStatus</span><span class="cd-stat-lbl">Verification</span></div></div></div>
+                </div>
+
+                <!-- MAIN PROFILE UPDATE FORM -->
+                <form asp-controller="Customer" asp-action="UpdateProfile" method="post" id="customerProfileForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-4">
+                            <div class="cd-profile-card h-100">
+                                <div class="cd-profile-banner"></div>
+                                <div class="cd-profile-body">
+                                    <div class="cd-profile-av-ph"><i class="bi bi-person-fill"></i></div>
+                                    <h3 class="cd-profile-name">@Model.FirstName @Model.LastName</h3>
+                                    <p class="cd-profile-email">@Model.Email</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="cd-card h-100">
+                                <div class="cd-card-head">
+                                    <span class="cd-card-icon" style="--icon-clr:#3b82f6"><i class="bi bi-person-lines-fill"></i></span>
+                                    <h6 class="cd-card-title">Basic Info</h6>
+                                    <div class="cd-head-actions"><button type="button" class="cd-edit-btn" data-bs-toggle="modal" data-bs-target="#basicInfoModal"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="cd-card-body">
+                                    <div class="cd-info-list">
+                                        <div class="cd-info-row"><span class="cd-info-ico"><i class="bi bi-telephone-fill"></i></span><div><span class="cd-info-lbl">Phone</span><span class="cd-info-val">@(Model.PhoneNumber ?? "Not provided")</span></div></div>
+                                        <div class="cd-info-row"><span class="cd-info-ico"><i class="bi bi-geo-alt-fill"></i></span><div><span class="cd-info-lbl">City</span><span class="cd-info-val">@Model.City</span></div></div>
+                                        <div class="cd-info-row"><span class="cd-info-ico"><i class="bi bi-house-fill"></i></span><div><span class="cd-info-lbl">Address</span><span class="cd-info-val">@Model.Address</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="cd-card h-100">
+                                <div class="cd-card-head">
+                                    <span class="cd-card-icon" style="--icon-clr:#f59e0b"><i class="bi bi-heart-pulse-fill"></i></span>
+                                    <h6 class="cd-card-title">Family Profile</h6>
+                                    <div class="cd-head-actions"><button type="button" class="cd-edit-btn" data-bs-toggle="modal" data-bs-target="#familyModal"><i class="bi bi-pencil-square"></i></button></div>
+                                </div>
+                                <div class="cd-card-body">
+                                    <div class="cd-info-list">
+                                        <div class="cd-info-row"><span class="cd-info-ico"><i class="bi bi-diagram-3-fill"></i></span><div><span class="cd-info-lbl">Family Status</span><span class="cd-info-val">@Model.FamilyStatus</span></div></div>
+                                        <div class="cd-info-row"><span class="cd-info-ico"><i class="bi bi-heart-fill"></i></span><div><span class="cd-info-lbl">Pets</span><span class="cd-info-val">@(Model.HasPets ? "Yes" : "No")</span></div></div>
+                                        <div class="cd-info-row"><span class="cd-info-ico"><i class="bi bi-123"></i></span><div><span class="cd-info-lbl">Number of Pets</span><span class="cd-info-val">@(Model.NumberOfPets?.ToString() ?? "0")</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cd-card mb-4">
+                        <div class="cd-card-head">
+                            <span class="cd-card-icon" style="--icon-clr:#10b981"><i class="bi bi-file-earmark-person-fill"></i></span>
+                            <h6 class="cd-card-title">About My Household</h6>
+                            <div class="cd-head-actions"><button type="button" class="cd-edit-btn" data-bs-toggle="modal" data-bs-target="#bioModal"><i class="bi bi-pencil-square"></i></button></div>
+                        </div>
+                        <div class="cd-card-body">
+                            @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                            {
+                                <p class="mb-0">@Model.Bio</p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 text-muted fst-italic">No household bio yet.</p>
+                            }
+                        </div>
+                    </div>
+                </form>
+
+                <!-- CHILDREN LIST + IN-PAGE EDIT -->
+                <div class="cd-card mb-4">
+                    <div class="cd-card-head">
+                        <span class="cd-card-icon" style="--icon-clr:#6366f1"><i class="bi bi-people-fill"></i></span>
+                        <h6 class="cd-card-title">My Children</h6>
+                        <div class="cd-head-actions">
+                            <button type="button" class="cd-edit-btn" data-bs-toggle="modal" data-bs-target="#addChildModal" title="Add Child">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cd-card-body">
+                        <div class="table-responsive">
+                            <table class="cd-table">
+                                <thead>
+                                    <tr>
+                                        <th>Child</th>
+                                        <th>Age</th>
+                                        <th>Care Instructions</th>
+                                        <th style="width: 130px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @if (children.Any())
+                                {
+                                    for (int i = 0; i < children.Count; i++)
+                                    {
+                                        var child = children[i];
+                                        var childLabel = !string.IsNullOrWhiteSpace(child.FirstName)
+                                            ? child.FirstName
+                                            : $"Child #{i + 1}";
+                                        var ageText = child.Age?.ToString() ?? "-";
+                                        var careText = string.IsNullOrWhiteSpace(child.SpecialCareInstructions) ? "-" : child.SpecialCareInstructions;
+
+                                        <tr>
+                                            <td>@childLabel</td>
+                                            <td>@ageText</td>
+                                            <td>@careText</td>
+                                            <td>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-primary me-1 edit-child-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editChildModal"
+                                                        data-child-id="@child.Id"
+                                                        data-child-firstname="@child.FirstName"
+                                                        data-child-age="@child.Age"
+                                                        data-child-bio="@child.Bio"
+                                                        data-child-care="@child.SpecialCareInstructions">
+                                                    Edit
+                                                </button>
+
+                                                <form asp-controller="Customer" asp-action="RemoveChild" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="childId" value="@child.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="4">No children registered yet.</td></tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modals: Profile -->
+                <div class="modal fade" id="basicInfoModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header"><h5 class="modal-title fw-bold">Basic Information</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <div class="mb-3"><label class="cd-label">Phone Number</label><input type="text" class="cd-input" name="PhoneNumber" value="@Model.PhoneNumber" form="customerProfileForm" /></div>
+                            <div class="mb-3"><label class="cd-label">City</label><input type="text" class="cd-input" name="City" value="@Model.City" form="customerProfileForm" /></div>
+                            <div class="mb-3"><label class="cd-label">Address</label><input type="text" class="cd-input" name="Address" value="@Model.Address" form="customerProfileForm" /></div>
+                        </div>
+                        <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4" form="customerProfileForm">Save</button></div>
+                    </div></div>
+                </div>
+
+                <div class="modal fade" id="familyModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header"><h5 class="modal-title fw-bold">Family Profile</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="cd-label">Family Status</label>
+                                <select class="cd-input" name="FamilyStatus" asp-items="Html.GetEnumSelectList<Core.Concretes.Enums.FamilyStatus>()" form="customerProfileForm"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="cd-label">Has Pets</label>
+                                <select class="cd-input" name="HasPets" form="customerProfileForm">
+                                    <option value="true" selected="@(Model.HasPets)">Yes</option>
+                                    <option value="false" selected="@(!Model.HasPets)">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="cd-label">Number Of Pets</label>
+                                <input type="number" class="cd-input" name="NumberOfPets" min="0" value="@Model.NumberOfPets" form="customerProfileForm" />
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4" form="customerProfileForm">Save</button></div>
+                    </div></div>
+                </div>
+
+                <div class="modal fade" id="bioModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header"><h5 class="modal-title fw-bold">Household Bio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <label class="cd-label">Bio</label>
+                            <textarea class="cd-input" name="Bio" rows="6" form="customerProfileForm">@Model.Bio</textarea>
+                        </div>
+                        <div class="modal-footer border-0"><button type="submit" class="btn btn-primary px-4" form="customerProfileForm">Save</button></div>
+                    </div></div>
+                </div>
+
+                <!-- Modal: Add Child (in-page) -->
+                <div class="modal fade" id="addChildModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                        <form asp-controller="Customer" asp-action="AddChild" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold">Add Child</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="text-muted small mb-3">All fields are optional.</p>
+                                <div class="mb-3">
+                                    <label class="cd-label">Name (optional)</label>
+                                    <input class="cd-input" type="text" name="FirstName" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="cd-label">Age (optional)</label>
+                                    <input class="cd-input" type="number" name="Age" min="0" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="cd-label">Bio (optional)</label>
+                                    <textarea class="cd-input" name="Bio"></textarea>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="cd-label">Special Care Instructions (optional)</label>
+                                    <input class="cd-input" type="text" name="SpecialCareInstructions" />
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="submit" class="btn btn-primary px-4">Save Child</button>
+                            </div>
+                        </form>
+                    </div></div>
+                </div>
+
+                <!-- Modal: Edit Child (in-page) -->
+                <div class="modal fade" id="editChildModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog"><div class="modal-content border-0 shadow-lg">
+                        <form asp-controller="Customer" asp-action="EditChild" method="post" id="editChildForm">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Id" id="editChildId" />
+
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold">Edit Child</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="text-muted small mb-3">All fields are optional.</p>
+                                <div class="mb-3">
+                                    <label class="cd-label">Name (optional)</label>
+                                    <input class="cd-input" type="text" name="FirstName" id="editChildFirstName" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="cd-label">Age (optional)</label>
+                                    <input class="cd-input" type="number" name="Age" min="0" id="editChildAge" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="cd-label">Bio (optional)</label>
+                                    <textarea class="cd-input" name="Bio" id="editChildBio"></textarea>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="cd-label">Special Care Instructions (optional)</label>
+                                    <input class="cd-input" type="text" name="SpecialCareInstructions" id="editChildCare" />
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                            </div>
+                        </form>
+                    </div></div>
+                </div>
+            }
+        </main>
     </div>
-    <div style="margin-bottom: 10px;">
-        <label>Age:</label><br />
-        <input type="number" name="Age" required />
-    </div>
-    <div style="margin-bottom: 10px;">
-        <label>Special Care Instructions:</label><br />
-        <input type="text" name="SpecialCareInstructions" />
-    </div>
-    <button type="submit">Save Child</button>
-</form>
+</div>
 
-<hr />
+<script>
+(function () {
+    const sidebar = document.getElementById('cdSidebar');
+    const overlay = document.getElementById('cdOverlay');
+    const toggle = document.getElementById('cdSbToggle');
+    const close = document.getElementById('cdSbClose');
 
-<h3>My Children</h3>
-<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: left;">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Age</th>
-        <th>Care Instructions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @if (ViewBag.Children != null)
-    {
-        foreach (var child in ViewBag.Children)
-        {
-            <tr>
-                <td>@child.FirstName</td>
-                <td>@child.Age</td>
-                <td>@child.SpecialCareInstructions</td>
-            </tr>
-        }
-    }
-    else
-    {
-        <tr>
-            <td colspan="3">No children registered yet.</td>
-        </tr>
-    }
-    </tbody>
-</table>
+    function openSb(){ if (sidebar) sidebar.classList.add('open'); if (overlay) overlay.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function shutSb(){ if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('open'); document.body.style.overflow = ''; }
+
+    if (toggle) toggle.addEventListener('click', openSb);
+    if (close) close.addEventListener('click', shutSb);
+    if (overlay) overlay.addEventListener('click', shutSb);
+
+    const editButtons = document.querySelectorAll('.edit-child-btn');
+    const editChildId = document.getElementById('editChildId');
+    const editChildFirstName = document.getElementById('editChildFirstName');
+    const editChildAge = document.getElementById('editChildAge');
+    const editChildBio = document.getElementById('editChildBio');
+    const editChildCare = document.getElementById('editChildCare');
+
+    editButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            if (editChildId) editChildId.value = btn.getAttribute('data-child-id') || '';
+            if (editChildFirstName) editChildFirstName.value = btn.getAttribute('data-child-firstname') || '';
+            if (editChildAge) editChildAge.value = btn.getAttribute('data-child-age') || '';
+            if (editChildBio) editChildBio.value = btn.getAttribute('data-child-bio') || '';
+            if (editChildCare) editChildCare.value = btn.getAttribute('data-child-care') || '';
+        });
+    });
+})();
+</script>

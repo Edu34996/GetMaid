@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(GetMaidContext))]
-    [Migration("20260523162350_InitialSetup")]
+    [Migration("20260524171825_InitialSetup")]
     partial class InitialSetup
     {
         /// <inheritdoc />
@@ -27,6 +27,20 @@ namespace Data.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -52,6 +66,13 @@ namespace Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IdentityDocumentPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IdentityVerificationStatus")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
@@ -63,11 +84,17 @@ namespace Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("TEXT");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -469,6 +496,24 @@ namespace Data.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("Core.Concretes.Entities.WorkerReference", b =>
+                {
+                    b.Property<string>("WorkerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("WorkerId", "CustomerId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("WorkerReferences");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -575,46 +620,14 @@ namespace Data.Migrations
                 {
                     b.HasBaseType("Core.Concretes.Entities.ApplicationUser");
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Bio")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("FamilyStatus")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("HasPets")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("IdentityDocumentPath")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("IdentityVerificationStatus")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("REAL");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("REAL");
-
                     b.Property<int?>("NumberOfPets")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("WorkerId")
-                        .HasColumnType("TEXT");
-
-                    b.HasIndex("WorkerId");
 
                     b.HasDiscriminator().HasValue("Customer");
                 });
@@ -623,36 +636,22 @@ namespace Data.Migrations
                 {
                     b.HasBaseType("Core.Concretes.Entities.ApplicationUser");
 
-                    b.Property<string>("Bio")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("CommitmentPreference")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ExperienceYears")
+                    b.Property<int?>("ExperienceYears")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ExperiencedAgeGroups")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("IdentityDocumentPath")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("IdentityVerificationStatus")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("IntroductionVideoUrl")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsExperienced")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsSmoker")
                         .HasColumnType("INTEGER");
@@ -660,12 +659,6 @@ namespace Data.Migrations
                     b.Property<string>("LanguagesSpoken")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("REAL");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("REAL");
 
                     b.Property<int?>("MaxDaysPerWeek")
                         .HasColumnType("INTEGER");
@@ -691,34 +684,12 @@ namespace Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProfilePictureUrl")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Skills")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.ToTable("AspNetUsers", t =>
-                        {
-                            t.Property("Bio")
-                                .HasColumnName("Worker_Bio");
-
-                            t.Property("City")
-                                .HasColumnName("Worker_City");
-
-                            t.Property("IdentityDocumentPath")
-                                .HasColumnName("Worker_IdentityDocumentPath");
-
-                            t.Property("IdentityVerificationStatus")
-                                .HasColumnName("Worker_IdentityVerificationStatus");
-
-                            t.Property("Latitude")
-                                .HasColumnName("Worker_Latitude");
-
-                            t.Property("Longitude")
-                                .HasColumnName("Worker_Longitude");
-                        });
 
                     b.HasDiscriminator().HasValue("Worker");
                 });
@@ -808,6 +779,25 @@ namespace Data.Migrations
                     b.Navigation("Reviewer");
                 });
 
+            modelBuilder.Entity("Core.Concretes.Entities.WorkerReference", b =>
+                {
+                    b.HasOne("Core.Concretes.Entities.Customer", "Customer")
+                        .WithMany("WorkerReferences")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Concretes.Entities.Worker", "Worker")
+                        .WithMany("References")
+                        .HasForeignKey("WorkerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Worker");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Core.Concretes.Entities.ApplicationUserRole", null)
@@ -859,13 +849,6 @@ namespace Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Core.Concretes.Entities.Customer", b =>
-                {
-                    b.HasOne("Core.Concretes.Entities.Worker", null)
-                        .WithMany("References")
-                        .HasForeignKey("WorkerId");
-                });
-
             modelBuilder.Entity("Core.Concretes.Entities.ApplicationUser", b =>
                 {
                     b.Navigation("ReviewsGiven");
@@ -881,6 +864,8 @@ namespace Data.Migrations
             modelBuilder.Entity("Core.Concretes.Entities.Customer", b =>
                 {
                     b.Navigation("Children");
+
+                    b.Navigation("WorkerReferences");
                 });
 
             modelBuilder.Entity("Core.Concretes.Entities.Worker", b =>
