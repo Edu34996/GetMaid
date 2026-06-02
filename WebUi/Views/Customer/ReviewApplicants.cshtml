@@ -6,71 +6,372 @@
     ViewData["Title"] = "Review Applicants";
 }
 
-<h1>Review Applicants</h1>
-<a asp-controller="Customer" asp-action="MyJobs" class="btn btn-secondary btn-sm">Back to My Jobs</a>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="text-danger border border-danger p-2 mb-3">
-        @TempData["ErrorMessage"]
+<style>
+    .ra-wrap {
+        max-width: 1120px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .ra-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+        overflow: hidden;
+    }
+
+    .ra-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .ra-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -.4px;
+    }
+
+    .ra-sub {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: .9rem;
+    }
+
+    .ra-back-btn {
+        border: 1.5px solid rgba(255,255,255,.3);
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: transparent;
+        color: #fff !important;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .88rem;
+    }
+
+    .ra-back-btn:hover {
+        background: rgba(255,255,255,.1);
+        border-color: rgba(255,255,255,.5);
+        color: #fff !important;
+    }
+
+    .ra-body {
+        padding: 22px;
+        background: #f8fafc;
+    }
+
+    .ra-alert-err {
+        border-radius: 12px;
+        background: #fef2f2;
+        border: 1.5px solid #fecaca;
+        color: #dc2626;
+        font-size: .86rem;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .ra-table-wrap {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .ra-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .ra-table th,
+    .ra-table td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #e4e8ee;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .ra-table th {
+        font-size: .76rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #7a8699;
+        font-weight: 700;
+        background: #f8fafc;
+    }
+
+    .ra-table td {
+        color: #0f1e35;
+        font-size: .88rem;
+    }
+
+    .ra-worker-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ra-worker-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .ra-worker-link {
+        text-decoration: none;
+        color: #0f1e35;
+        font-weight: 700;
+        transition: color .18s ease;
+        white-space: nowrap;
+    }
+
+    .ra-worker-link:hover {
+        color: #1f5fa8;
+    }
+
+    .ra-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: .74rem;
+        font-weight: 600;
+        background: #eef2ff;
+        color: #4338ca;
+        border: 1px solid #c7d2fe;
+    }
+
+    .ra-badge.pending {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .ra-badge.accepted {
+        background: #d1fae5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .ra-badge.rejected {
+        background: #fee2e2;
+        color: #7f1d1d;
+        border-color: #fca5a5;
+    }
+
+    .ra-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .ra-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        border-radius: 9px;
+        padding: 7px 10px;
+        text-decoration: none;
+        color: #fff !important;
+        font-size: .78rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: all .18s ease;
+        background: #10b981;
+    }
+
+    .ra-action-btn:hover {
+        filter: brightness(1.04);
+        transform: translateY(-1px);
+        color: #fff !important;
+    }
+
+    .ra-action-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .ra-empty {
+        text-align: center;
+        padding: 40px 18px;
+        color: #7a8699;
+    }
+
+    .ra-empty h3 {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.05rem;
+        color: #0f1e35;
+        margin-bottom: 6px;
+    }
+
+    .ra-empty p {
+        margin: 0 0 16px;
+        font-size: .9rem;
+    }
+
+    @@media (max-width: 991.98px) {
+        .ra-table-wrap { overflow-x: auto; }
+        .ra-table { min-width: 980px; }
+    }
+</style>
+
+<div class="ra-wrap">
+    <div class="ra-shell">
+        <div class="ra-head">
+            <div>
+                <h1 class="ra-title">Review Applicants</h1>
+                <p class="ra-sub">Review worker applications and select the best fit for your job.</p>
+            </div>
+            <a asp-controller="Customer" asp-action="MyJobs" class="ra-back-btn">
+                <i class="bi bi-arrow-left"></i> Back to My Jobs
+            </a>
+        </div>
+
+        <div class="ra-body">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="ra-alert-err">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <div class="ra-table-wrap">
+                @if (Model != null && Model.Any())
+                {
+                    <table class="ra-table">
+                        <thead>
+                            <tr>
+                                <th>Worker Name</th>
+                                <th>Bio</th>
+                                <th>Rate Range</th>
+                                <th>Message</th>
+                                <th>Available</th>
+                                <th>Availability</th>
+                                <th>Questions</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var app in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="ra-worker-cell">
+                                            <div class="ra-worker-avatar">
+                                                <i class="bi bi-person-fill"></i>
+                                            </div>
+                                            <a asp-controller="Customer" asp-action="WorkerDetails" asp-route-workerId="@app.WorkerId" class="ra-worker-link">
+                                                @app.WorkerName
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span title="@app.WorkerBio">
+                                            @(app.WorkerBio?.Substring(0, Math.Min(30, app.WorkerBio?.Length ?? 0))
+                                            + (app.WorkerBio?.Length > 30 ? "..." : ""))
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (app.WorkerMinHourlyRate.HasValue && app.WorkerMaxHourlyRate.HasValue)
+                                        {
+                                            <span>${@app.WorkerMinHourlyRate.Value.ToString("0.00")} - ${@app.WorkerMaxHourlyRate.Value.ToString("0.00")}</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span title="@app.MessageToCustomer">
+                                            @(app.MessageToCustomer?.Substring(0, Math.Min(25, app.MessageToCustomer?.Length ?? 0))
+                                            + (app.MessageToCustomer?.Length > 25 ? "..." : ""))
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="ra-badge" style="@(app.IsCurrentlyWorking ? "background: #fee2e2; color: #7f1d1d; border-color: #fca5a5;" : "background: #d1fae5; color: #065f46; border-color: #a7f3d0;")">
+                                            @(app.IsCurrentlyWorking ? "Busy" : "Available")
+                                        </span>
+                                    </td>
+                                    <td>@(app.SoonestAvailableStartDate?.ToShortDateString() ?? "ASAP")</td>
+                                    <td>
+                                        <span title="@app.QuestionsAboutWork">
+                                            @(app.QuestionsAboutWork?.Substring(0, Math.Min(20, app.QuestionsAboutWork?.Length ?? 0))
+                                            + (app.QuestionsAboutWork?.Length > 20 ? "..." : ""))
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var statusClass = app.Status == ApplicationStatus.Pending ? "pending" :
+                                                            app.Status == ApplicationStatus.Accepted ? "accepted" : "rejected";
+                                        }
+                                        <span class="ra-badge @statusClass">@app.Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="ra-actions">
+                                            <a asp-controller="Customer"
+                                               asp-action="ApplicationDetails"
+                                               asp-route-applicationId="@app.Id"
+                                               class="ra-action-btn"
+                                               style="background:#0ea5e9;">
+                                                <i class="bi bi-eye-fill"></i> Details
+                                            </a>
+
+                                            @if (app.Status == ApplicationStatus.Pending)
+                                            {
+                                                <form asp-controller="Customer" asp-action="HireWorker" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="applicationId" value="@app.Id" />
+                                                    <button type="submit" class="ra-action-btn" style="background:#10b981;">
+                                                        <i class="bi bi-check-lg"></i> Hire
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted"><em>@app.Status</em></span>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="ra-empty">
+                        <h3>No Applications Yet</h3>
+                        <p>No workers have applied for this job yet. Check back soon!</p>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
-}
-
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Worker Name</th>
-            <th>Worker Bio</th>
-            <th>Min Rate</th>
-            <th>Max Rate</th>
-            <th>Message</th>
-            <th>Soonest Start</th>
-            <th>Currently Working</th>
-            <th>Questions</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-    @if (Model != null && Model.Any())
-    {
-        foreach (var app in Model)
-        {
-            <tr>
-                <td><strong>@app.WorkerName</strong></td>
-                <td>@app.WorkerBio</td>
-                <td>@(app.WorkerMinHourlyRate?.ToString("0.00") ?? "-")</td>
-                <td>@(app.WorkerMaxHourlyRate?.ToString("0.00") ?? "-")</td>
-                <td>@app.MessageToCustomer</td>
-                <td>@(app.SoonestAvailableStartDate?.ToShortDateString() ?? "-")</td>
-                <td>@(app.IsCurrentlyWorking ? "Yes" : "No")</td>
-                <td>@app.QuestionsAboutWork</td>
-                <td>@app.Status</td>
-                <td>
-                    @if (app.Status == ApplicationStatus.Pending)
-                    {
-                        <form asp-controller="Customer" asp-action="HireWorker" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="applicationId" value="@app.Id" />
-                            <button type="submit" class="btn btn-success btn-sm">
-                                Hire Worker
-                            </button>
-                        </form>
-                    }
-                    else
-                    {
-                        <span class="text-muted"><em>@app.Status</em></span>
-                    }
-                </td>
-            </tr>
-        }
-    }
-    else
-    {
-        <tr>
-            <td colspan="10">No workers have applied for this job yet. Check back soon!</td>
-        </tr>
-    }
-    </tbody>
-</table>
+</div>

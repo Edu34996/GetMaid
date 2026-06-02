@@ -1,0 +1,238 @@
+@using Core.Concretes.DTOs
+@model IEnumerable<BookingListItemDTO>
+
+@{
+    var bookings = (Model ?? Enumerable.Empty<BookingListItemDTO>()).ToList();
+    var mode = (ViewData["Mode"] as string ?? "customer").ToLowerInvariant();
+    var detailsAction = ViewData["DetailsAction"] as string ?? "MyBookings";
+}
+
+<div class="mbk-table-wrap">
+    @if (bookings.Any())
+    {
+        <table class="mbk-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+
+                    @if (mode == "customer")
+                    {
+                        <th>Worker</th>
+                    }
+                    else
+                    {
+                        <th>Customer</th>
+                    }
+
+                    <th>City</th>
+                    <th>Budget</th>
+                    <th>Estimated Hours</th>
+                    <th>Start Date</th>
+                    <th>Status</th>
+
+                    @if (mode == "customer")
+                    {
+                        <th>Contact</th>
+                        <th>Cancellation</th>
+                    }
+                    else
+                    {
+                        <th>Respond</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var booking in bookings)
+                {
+                    var statusClass = booking.Status.Trim().ToLowerInvariant();
+                    var status = booking.Status.Trim();
+                    var isLocked =
+                        string.Equals(status, "Accepted",  StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(status, "Rejected",  StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(status, "Canceled",  StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase);
+
+                    <tr>
+                        <td>
+                            <a class="mbk-row-link"
+                               asp-controller="@(mode == "customer" ? "Customer" : "Worker")"
+                               asp-action="@detailsAction"
+                               asp-route-bookingId="@booking.Id">
+                                @booking.Title
+                            </a>
+                        </td>
+
+                        @if (mode == "customer")
+                        {
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(booking.WorkerId))
+                                {
+                                    <a class="mbk-worker-link"
+                                       asp-controller="Customer"
+                                       asp-action="WorkerDetails"
+                                       asp-route-workerId="@booking.WorkerId">
+                                        <img class="mbk-worker-avatar"
+                                             src="@(string.IsNullOrWhiteSpace(booking.WorkerProfilePictureUrl) ? "https://via.placeholder.com/64x64?text=W" : booking.WorkerProfilePictureUrl)"
+                                             alt="Worker profile" />
+                                        <span>@booking.WorkerName</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="mbk-worker-link">
+                                        <img class="mbk-worker-avatar"
+                                             src="@(string.IsNullOrWhiteSpace(booking.WorkerProfilePictureUrl) ? "https://via.placeholder.com/64x64?text=W" : booking.WorkerProfilePictureUrl)"
+                                             alt="Worker profile" />
+                                        <span>@booking.WorkerName</span>
+                                    </span>
+                                }
+                            </td>
+                        }
+                        else
+                        {
+                            <td>
+                                <span class="wb-customer">@booking.CustomerName</span>
+                            </td>
+                        }
+
+                        <td>
+                            <a class="mbk-row-link"
+                               asp-controller="@(mode == "customer" ? "Customer" : "Worker")"
+                               asp-action="@detailsAction"
+                               asp-route-bookingId="@booking.Id">
+                                @booking.City
+                            </a>
+                        </td>
+
+                        <td>
+                            <a class="mbk-row-link"
+                               asp-controller="@(mode == "customer" ? "Customer" : "Worker")"
+                               asp-action="@detailsAction"
+                               asp-route-bookingId="@booking.Id">
+                                @booking.Budget.ToString("0.00")
+                            </a>
+                        </td>
+
+                        <td>
+                            <a class="mbk-row-link"
+                               asp-controller="@(mode == "customer" ? "Customer" : "Worker")"
+                               asp-action="@detailsAction"
+                               asp-route-bookingId="@booking.Id">
+                                @booking.EstimatedHours
+                            </a>
+                        </td>
+
+                        <td>
+                            <a class="mbk-row-link"
+                               asp-controller="@(mode == "customer" ? "Customer" : "Worker")"
+                               asp-action="@detailsAction"
+                               asp-route-bookingId="@booking.Id">
+                                @booking.StartDate.ToShortDateString()
+                            </a>
+                        </td>
+
+                        <td>
+                            <a class="mbk-row-link"
+                               asp-controller="@(mode == "customer" ? "Customer" : "Worker")"
+                               asp-action="@detailsAction"
+                               asp-route-bookingId="@booking.Id">
+                                @if (mode == "worker")
+                                {
+                                    <span class="wb-badge @statusClass">@booking.Status</span>
+                                }
+                                else
+                                {
+                                    <span class="mbk-status @statusClass">@booking.Status</span>
+                                }
+                            </a>
+                        </td>
+
+                        @if (mode == "customer")
+                        {
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(booking.WorkerId))
+                                {
+                                    <a class="mbk-contact-btn"
+                                       asp-controller="Message"
+                                       asp-action="Inbox"
+                                       asp-route-userId="@booking.WorkerId">
+                                        <i class="bi bi-chat-dots-fill"></i> Contact Worker
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!isLocked)
+                                {
+                                    <form asp-controller="Customer"
+                                          asp-action="CancelBooking"
+                                          asp-route-bookingId="@booking.Id"
+                                          method="post"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Cancel this booking request?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Cancel
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-warning fw-semibold">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                        Not cancellable
+                                    </span>
+                                }
+                            </td>
+                        }
+                        else
+                        {
+                            <td>
+                                @if (string.Equals(booking.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <div class="wb-actions">
+                                        <form asp-controller="Worker" asp-action="RespondToBooking" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="bookingId" value="@booking.Id" />
+                                            <input type="hidden" name="confirm" value="true" />
+                                            <button type="submit" class="wb-btn accept">Accept</button>
+                                        </form>
+
+                                        <form asp-controller="Worker" asp-action="RespondToBooking" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="bookingId" value="@booking.Id" />
+                                            <input type="hidden" name="confirm" value="false" />
+                                            <button type="submit" class="wb-btn reject">Reject</button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="wb-muted">No action available</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="mbk-empty">
+            <h3>No bookings yet</h3>
+            <p>No booking records found.</p>
+
+            @if (mode == "customer")
+            {
+                <a asp-controller="Customer" asp-action="WorkerShop">
+                    <i class="bi bi-search me-1"></i> Find Workers
+                </a>
+            }
+        </div>
+    }
+</div>

@@ -17,12 +17,12 @@ namespace WebUi.Controllers
         }
 
         // GET: Worker/Dashboard
+        [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();
 
-            // FIX: IWorkerService defines GetDashboardProfileAsync
             var result = await _workerService.GetDashboardProfileAsync(workerId);
 
             if (!result.IsSuccess)
@@ -56,7 +56,8 @@ namespace WebUi.Controllers
             return View("Dashboard", model);
         }
 
-        // GET: Worker/JobBoard
+        // GET: Worker/JobBoard (open jobs to apply)
+        [HttpGet]
         public async Task<IActionResult> JobBoard()
         {
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -67,36 +68,106 @@ namespace WebUi.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                // FIX: service returns JobPostingCardDTO list
+                return View(new List<JobPostingCardDTO>());
+            }
+
+            return View(result.Data);
+        }
+        
+        // GET: Worker/MyJobs
+        [HttpGet]
+        public async Task<IActionResult> MyJobs()
+        {
+            var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(workerId)) return Unauthorized();
+
+            var result = await _workerService.GetMyAppliedJobsAsync(workerId);
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
                 return View(new List<JobPostingCardDTO>());
             }
 
             return View(result.Data);
         }
 
+        // GET: Worker/ApplyToJob
+        [HttpGet]
+        public async Task<IActionResult> ApplyToJob(string jobPostingId)
+        {
+            if (string.IsNullOrWhiteSpace(jobPostingId))
+            {
+                TempData["ErrorMessage"] = "Job posting ID is required.";
+                return RedirectToAction(nameof(JobBoard));
+            }
+
+            var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(workerId)) return Unauthorized();
+
+            var jobsResult = await _workerService.GetOpenJobPostingsAsync(workerId);
+            if (!jobsResult.IsSuccess || jobsResult.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", jobsResult.Messages ?? new[] { "Could not load job posting." });
+                return RedirectToAction(nameof(JobBoard));
+            }
+
+            var job = jobsResult.Data.FirstOrDefault(j => j.Id == jobPostingId);
+            if (job == null)
+            {
+                TempData["ErrorMessage"] = "Job posting not found or no longer available.";
+                return RedirectToAction(nameof(JobBoard));
+            }
+
+            ViewBag.JobPostingId = jobPostingId;
+            ViewBag.JobTitle = job.Title;
+            ViewBag.JobCity = job.City;
+            ViewBag.JobAddress = string.Empty;
+
+            return View(new JobApplicationCreateDTO());
+        }
+
         // POST: Worker/ApplyForJob
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApplyForJob(string jobId)
+        public async Task<IActionResult> ApplyForJob(string jobPostingId, JobApplicationCreateDTO model)
         {
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(workerId)) return Unauthorized();
 
-            var result = await _workerService.ApplyForJobAsync(jobId, workerId);
+            if (string.IsNullOrWhiteSpace(jobPostingId))
+            {
+                TempData["ErrorMessage"] = "Job posting ID is required.";
+                return RedirectToAction(nameof(JobBoard));
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var jobsResult = await _workerService.GetOpenJobPostingsAsync(workerId);
+                var job = jobsResult.IsSuccess ? jobsResult.Data?.FirstOrDefault(j => j.Id == jobPostingId) : null;
+
+                ViewBag.JobPostingId = jobPostingId;
+                ViewBag.JobTitle = job?.Title ?? "Job Posting";
+                ViewBag.JobCity = job?.City ?? "N/A";
+                ViewBag.JobAddress = string.Empty;
+
+                return View("ApplyToJob", model);
+            }
+
+            var result = await _workerService.ApplyForJobAsync(jobPostingId, workerId, model);
 
             if (result.IsSuccess)
             {
                 TempData["SuccessMessage"] = "You have successfully applied for the job!";
-            }
-            else
-            {
-                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+                return RedirectToAction(nameof(JobBoard));
             }
 
+            TempData["ErrorMessage"] = string.Join(" ", result.Messages);
             return RedirectToAction(nameof(JobBoard));
         }
 
         // GET: Worker/MyBookings
+        [HttpGet]
         public async Task<IActionResult> MyBookings()
         {
             var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -107,11 +178,28 @@ namespace WebUi.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
-                // FIX: service returns BookingListItemDTO list
                 return View(new List<BookingListItemDTO>());
             }
 
             return View(result.Data);
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> BookingDetails(string bookingId)
+        {
+            var workerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(workerId)) return Unauthorized();
+
+            var result = await _workerService.GetBookingDetailsAsync(bookingId, workerId);
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages ?? new[] { "Booking not found." });
+                return RedirectToAction(nameof(MyBookings));
+            }
+
+            ViewBag.BookingMode = "worker";
+            return View("~/Views/Shared/BookingDetails.cshtml", result.Data);
         }
 
         // POST: Worker/RespondToBooking

@@ -5,236 +5,527 @@
     ViewData["Title"] = $"{Model.FirstName} - Worker Details";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <!-- Left Column: Profile & Basic Info -->
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <!-- Profile Picture -->
-                @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
-                {
-                    <img src="@Model.ProfilePictureUrl" alt="@Model.FirstName" class="card-img-top" style="height: 300px; object-fit: cover;" />
-                }
-                else
-                {
-                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 300px; color: white; font-size: 48px;">
-                        <i class="bi bi-person"></i>
-                    </div>
-                }
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-                <div class="card-body">
-                    <h2 class="card-title">@Model.FirstName</h2>
-                    
-                    <!-- Rating & Reviews -->
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-warning text-dark">
-                                ⭐ @Model.AverageRating.ToString("0.0") / 5.0
-                            </span>
-                            <small class="text-muted">(@Model.TotalReviews reviews)</small>
-                        </div>
-                    </div>
+<style>
+    .wd-wrap {
+        max-width: 1180px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: #0f1e35;
+    }
 
-                    <!-- Location & Status -->
-                    <div class="mb-3">
-                        <p class="mb-1"><strong>📍 City:</strong> @Model.City</p>
-                        <p class="mb-1"><strong>🚬 Smoker:</strong> @(Model.IsSmoker ? "Yes" : "No")</p>
-                    </div>
+    .wd-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 10px 30px rgba(0,0,0,.06);
+        overflow: hidden;
+    }
 
-                    <!-- Hourly Rates -->
-                    <div class="mb-3">
-                        <p class="mb-1">
-                            <strong>💰 Hourly Rate:</strong><br />
-                            @if (Model.MinHourlyRate.HasValue || Model.MaxHourlyRate.HasValue)
-                            {
-                                <span>
-                                    @(Model.MinHourlyRate?.ToString("$0.00") ?? "-") 
-                                    to 
-                                    @(Model.MaxHourlyRate?.ToString("$0.00") ?? "-")
+    .wd-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .wd-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -.35px;
+    }
+
+    .wd-sub {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: .9rem;
+    }
+
+    .wd-back-btn {
+        border: 1.5px solid rgba(255,255,255,.3);
+        border-radius: 10px;
+        padding: 9px 14px;
+        background: transparent;
+        color: #fff !important;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: .87rem;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        transition: all .18s ease;
+        white-space: nowrap;
+    }
+
+    .wd-back-btn:hover {
+        background: rgba(255,255,255,.10);
+        border-color: rgba(255,255,255,.5);
+        color: #fff !important;
+    }
+
+    .wd-body {
+        padding: 22px;
+        background: #f8fafc;
+    }
+
+    .wd-grid {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .wd-card {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .wd-card + .wd-card {
+        margin-top: 14px;
+    }
+
+    .wd-card-head {
+        padding: 12px 14px;
+        border-bottom: 1px solid #edf1f6;
+        background: #fcfdff;
+    }
+
+    .wd-card-title {
+        margin: 0;
+        font-size: .93rem;
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+        color: #0f1e35;
+    }
+
+    .wd-card-body {
+        padding: 14px;
+    }
+
+    .wd-profile-img {
+        width: 100%;
+        height: 290px;
+        object-fit: cover;
+        background: #dbe3ef;
+    }
+
+    .wd-profile-fallback {
+        width: 100%;
+        height: 290px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(125deg, #1c2b48 0%, #304f84 100%);
+        color: #fff;
+        font-size: 52px;
+    }
+
+    .wd-name {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f1e35;
+        letter-spacing: -.2px;
+    }
+
+    .wd-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: #fff7e8;
+        border: 1px solid #ffd79a;
+        color: #8b5e06;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .wd-reviews {
+        color: #7a8699;
+        font-size: .84rem;
+        margin-left: 8px;
+    }
+
+    .wd-meta {
+        margin: 12px 0 0;
+        display: grid;
+        gap: 8px;
+        font-size: .9rem;
+    }
+
+    .wd-meta strong {
+        color: #2a3b59;
+    }
+
+    .wd-rate {
+        font-size: .9rem;
+        color: #1d2f4d;
+        font-weight: 600;
+    }
+
+    .wd-actions {
+        margin-top: 14px;
+        display: grid;
+        gap: 8px;
+    }
+
+    .wd-btn-primary {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #ffb84d 0%, #f59e0b 100%);
+        color: #1f1400 !important;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: .9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all .18s ease;
+    }
+
+    .wd-btn-primary:hover {
+        filter: brightness(1.03);
+        transform: translateY(-1px);
+        color: #1f1400 !important;
+    }
+
+    .wd-btn-ghost {
+        border: 1.4px solid #d3dbea;
+        border-radius: 10px;
+        padding: 9px 12px;
+        background: #fff;
+        color: #23324f !important;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: .88rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all .18s ease;
+    }
+
+    .wd-btn-ghost:hover {
+        border-color: #b7c4de;
+        background: #f8fbff;
+        color: #1a2744 !important;
+    }
+
+    .wd-pill-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .wd-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: .78rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+    }
+
+    .wd-pill.service { background: #e9f2ff; color: #1d4e89; border-color: #c6dcff; }
+    .wd-pill.skill { background: #e9faef; color: #116a3a; border-color: #bcefd0; }
+    .wd-pill.age { background: #f1efff; color: #4b3ea8; border-color: #d7d2ff; }
+    .wd-pill.lang { background: #fff8e8; color: #8b5e06; border-color: #ffe1aa; }
+
+    .wd-info-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .wd-info-item {
+        border: 1px solid #edf1f6;
+        background: #fcfdff;
+        border-radius: 10px;
+        padding: 10px 11px;
+    }
+
+    .wd-info-label {
+        margin: 0 0 3px;
+        font-size: .75rem;
+        color: #7a8699;
+        text-transform: uppercase;
+        letter-spacing: .45px;
+        font-weight: 700;
+    }
+
+    .wd-info-value {
+        margin: 0;
+        font-size: .9rem;
+        color: #132743;
+        font-weight: 700;
+    }
+
+    .wd-review-box {
+        margin-top: 16px;
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .wd-review-head {
+        padding: 12px 14px;
+        background: #fcfdff;
+        border-bottom: 1px solid #edf1f6;
+    }
+
+    .wd-review-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: .95rem;
+        font-weight: 800;
+    }
+
+    .wd-review-body {
+        padding: 14px;
+        color: #607089;
+        font-size: .9rem;
+    }
+
+    .wd-video {
+        width: 100%;
+        max-height: 420px;
+        border-radius: 10px;
+        border: 1px solid #e4e8ee;
+        background: #f3f6fb;
+    }
+
+    @@media (max-width: 991.98px) {
+        .wd-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .wd-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="wd-wrap">
+    <div class="wd-shell">
+        <div class="wd-head">
+            <div>
+                <h1 class="wd-title">@Model.FirstName's Profile</h1>
+                <p class="wd-sub">Review worker details, experience, and preferences before booking.</p>
+            </div>
+            <a asp-controller="Customer" asp-action="WorkerShop" class="wd-back-btn">
+                <i class="bi bi-arrow-left"></i> Back to Workers
+            </a>
+        </div>
+
+        <div class="wd-body">
+            <div class="wd-grid">
+                <div>
+                    <div class="wd-card">
+                        @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
+                        {
+                            <img src="@Model.ProfilePictureUrl" alt="@Model.FirstName" class="wd-profile-img" />
+                        }
+                        else
+                        {
+                            <div class="wd-profile-fallback">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        }
+
+                        <div class="wd-card-body">
+                            <h2 class="wd-name">@Model.FirstName</h2>
+
+                            <div class="mt-2 d-flex align-items-center flex-wrap">
+                                <span class="wd-rating">
+                                    <i class="bi bi-star-fill"></i> @Model.AverageRating.ToString("0.0") / 5.0
                                 </span>
-                            }
-                            else
-                            {
-                                <span>Not specified</span>
-                            }
-                        </p>
-                    </div>
+                                <span class="wd-reviews">(@Model.TotalReviews reviews)</span>
+                            </div>
 
-                    <!-- Experience -->
-                    <div class="mb-3">
-                        <p><strong>📅 Experience:</strong> @Model.ExperienceYears years</p>
-                    </div>
+                            <div class="wd-meta">
+                                <p class="mb-0"><strong>City:</strong> @Model.City</p>
+                                <p class="mb-0"><strong>Smoker:</strong> @(Model.IsSmoker ? "Yes" : "No")</p>
+                                <p class="mb-0 wd-rate">
+                                    <strong>Hourly Rate:</strong>
+                                    @if (Model.MinHourlyRate.HasValue || Model.MaxHourlyRate.HasValue)
+                                    {
+                                        <span>
+                                            @(Model.MinHourlyRate?.ToString("$0.00") ?? "-")
+                                            to
+                                            @(Model.MaxHourlyRate?.ToString("$0.00") ?? "-")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span> Not specified</span>
+                                    }
+                                </p>
+                                <p class="mb-0"><strong>Experience:</strong> @Model.ExperienceYears years</p>
+                            </div>
 
-                    <!-- Action Buttons -->
-                    <div class="d-grid gap-2">
-                        <a asp-controller="Customer" asp-action="BookWorker" asp-route-workerId="@Model.Id"
-                           class="btn btn-success btn-lg">
-                            📋 Book This Worker
-                        </a>
-                        <a asp-controller="Customer" asp-action="WorkerShop"
-                           class="btn btn-outline-secondary">
-                            ← Back to Workers
-                        </a>
+                            <div class="wd-actions">
+                                <a asp-controller="Customer" asp-action="BookWorker" asp-route-workerId="@Model.Id" class="wd-btn-primary">
+                                    <i class="bi bi-calendar2-check"></i> Book This Worker
+                                </a>
+                                <a asp-controller="Customer" asp-action="WorkerShop" class="wd-btn-ghost">
+                                    <i class="bi bi-grid"></i> Browse More Workers
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                    {
+                        <div class="wd-card">
+                            <div class="wd-card-head">
+                                <h5 class="wd-card-title">About</h5>
+                            </div>
+                            <div class="wd-card-body">
+                                <p class="mb-0" style="color:#364c6d;">@Model.Bio</p>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.IntroductionVideoUrl))
+                    {
+                        <div class="wd-card">
+                            <div class="wd-card-head">
+                                <h5 class="wd-card-title">Introduction Video</h5>
+                            </div>
+                            <div class="wd-card-body">
+                                <video class="wd-video" controls>
+                                    <source src="@Model.IntroductionVideoUrl" type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.OfferedServices != null && Model.OfferedServices.Any())
+                    {
+                        <div class="wd-card">
+                            <div class="wd-card-head">
+                                <h5 class="wd-card-title">Services</h5>
+                            </div>
+                            <div class="wd-card-body">
+                                <div class="wd-pill-wrap">
+                                    @foreach (var service in Model.OfferedServices)
+                                    {
+                                        <span class="wd-pill service">@service</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Skills != null && Model.Skills.Any())
+                    {
+                        <div class="wd-card">
+                            <div class="wd-card-head">
+                                <h5 class="wd-card-title">Skills</h5>
+                            </div>
+                            <div class="wd-card-body">
+                                <div class="wd-pill-wrap">
+                                    @foreach (var skill in Model.Skills)
+                                    {
+                                        <span class="wd-pill skill">@skill</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.ExperiencedAgeGroups != null && Model.ExperiencedAgeGroups.Any())
+                    {
+                        <div class="wd-card">
+                            <div class="wd-card-head">
+                                <h5 class="wd-card-title">Experience with Age Groups</h5>
+                            </div>
+                            <div class="wd-card-body">
+                                <div class="wd-pill-wrap">
+                                    @foreach (var ageGroup in Model.ExperiencedAgeGroups)
+                                    {
+                                        <span class="wd-pill age">@ageGroup</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.LanguagesSpoken != null && Model.LanguagesSpoken.Any())
+                    {
+                        <div class="wd-card">
+                            <div class="wd-card-head">
+                                <h5 class="wd-card-title">Languages</h5>
+                            </div>
+                            <div class="wd-card-body">
+                                <div class="wd-pill-wrap">
+                                    @foreach (var language in Model.LanguagesSpoken)
+                                    {
+                                        <span class="wd-pill lang">@language</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="wd-card">
+                        <div class="wd-card-head">
+                            <h5 class="wd-card-title">Work Preferences</h5>
+                        </div>
+                        <div class="wd-card-body">
+                            <div class="wd-info-grid">
+                                <div class="wd-info-item">
+                                    <p class="wd-info-label">Arrangement</p>
+                                    <p class="wd-info-value">@Model.PreferredArrangement</p>
+                                </div>
+                                <div class="wd-info-item">
+                                    <p class="wd-info-label">Commitment</p>
+                                    <p class="wd-info-value">@Model.CommitmentPreference</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Right Column: Detailed Information -->
-        <div class="col-md-8">
-            <!-- Bio Section -->
-            @if (!string.IsNullOrWhiteSpace(Model.Bio))
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">About</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>@Model.Bio</p>
-                    </div>
+            <div class="wd-review-box">
+                <div class="wd-review-head">
+                    <h5 class="wd-review-title">Reviews (@Model.TotalReviews)</h5>
                 </div>
-            }
-
-            <!-- Introduction Video -->
-            @if (!string.IsNullOrWhiteSpace(Model.IntroductionVideoUrl))
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Introduction Video</h5>
-                    </div>
-                    <div class="card-body">
-                        <video width="100%" height="400" controls style="border-radius: 8px;">
-                            <source src="@Model.IntroductionVideoUrl" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                </div>
-            }
-
-            <!-- Services Offered -->
-            @if (Model.OfferedServices != null && Model.OfferedServices.Any())
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Services</h5>
-                    </div>
-                    <div class="card-body">
-                        <div>
-                            @foreach (var service in Model.OfferedServices)
-                            {
-                                <span class="badge bg-info me-2 mb-2">@service</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Skills -->
-            @if (Model.Skills != null && Model.Skills.Any())
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Skills</h5>
-                    </div>
-                    <div class="card-body">
-                        <div>
-                            @foreach (var skill in Model.Skills)
-                            {
-                                <span class="badge bg-success me-2 mb-2">@skill</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Age Groups Experience -->
-            @if (Model.ExperiencedAgeGroups != null && Model.ExperiencedAgeGroups.Any())
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Experience with Age Groups</h5>
-                    </div>
-                    <div class="card-body">
-                        <div>
-                            @foreach (var ageGroup in Model.ExperiencedAgeGroups)
-                            {
-                                <span class="badge bg-secondary me-2 mb-2">@ageGroup</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Languages -->
-            @if (Model.LanguagesSpoken != null && Model.LanguagesSpoken.Any())
-            {
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Languages</h5>
-                    </div>
-                    <div class="card-body">
-                        <div>
-                            @foreach (var language in Model.LanguagesSpoken)
-                            {
-                                <span class="badge bg-warning text-dark me-2 mb-2">@language</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Work Preferences -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Work Preferences</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2"><strong>Arrangement:</strong> @Model.PreferredArrangement</p>
-                    <p><strong>Commitment:</strong> @Model.CommitmentPreference</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reviews Section (Full Width) -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Reviews (@Model.TotalReviews)</h5>
-                </div>
-                <div class="card-body">
+                <div class="wd-review-body">
                     @if (Model.TotalReviews > 0)
                     {
-                        <p class="text-muted">Reviews will be displayed here (implement review listing)</p>
+                        <p class="mb-0">Reviews list can be plugged in here when your detailed review component is ready.</p>
                     }
                     else
                     {
-                        <p class="text-muted">No reviews yet. Be the first to review this worker!</p>
+                        <p class="mb-0">No reviews yet. Be the first to review this worker after a completed booking.</p>
                     }
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .card {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        border: none;
-    }
-
-    .badge {
-        font-size: 0.85rem;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .card-header {
-        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .btn-lg {
-        font-size: 1.1rem;
-        padding: 0.75rem 1.5rem;
-    }
-</style>

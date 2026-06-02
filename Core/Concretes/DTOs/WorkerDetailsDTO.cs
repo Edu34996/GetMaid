@@ -7,6 +7,7 @@ namespace Core.Concretes.DTOs
     {
         public string Id { get; set; } = null!;
         public string FirstName { get; set; } = null!;
+        public string LastName { get; set; } = null!;
         public string ProfilePictureUrl { get; set; } = null!;
         public string City { get; set; } = null!;
         public bool IsSmoker { get; set; }

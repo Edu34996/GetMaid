@@ -13,10 +13,13 @@ namespace Business.Profiles
             CreateMap<ServiceRequestCreateDTO, Booking>()
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.TargetWorkerId));
 
-            // 2. List View Mapping
+            // 2. List View Mapping (customer tracks worker)
             CreateMap<Booking, BookingListItemDTO>()
-                // Map the Customer navigation property to the DTO properties
-                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer != null ? src.Customer.FirstName : "N/A"))
+                .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
+                .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src =>
+                    src.Worker != null ? $"{src.Worker.FirstName} {src.Worker.LastName}" : "Unassigned"))
+                .ForMember(dest => dest.WorkerProfilePictureUrl, opt => opt.MapFrom(src =>
+                    src.Worker != null ? src.Worker.ProfilePictureUrl : null))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
             // 3. Detail View Mapping

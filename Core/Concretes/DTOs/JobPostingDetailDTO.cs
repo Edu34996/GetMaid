@@ -10,8 +10,13 @@ namespace Core.Concretes.DTOs
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string? Requirements { get; set; }
-        public string Location { get; set; } = null!;
+     
+        public string City { get; set; } = null!;
+        public string? Address { get; set; }
 
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int EstimatedHours { get; set; }

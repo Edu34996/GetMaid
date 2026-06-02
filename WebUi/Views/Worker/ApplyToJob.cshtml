@@ -1,0 +1,243 @@
+@model Core.Concretes.DTOs.JobApplicationCreateDTO
+
+@{
+    ViewData["Title"] = "Apply to Job";
+    var jobId = ViewBag.JobPostingId as string ?? "";
+    var jobTitle = ViewBag.JobTitle as string ?? "Job Posting";
+    var jobCity = ViewBag.JobCity as string ?? "N/A";
+    var jobAddress = ViewBag.JobAddress as string ?? "";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+    .apply-wrap {
+        max-width: 980px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: #0f1e35;
+    }
+
+    .apply-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+        overflow: hidden;
+    }
+
+    .apply-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+    }
+
+    .apply-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
+    .apply-sub {
+        margin: 6px 0 0;
+        color: rgba(255,255,255,.84);
+        font-size: .9rem;
+    }
+
+    .apply-body {
+        padding: 20px;
+        background: #f8fafc;
+    }
+
+    .apply-job-card {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+    }
+
+    .apply-job-card h4 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+    }
+
+    .apply-form {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    .apply-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .apply-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .apply-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .apply-label {
+        font-size: .8rem;
+        color: #6f7d92;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+
+    .apply-input, .apply-textarea {
+        width: 100%;
+        border: 1px solid #d6ddea;
+        border-radius: 10px;
+        padding: 9px 10px;
+        font-size: .9rem;
+        background: #fff;
+    }
+
+    .apply-input:focus, .apply-textarea:focus {
+        outline: none;
+        border-color: #94b6ff;
+        box-shadow: 0 0 0 3px rgba(59,130,246,.14);
+    }
+
+    .apply-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .9rem;
+    }
+
+    .apply-actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .btn-primary-custom {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: .9rem;
+        font-weight: 700;
+        background: #10b981;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom {
+        border: 1px solid #d0d9e8;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: .9rem;
+        font-weight: 700;
+        background: #fff;
+        color: #334155;
+        text-decoration: none;
+    }
+
+    .validation-summary-errors {
+        margin-bottom: 10px;
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+        color: #b91c1c;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: .85rem;
+    }
+
+    .field-validation-error {
+        color: #b91c1c;
+        font-size: .8rem;
+    }
+
+    @@media (max-width: 768px) {
+        .apply-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="apply-wrap">
+    <div class="apply-shell">
+        <div class="apply-head">
+            <h1 class="apply-title">Apply to Job</h1>
+            <p class="apply-sub">Send your application details to the customer.</p>
+        </div>
+
+        <div class="apply-body">
+            <div class="apply-job-card">
+                <h4>@jobTitle</h4>
+                <div><strong>City:</strong> @jobCity</div>
+                <div><strong>Address:</strong> @(string.IsNullOrWhiteSpace(jobAddress) ? "Not provided" : jobAddress)</div>
+            </div>
+
+            <form asp-controller="Worker"
+                  asp-action="ApplyForJob"
+                  asp-route-jobPostingId="@jobId"
+                  method="post"
+                  class="apply-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All"></div>
+
+                <div class="apply-grid">
+                    <div class="apply-field full">
+                        <label asp-for="MessageToCustomer" class="apply-label">Message to Customer</label>
+                        <textarea asp-for="MessageToCustomer"
+                                  rows="4"
+                                  class="apply-textarea"
+                                  placeholder="Introduce yourself and explain why you're a good fit."></textarea>
+                        <span asp-validation-for="MessageToCustomer"></span>
+                    </div>
+
+                    <div class="apply-field">
+                        <label asp-for="SoonestAvailableStartDate" class="apply-label">Soonest Start Date</label>
+                        <input asp-for="SoonestAvailableStartDate" type="date" class="apply-input" />
+                        <span asp-validation-for="SoonestAvailableStartDate"></span>
+                    </div>
+
+                    <div class="apply-field">
+                        <label class="apply-label">Availability</label>
+                        <label class="apply-check">
+                            <input asp-for="IsCurrentlyWorking" />
+                            I am currently working elsewhere
+                        </label>
+                    </div>
+
+                    <div class="apply-field full">
+                        <label asp-for="QuestionsAboutWork" class="apply-label">Questions (Optional)</label>
+                        <textarea asp-for="QuestionsAboutWork"
+                                  rows="3"
+                                  class="apply-textarea"
+                                  placeholder="Any clarifications you need from the customer."></textarea>
+                        <span asp-validation-for="QuestionsAboutWork"></span>
+                    </div>
+                </div>
+
+                <div class="apply-actions">
+                    <a asp-controller="Worker" asp-action="JobBoard" class="btn-secondary-custom">Cancel</a>
+                    <button type="submit" class="btn-primary-custom">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

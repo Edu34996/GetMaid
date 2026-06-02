@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSetup : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,6 +34,7 @@ namespace Data.Migrations
                     FirstName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    ProfilePictureUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Latitude = table.Column<double>(type: "REAL", nullable: true),
                     Longitude = table.Column<double>(type: "REAL", nullable: true),
@@ -52,7 +53,6 @@ namespace Data.Migrations
                     MaxHourlyRate = table.Column<decimal>(type: "TEXT", nullable: true),
                     IsExperienced = table.Column<bool>(type: "INTEGER", nullable: true),
                     ExperienceYears = table.Column<int>(type: "INTEGER", nullable: true),
-                    ProfilePictureUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     IntroductionVideoUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     OfferedServices = table.Column<string>(type: "TEXT", nullable: true),
                     Skills = table.Column<string>(type: "TEXT", nullable: true),
@@ -212,26 +212,29 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    ServiceTypes = table.Column<string>(type: "TEXT", nullable: false),
-                    WorkArrangement = table.Column<int>(type: "INTEGER", nullable: false),
-                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: false),
-                    RequiredSkills = table.Column<string>(type: "TEXT", nullable: false),
+                    BookingInactive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    WorkerId = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     Title = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
                     Requirements = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    Location = table.Column<string>(type: "TEXT", nullable: false),
+                    City = table.Column<string>(type: "TEXT", maxLength: 120, nullable: false),
+                    Address = table.Column<string>(type: "TEXT", maxLength: 250, nullable: false),
+                    Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Longitude = table.Column<double>(type: "REAL", nullable: true),
                     StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EstimatedHours = table.Column<int>(type: "INTEGER", nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     RequireNonSmoker = table.Column<bool>(type: "INTEGER", nullable: false),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
-                    CustomerId = table.Column<string>(type: "TEXT", nullable: false),
-                    BookingInactive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    WorkerId = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    ServiceTypes = table.Column<string>(type: "TEXT", nullable: false),
+                    WorkArrangement = table.Column<int>(type: "INTEGER", nullable: false),
+                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: false),
+                    RequiredSkills = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -255,6 +258,7 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
+                    FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     Age = table.Column<int>(type: "INTEGER", nullable: true),
                     Bio = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     SpecialCareInstructions = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
@@ -279,26 +283,29 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    ServiceTypes = table.Column<string>(type: "TEXT", nullable: false),
-                    WorkArrangement = table.Column<int>(type: "INTEGER", nullable: false),
-                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: false),
-                    RequiredSkills = table.Column<string>(type: "TEXT", nullable: false),
+                    PostInactive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AssignedWorkerId = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     Title = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
                     Requirements = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    Location = table.Column<string>(type: "TEXT", nullable: false),
+                    City = table.Column<string>(type: "TEXT", maxLength: 120, nullable: false),
+                    Address = table.Column<string>(type: "TEXT", maxLength: 250, nullable: false),
+                    Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Longitude = table.Column<double>(type: "REAL", nullable: true),
                     StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EstimatedHours = table.Column<int>(type: "INTEGER", nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     RequireNonSmoker = table.Column<bool>(type: "INTEGER", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    CustomerId = table.Column<string>(type: "TEXT", nullable: false),
-                    PostInactive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AssignedWorkerId = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    ServiceTypes = table.Column<string>(type: "TEXT", nullable: false),
+                    WorkArrangement = table.Column<int>(type: "INTEGER", nullable: false),
+                    CommitmentPreference = table.Column<int>(type: "INTEGER", nullable: false),
+                    RequiredSkills = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -384,6 +391,10 @@ namespace Data.Migrations
                     SoonestAvailableStartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsCurrentlyWorking = table.Column<bool>(type: "INTEGER", nullable: false),
                     QuestionsAboutWork = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    AppliedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    RejectedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    AcceptedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    BookingId = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -397,6 +408,11 @@ namespace Data.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_JobApplications_Bookings_BookingId",
+                        column: x => x.BookingId,
+                        principalTable: "Bookings",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_JobApplications_JobPostings_JobPostingId",
                         column: x => x.JobPostingId,
@@ -458,6 +474,11 @@ namespace Data.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_JobApplications_BookingId",
+                table: "JobApplications",
+                column: "BookingId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JobApplications_JobPostingId",
                 table: "JobApplications",
                 column: "JobPostingId");
@@ -512,9 +533,6 @@ namespace Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Bookings");
-
-            migrationBuilder.DropTable(
                 name: "Children");
 
             migrationBuilder.DropTable(
@@ -531,6 +549,9 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Bookings");
 
             migrationBuilder.DropTable(
                 name: "JobPostings");

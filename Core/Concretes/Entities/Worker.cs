@@ -20,10 +20,6 @@ namespace Core.Concretes.Entities
         public int? ExperienceYears { get; set; }
 
         // --- Media & Trust Properties ---
-        //[Required]
-        [MaxLength(500)]
-        public string? ProfilePictureUrl { get; set; }
-
         [MaxLength(500)]
         public string? IntroductionVideoUrl { get; set; }
         

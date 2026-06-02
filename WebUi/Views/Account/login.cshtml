@@ -1,24 +1,310 @@
 @model Core.Concretes.DTOs.LoginDTO
 
-<h2>Login</h2>
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<form asp-action="Login" method="post">
-    <div asp-validation-summary="ModelOnly" style="color:red"></div>
-    
-    <div>
-        <label>Email</label><br />
-        <input asp-for="Email" />
-    </div>
-    <div>
-        <label>Password</label><br />
-        <input asp-for="Password" type="password" />
-    </div>
-    <div>
-        <input asp-for="RememberMe" /> <label>Remember Me</label>
-    </div>
-    <button type="submit">Login</button>
-</form>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-<hr />
-<a asp-action="RegisterCustomer">Register as Customer</a> | 
-<a asp-action="RegisterWorker">Register as Worker</a>
+<style>
+    .lg-wrap {
+        max-width: 1080px;
+        margin: 24px auto 48px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        padding: 0 12px;
+    }
+
+    .lg-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+        overflow: hidden;
+    }
+
+    .lg-grid {
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
+        min-height: 580px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .lg-grid { grid-template-columns: 1fr; }
+    }
+
+    .lg-hero {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 34px 32px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .lg-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .lg-brand-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.05rem;
+        box-shadow: 0 4px 12px rgba(245,158,11,.38);
+    }
+
+    .lg-brand-name {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+        font-size: 1.05rem;
+        letter-spacing: -.3px;
+    }
+
+    .lg-brand-name span { color: #f59e0b; }
+
+    .lg-title {
+        font-family: 'Nunito', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.15;
+        margin: 10px 0 10px;
+        letter-spacing: -.5px;
+    }
+
+    .lg-sub {
+        color: rgba(255,255,255,.82);
+        font-size: .95rem;
+        max-width: 40ch;
+        margin: 0;
+    }
+
+    .lg-points {
+        margin-top: 26px;
+        display: grid;
+        gap: 10px;
+    }
+
+    .lg-point {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255,255,255,.88);
+        font-size: .88rem;
+    }
+
+    .lg-point i {
+        color: #f59e0b;
+        font-size: .95rem;
+    }
+
+    .lg-card {
+        padding: 30px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+    }
+
+    .lg-form-wrap {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .lg-form-title {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #0f1e35;
+        margin: 0 0 4px;
+        letter-spacing: -.3px;
+    }
+
+    .lg-form-sub {
+        color: #7a8699;
+        margin: 0 0 20px;
+        font-size: .9rem;
+    }
+
+    .lg-field { margin-bottom: 14px; }
+
+    .lg-label {
+        display: block;
+        font-size: .8rem;
+        font-weight: 700;
+        color: #3f4d63;
+        margin-bottom: 6px;
+    }
+
+    .lg-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #e4e8ee;
+        border-radius: 10px;
+        background: #f8fafc;
+        font-size: .9rem;
+        color: #0f1e35;
+        outline: none;
+        transition: all .2s;
+    }
+
+    .lg-input:focus {
+        border-color: #f59e0b;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+    }
+
+    .lg-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 2px 0 16px;
+        color: #3f4d63;
+        font-size: .86rem;
+    }
+
+    .lg-check input {
+        width: 16px;
+        height: 16px;
+        accent-color: #f59e0b;
+    }
+
+    .lg-btn {
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        box-shadow: 0 8px 18px rgba(217,119,6,.24);
+        transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+        cursor: pointer;
+    }
+
+    .lg-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(217,119,6,.3);
+        filter: brightness(1.02);
+    }
+
+    .lg-error-summary {
+        border-radius: 10px;
+        border: 1.5px solid #fecaca;
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 10px 12px;
+        font-size: .86rem;
+        margin-bottom: 14px;
+    }
+
+    .field-validation-error {
+        color: #dc2626;
+        font-size: .78rem;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .lg-links {
+        margin-top: 16px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        font-size: .86rem;
+        color: #7a8699;
+    }
+
+    .lg-links a {
+        color: #1f3561;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .lg-links a:hover { color: #d97706; }
+
+    .validation-summary-valid { display: none; }
+</style>
+
+<div class="lg-wrap">
+    <div class="lg-shell">
+        <div class="lg-grid">
+            <section class="lg-hero">
+                <div>
+                    <div class="lg-brand">
+                        <span class="lg-brand-logo"><i class="bi bi-house-heart-fill"></i></span>
+                        <span class="lg-brand-name">Get<span>Maid</span></span>
+                    </div>
+
+                    <h1 class="lg-title">Welcome back</h1>
+                    <p class="lg-sub">
+                        Sign in to manage bookings, update your profile, and continue where you left off.
+                    </p>
+                </div>
+
+                <div class="lg-points">
+                    <div class="lg-point"><i class="bi bi-check-circle-fill"></i><span>Secure account sign-in</span></div>
+                    <div class="lg-point"><i class="bi bi-check-circle-fill"></i><span>Access customer and worker dashboards</span></div>
+                    <div class="lg-point"><i class="bi bi-check-circle-fill"></i><span>Track jobs, bookings, and profile updates</span></div>
+                </div>
+            </section>
+
+            <section class="lg-card">
+                <div class="lg-form-wrap">
+                    <h2 class="lg-form-title">Sign in</h2>
+                    <p class="lg-form-sub">Enter your account credentials.</p>
+
+                    <form asp-action="Login" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="lg-error-summary"></div>
+
+                        <div class="lg-field">
+                            <label asp-for="Email" class="lg-label"></label>
+                            <input asp-for="Email" class="lg-input" />
+                            <span asp-validation-for="Email"></span>
+                        </div>
+
+                        <div class="lg-field">
+                            <label asp-for="Password" class="lg-label"></label>
+                            <input asp-for="Password" type="password" class="lg-input" />
+                            <span asp-validation-for="Password"></span>
+                        </div>
+
+                        <label class="lg-check">
+                            <input asp-for="RememberMe" />
+                            <span>Remember me</span>
+                        </label>
+
+                        <button type="submit" class="lg-btn">Sign In</button>
+                    </form>
+
+                    <div class="lg-links">
+                        <span>New here?</span>
+                        <a asp-action="RegisterCustomer">Register as Customer</a>
+                        <span>•</span>
+                        <a asp-action="RegisterWorker">Register as Worker</a>
+                    </div>
+
+                    <div class="lg-links" style="margin-top:8px;">
+                        <a asp-action="ForgotPassword">Forgot password?</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

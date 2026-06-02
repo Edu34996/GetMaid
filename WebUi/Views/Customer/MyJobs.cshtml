@@ -3,70 +3,320 @@
 
 @{
     ViewData["Title"] = "My Job Postings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var jobs = (Model ?? Enumerable.Empty<JobPostingCardDTO>()).ToList();
 }
 
-<h1>My Job Postings</h1>
-<a asp-controller="Customer" asp-action="CreateJob" class="btn btn-primary btn-sm">Post a New Job</a>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="text-success border border-success p-2 mb-3">
-        @TempData["SuccessMessage"]
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="text-danger border border-danger p-2 mb-3">
-        @TempData["ErrorMessage"]
-    </div>
-}
-
-<table class="table table-bordered">
-    <thead>
-    <tr>
-        <th>Title</th>
-        <th>Location</th>
-        <th>Start Date</th>
-        <th>Budget</th>
-        <th>Services</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @if (Model != null && Model.Any())
-    {
-        foreach (var job in Model)
-        {
-            <tr>
-                <td>@job.Title</td>
-                <td>@job.Location</td>
-                <td>@job.StartDate.ToShortDateString()</td>
-                <td>@job.Budget.ToString("0.00")</td>
-                <td>
-                    @if (job.ServiceTypes != null && job.ServiceTypes.Any())
-                    {
-                        @foreach (var service in job.ServiceTypes)
-                        {
-                            <span class="badge bg-secondary me-1">@service</span>
-                        }
-                    }
-                </td>
-                <td>
-                    <a asp-controller="Customer" asp-action="ReviewApplicants" asp-route-jobId="@job.Id"
-                       class="btn btn-info btn-sm text-white">
-                        Review Applicants
-                    </a>
-                </td>
-            </tr>
-        }
+<style>
+    .mj-wrap {
+        max-width: 1120px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
     }
-    else
-    {
-        <tr>
-            <td colspan="6">You haven't posted any jobs yet.</td>
-        </tr>
+
+    .mj-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+        overflow: hidden;
     }
-    </tbody>
-</table>
+
+    .mj-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .mj-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -.4px;
+    }
+
+    .mj-sub {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: .9rem;
+    }
+
+    .mj-head-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff !important;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(217,119,6,.2);
+        transition: all .18s ease;
+        white-space: nowrap;
+    }
+
+    .mj-head-btn:hover {
+        filter: brightness(1.03);
+        transform: translateY(-1px);
+        color: #fff !important;
+    }
+
+    .mj-body {
+        padding: 22px;
+        background: #f8fafc;
+    }
+
+    .mj-alert-ok {
+        border-radius: 12px;
+        background: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        color: #15803d;
+        font-size: .86rem;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .mj-alert-err {
+        border-radius: 12px;
+        background: #fef2f2;
+        border: 1.5px solid #fecaca;
+        color: #dc2626;
+        font-size: .86rem;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .mj-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    @@media (max-width: 767.98px) {
+        .mj-stats { grid-template-columns: 1fr; }
+    }
+
+    .mj-stat {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .mj-stat-label {
+        display: block;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        color: #7a8699;
+        margin-bottom: 4px;
+    }
+
+    .mj-stat-val {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0f1e35;
+        line-height: 1;
+    }
+
+    .mj-table-wrap {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .mj-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .mj-table th,
+    .mj-table td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #e4e8ee;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .mj-table th {
+        font-size: .76rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #7a8699;
+        font-weight: 700;
+        background: #f8fafc;
+    }
+
+    .mj-table td {
+        color: #0f1e35;
+        font-size: .88rem;
+    }
+
+    .mj-services {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .mj-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: .74rem;
+        font-weight: 700;
+        background: #eef2ff;
+        color: #4338ca;
+        border: 1px solid #c7d2fe;
+    }
+
+    .mj-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .mj-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        border-radius: 9px;
+        padding: 7px 10px;
+        text-decoration: none;
+        color: #fff !important;
+        font-size: .78rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: all .18s ease;
+    }
+
+    .mj-action-btn:hover {
+        filter: brightness(1.04);
+        transform: translateY(-1px);
+    }
+
+    .mj-applicants-btn {
+        background: #0ea5e9;
+    }
+
+    .mj-browse-btn {
+        background: #10b981;
+    }
+
+    .mj-empty {
+        text-align: center;
+        padding: 40px 18px;
+        color: #7a8699;
+    }
+
+    .mj-empty h3 {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.05rem;
+        color: #0f1e35;
+        margin-bottom: 6px;
+    }
+
+    .mj-empty p {
+        margin: 0 0 16px;
+        font-size: .9rem;
+    }
+
+    .mj-empty a {
+        display: inline-block;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff !important;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .mj-row-link {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+        border-radius: 8px;
+        padding: 2px 2px;
+        transition: all .15s ease;
+    }
+
+    .mj-row-link:hover {
+        color: #d97706;
+        background: rgba(245,158,11,.08);
+    }
+
+    @@media (max-width: 991.98px) {
+        .mj-table-wrap { overflow-x: auto; }
+        .mj-table { min-width: 980px; }
+    }
+</style>
+
+<div class="mj-wrap">
+    <div class="mj-shell">
+        <div class="mj-head">
+            <div>
+                <h1 class="mj-title">My Job Postings</h1>
+                <p class="mj-sub">Manage your published jobs and browse matching workers.</p>
+            </div>
+            <a asp-controller="Customer" asp-action="CreateJob" class="mj-head-btn">
+                <i class="bi bi-plus-lg me-1"></i> Post a New Job
+            </a>
+        </div>
+
+        <div class="mj-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="mj-alert-ok">
+                    <i class="bi bi-check-circle-fill me-1"></i>@TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="mj-alert-err">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i>@TempData["ErrorMessage"]
+                </div>
+            }
+
+            <div class="mj-stats">
+                <div class="mj-stat">
+                    <span class="mj-stat-label">Total Job Posts</span>
+                    <span class="mj-stat-val">@jobs.Count</span>
+                </div>
+                <div class="mj-stat">
+                    <span class="mj-stat-label">Upcoming Jobs</span>
+                    <span class="mj-stat-val">@jobs.Count(j => j.StartDate.Date >= DateTime.Today)</span>
+                </div>
+                <div class="mj-stat">
+                    <span class="mj-stat-label">Avg. Budget</span>
+                    <span class="mj-stat-val">@(jobs.Any() ? jobs.Average(j => j.Budget).ToString("0.00") : "0.00")</span>
+                </div>
+            </div>
+            
+            @{
+                var jobsTableViewData = new ViewDataDictionary(ViewData)
+                {
+                    ["Mode"] = "customer"
+                };
+            }
+            <partial name="~/Views/Shared/Tables/_JobsTable.cshtml" model="jobs" view-data="jobsTableViewData" />
+            
+        </div>
+    </div>
+</div>

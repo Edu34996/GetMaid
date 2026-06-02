@@ -1,0 +1,126 @@
+@using Core.Concretes.DTOs
+@model IEnumerable<JobPostingCardDTO>
+
+@{
+    var jobs = (Model ?? Enumerable.Empty<JobPostingCardDTO>()).ToList();
+    var mode = (ViewData["Mode"] as string ?? "customer").ToLowerInvariant(); // customer | worker
+}
+
+<div class="mj-table-wrap">
+    @if (jobs.Any())
+    {
+        <table class="mj-table">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>City</th>
+                <th>Start Date</th>
+                <th>Budget</th>
+                <th>Services</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var job in jobs)
+            {
+                <tr>
+                    <td>
+                        <a asp-controller="Customer"
+                           asp-action="JobDetails"
+                           asp-route-jobId="@job.Id"
+                           class="mj-row-link">
+                            @job.Title
+                        </a>
+                    </td>
+                    <td>
+                        <a asp-controller="Customer"
+                           asp-action="JobDetails"
+                           asp-route-jobId="@job.Id"
+                           class="mj-row-link">
+                            @job.City
+                        </a>
+                    </td>
+                    <td>
+                        <a asp-controller="Customer"
+                           asp-action="JobDetails"
+                           asp-route-jobId="@job.Id"
+                           class="mj-row-link">
+                            @job.StartDate.ToShortDateString()
+                        </a>
+                    </td>
+                    <td>
+                        <a asp-controller="Customer"
+                           asp-action="JobDetails"
+                           asp-route-jobId="@job.Id"
+                           class="mj-row-link">
+                            @job.Budget.ToString("0.00")
+                        </a>
+                    </td>
+                    <td>
+                        @if (job.ServiceTypes != null && job.ServiceTypes.Any())
+                        {
+                            <div class="mj-services">
+                                @foreach (var service in job.ServiceTypes)
+                                {
+                                    <span class="mj-badge">@service</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="mj-actions">
+                            @if (mode == "customer")
+                            {
+                                <div class="mj-actions">
+                                    <a asp-controller="Customer"
+                                       asp-action="ReviewApplicants"
+                                       asp-route-jobId="@job.Id"
+                                       class="mj-action-btn mj-browse-btn">
+                                        <i class="bi bi-people-fill"></i> Review Applicants
+                                    </a>
+
+                                    <a asp-controller="Customer"
+                                       asp-action="WorkerShop"
+                                       asp-route-city="@job.City"
+                                       asp-route-requiredServices="@(job.ServiceTypes != null ? string.Join(",", job.ServiceTypes) : null)"
+                                       class="mj-action-btn"
+                                       style="background:#0ea5e9;">
+                                        <i class="bi bi-search"></i> Browse Workers
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <a asp-controller="Worker"
+                                   asp-action="ApplyToJob"
+                                   asp-route-jobPostingId="@job.Id"
+                                   class="mj-action-btn mj-browse-btn">
+                                    <i class="bi bi-send-fill"></i> Apply
+                                </a>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="mj-empty">
+            <h3>No job postings yet</h3>
+            <p>No jobs available right now.</p>
+
+            @if (mode == "customer")
+            {
+                <a asp-controller="Customer" asp-action="CreateJob">
+                    <i class="bi bi-plus-lg me-1"></i> Post Your First Job
+                </a>
+            }
+        </div>
+    }
+</div>

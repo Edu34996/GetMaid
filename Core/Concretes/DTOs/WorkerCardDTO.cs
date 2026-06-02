@@ -28,5 +28,8 @@ namespace Core.Concretes.DTOs
 
         // Kept as an enum list so the frontend can loop through and print matching icons
         public List<ServiceType> OfferedServices { get; set; } = new List<ServiceType>();
+        
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 }

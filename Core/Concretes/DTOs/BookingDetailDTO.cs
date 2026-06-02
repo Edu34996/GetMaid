@@ -10,7 +10,14 @@ namespace Core.Concretes.DTOs
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string? Requirements { get; set; }
-        public string Location { get; set; } = null!;
+        
+        // Replaces old Location
+        public string City { get; set; } = null!;
+        public string? Address { get; set; }
+
+        // Map pin support
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -30,11 +37,15 @@ namespace Core.Concretes.DTOs
         public string CustomerName { get; set; } = null!;
         public string? CustomerAddress { get; set; }
         public string? CustomerPhoneNumber { get; set; }
-
+        
+        public string? CustomerProfilePictureUrl { get; set; }   // ← ADD
+        
         // Worker context
         public string WorkerId { get; set; } = null!;
         public string? WorkerName { get; set; }
         public string? WorkerPhoneNumber { get; set; }
+        
+        public string? WorkerProfilePictureUrl { get; set; }     // ← ADD
 
         // Booking state
         public bool BookingInactive { get; set; }

@@ -4,79 +4,218 @@
     ViewData["Title"] = "My Booking Requests";
 }
 
-<h1>My Booking Requests</h1>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="text-success border border-success p-2 mb-3">
-        @TempData["SuccessMessage"]
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="text-danger border border-danger p-2 mb-3">
-        @TempData["ErrorMessage"]
-    </div>
-}
-
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Customer Name</th>
-            <th>Title</th>
-            <th>Location</th>
-            <th>Budget</th>
-            <th>Estimated Hours</th>
-            <th>Start Date</th>
-            <th>Status</th>
-            <th>Respond</th>
-        </tr>
-    </thead>
-    <tbody>
-    @if (Model != null && Model.Any())
-    {
-        foreach (var booking in Model)
-        {
-            <tr>
-                <td>@booking.CustomerName</td>
-                <td>@booking.Title</td>
-                <td>@booking.Location</td>
-                <td>@booking.Budget.ToString("0.00")</td>
-                <td>@booking.EstimatedHours</td>
-                <td>@booking.StartDate.ToShortDateString()</td>
-                <td><strong>@booking.Status</strong></td>
-                <td>
-                    @if (booking.Status == "Pending")
-                    {
-                        <form asp-controller="Worker" asp-action="RespondToBooking" method="post" style="display:inline;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="bookingId" value="@booking.Id" />
-                            <input type="hidden" name="confirm" value="true" />
-                            <button type="submit" class="btn btn-success btn-sm">Accept</button>
-                        </form>
-
-                        <form asp-controller="Worker" asp-action="RespondToBooking" method="post" style="display:inline;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="bookingId" value="@booking.Id" />
-                            <input type="hidden" name="confirm" value="false" />
-                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <span class="text-muted">No action available</span>
-                    }
-                </td>
-            </tr>
-        }
+<style>
+    .wb-wrap {
+        max-width: 1140px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: #0f1e35;
     }
-    else
-    {
-        <tr>
-            <td colspan="8">You have no booking requests at this time.</td>
-        </tr>
+
+    .wb-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+        overflow: hidden;
     }
-    </tbody>
-</table>
+
+    .wb-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+    }
+
+    .wb-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -.3px;
+    }
+
+    .wb-sub {
+        margin: 6px 0 0;
+        color: rgba(255,255,255,.84);
+        font-size: .9rem;
+    }
+
+    .wb-body {
+        padding: 18px;
+        background: #f8fafc;
+    }
+
+    .wb-alert {
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        font-size: .86rem;
+        border: 1px solid transparent;
+    }
+
+    .wb-alert.success {
+        background: #ecfdf3;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .wb-alert.error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .wb-table-wrap {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .wb-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .wb-table th,
+    .wb-table td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #e4e8ee;
+        text-align: left;
+        vertical-align: middle;
+        font-size: .87rem;
+    }
+
+    .wb-table th {
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .45px;
+        color: #7a8699;
+        font-weight: 700;
+        background: #f8fafc;
+    }
+
+    .wb-table td {
+        color: #10213a;
+    }
+
+    .wb-customer {
+        font-weight: 700;
+        color: #10213a;
+    }
+
+    .wb-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: .73rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+    }
+
+    .wb-badge.pending {
+        background: #fff7e6;
+        color: #9a6700;
+        border-color: #fed7aa;
+    }
+
+    .wb-badge.accepted {
+        background: #ecfdf3;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .wb-badge.rejected {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .wb-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .wb-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: .76rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        line-height: 1;
+    }
+
+    .wb-btn.accept {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .wb-btn.reject {
+        background: #ef4444;
+        color: #fff;
+    }
+
+    .wb-muted {
+        color: #7a8699;
+        font-size: .82rem;
+    }
+
+    .wb-empty {
+        text-align: center;
+        padding: 34px 18px;
+        color: #6b7a8f;
+    }
+
+    .wb-empty h3 {
+        margin: 0 0 6px;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.05rem;
+        color: #10213a;
+    }
+
+    @@media (max-width: 991.98px) {
+        .wb-table-wrap { overflow-x: auto; }
+        .wb-table { min-width: 980px; }
+    }
+</style>
+
+<div class="wb-wrap">
+    <div class="wb-shell">
+        <div class="wb-head">
+            <h1 class="wb-title">My Booking Requests</h1>
+            <p class="wb-sub">Review incoming requests and respond quickly.</p>
+        </div>
+
+        <div class="wb-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="wb-alert success">@TempData["SuccessMessage"]</div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="wb-alert error">@TempData["ErrorMessage"]</div>
+            }
+
+            
+            @{
+                var bookingTableViewData = new ViewDataDictionary(ViewData)
+                {
+                    ["Mode"] = "worker",
+                    ["DetailsAction"] = "MyBookings"
+                };
+            }
+            <partial name="~/Views/Shared/Tables/_BookingTable.cshtml" model="Model" view-data="bookingTableViewData" />
+        </div>
+    </div>
+</div>

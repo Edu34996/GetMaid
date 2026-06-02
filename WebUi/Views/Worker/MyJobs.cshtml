@@ -1,0 +1,188 @@
+@using Core.Concretes.DTOs
+@model IEnumerable<JobPostingCardDTO>
+
+@{
+    ViewData["Title"] = "My Jobs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var jobs = (Model ?? Enumerable.Empty<JobPostingCardDTO>()).ToList();
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+    .mj-wrap {
+        max-width: 1120px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .mj-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+        overflow: hidden;
+    }
+
+    .mj-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .mj-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -.4px;
+    }
+
+    .mj-sub {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: .9rem;
+    }
+
+    .mj-head-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff !important;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(217,119,6,.2);
+        transition: all .18s ease;
+        white-space: nowrap;
+    }
+
+    .mj-head-btn:hover {
+        filter: brightness(1.03);
+        transform: translateY(-1px);
+        color: #fff !important;
+    }
+
+    .mj-body {
+        padding: 22px;
+        background: #f8fafc;
+    }
+
+    .mj-alert-ok {
+        border-radius: 12px;
+        background: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        color: #15803d;
+        font-size: .86rem;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .mj-alert-err {
+        border-radius: 12px;
+        background: #fef2f2;
+        border: 1.5px solid #fecaca;
+        color: #dc2626;
+        font-size: .86rem;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .mj-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    @@media (max-width: 767.98px) {
+        .mj-stats { grid-template-columns: 1fr; }
+    }
+
+    .mj-stat {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .mj-stat-label {
+        display: block;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        color: #7a8699;
+        margin-bottom: 4px;
+    }
+
+    .mj-stat-val {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0f1e35;
+        line-height: 1;
+    }
+</style>
+
+<div class="mj-wrap">
+    <div class="mj-shell">
+        <div class="mj-head">
+            <div>
+                <h1 class="mj-title">My Jobs</h1>
+                <p class="mj-sub">Jobs you have applied to and are tracking.</p>
+            </div>
+            <a asp-controller="Worker" asp-action="JobBoard" class="mj-head-btn">
+                <i class="bi bi-search me-1"></i> Browse More Jobs
+            </a>
+        </div>
+
+        <div class="mj-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="mj-alert-ok">
+                    <i class="bi bi-check-circle-fill me-1"></i>@TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="mj-alert-err">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i>@TempData["ErrorMessage"]
+                </div>
+            }
+
+            <div class="mj-stats">
+                <div class="mj-stat">
+                    <span class="mj-stat-label">Total Open Jobs</span>
+                    <span class="mj-stat-val">@jobs.Count</span>
+                </div>
+                <div class="mj-stat">
+                    <span class="mj-stat-label">Upcoming Starts</span>
+                    <span class="mj-stat-val">@jobs.Count(j => j.StartDate.Date >= DateTime.Today)</span>
+                </div>
+                <div class="mj-stat">
+                    <span class="mj-stat-label">Avg. Budget</span>
+                    <span class="mj-stat-val">@(jobs.Any() ? jobs.Average(j => j.Budget).ToString("0.00") : "0.00")</span>
+                </div>
+            </div>
+
+            @{
+                var jobsTableViewData = new ViewDataDictionary(ViewData)
+                {
+                    ["Mode"] = "worker"
+                };
+            }
+
+            <partial name="~/Views/Shared/Tables/_JobsTable.cshtml" model="jobs" view-data="jobsTableViewData" />
+        </div>
+    </div>
+</div>

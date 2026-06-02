@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Core.Concretes.DTOs;
 using Utils.Responses;
 
@@ -13,7 +11,7 @@ namespace Core.Abstracts.IServices
         
         Task<IResult<IEnumerable<JobPostingCardDTO>>> GetOpenJobPostingsAsync(string workerId);
         
-        Task<IResult> ApplyForJobAsync(string jobPostingId, string workerId);
+        Task<IResult> ApplyForJobAsync(string jobPostingId, string workerId, JobApplicationCreateDTO? model = null);
         
         Task<IResult<IEnumerable<BookingListItemDTO>>> GetMyBookingsAsync(string workerId);
         
@@ -26,5 +24,10 @@ namespace Core.Abstracts.IServices
         Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string userId);
         
         Task<IResult> UpdateReviewAsync(ReviewUpdateDTO model, string userId);
+        
+        Task<IResult<IEnumerable<JobPostingCardDTO>>> GetMyCompletedJobsAsync(string workerId);
+        
+        Task<IResult<IEnumerable<JobPostingCardDTO>>> GetMyAppliedJobsAsync(string workerId);
+        
     }
 }

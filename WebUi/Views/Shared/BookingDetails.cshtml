@@ -1,0 +1,696 @@
+@using Core.Concretes.DTOs
+@using Core.Concretes.Enums
+@model BookingDetailDTO
+
+@{
+    ViewData["Title"] = "Booking Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var bookingMode = (ViewBag.BookingMode as string) ?? string.Empty;
+    bool isCustomer = bookingMode.Equals("Customer", StringComparison.OrdinalIgnoreCase);
+
+    bool lockedByStatus = Model.Status == ApplicationStatus.Accepted
+                          || Model.Status == ApplicationStatus.Rejected
+                          || Model.Status == ApplicationStatus.Completed
+                          || Model.Status == ApplicationStatus.Cancelled;
+
+    bool canEdit = isCustomer && !lockedByStatus;
+
+    var disabledAttr = canEdit ? null : "disabled";
+    var readOnlyAttr = canEdit ? null : "readonly";
+
+    var lat = Model.Latitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null";
+    var lon = Model.Longitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet" />
+
+<style>
+    :root {
+        --cd-bg: #f0f2f6;
+        --cd-surface: #ffffff;
+        --cd-border: #e4e8ee;
+        --cd-navy: #0c1224;
+        --cd-navy-mid: #1a2744;
+        --cd-amber: #f59e0b;
+        --cd-amber-dark: #d97706;
+        --cd-text-primary: #0f1e35;
+        --cd-text-mid: #3f4d63;
+        --cd-text-soft: #7a8699;
+        --cd-radius-card: 16px;
+        --cd-radius-sm: 10px;
+        --cd-shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+    }
+
+    .bd-wrap {
+        max-width: 1120px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .bd-shell {
+        background: var(--cd-surface);
+        border: 1px solid var(--cd-border);
+        border-radius: var(--cd-radius-card);
+        box-shadow: var(--cd-shadow-card);
+        overflow: hidden;
+    }
+
+    .bd-head {
+        background: linear-gradient(125deg, var(--cd-navy) 0%, var(--cd-navy-mid) 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 28px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .bd-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -.4px;
+    }
+
+    .bd-body {
+        padding: 28px;
+        background: #f8fafc;
+    }
+
+    .bd-card {
+        background: var(--cd-surface);
+        border: 1px solid var(--cd-border);
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.03);
+    }
+
+    .bd-card-title {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--cd-text-primary);
+        margin: 0 0 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--cd-border);
+    }
+
+    .bd-label {
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--cd-text-soft);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .bd-value {
+        font-size: .9rem;
+        color: var(--cd-text-primary);
+        font-weight: 500;
+    }
+
+    /* Synchronized Inputs */
+    .bd-wrap .form-control, .bd-wrap .form-select {
+        border: 1.5px solid var(--cd-border);
+        border-radius: var(--cd-radius-sm);
+        background: #f8fafc;
+        color: var(--cd-text-primary);
+        font-size: .875rem;
+        font-family: 'DM Sans', sans-serif;
+        padding: 10px 14px;
+        transition: all .2s;
+        box-shadow: none;
+    }
+    .bd-wrap .form-control:focus, .bd-wrap .form-select:focus {
+        border-color: var(--cd-amber);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+    }
+
+    .bd-info-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 0;
+    }
+
+    .bd-status-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .2px;
+        border: 1px solid transparent;
+    }
+    .bd-status-badge.pending    { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+    .bd-status-badge.accepted,
+    .bd-status-badge.confirmed  { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+    .bd-status-badge.rejected,
+    .bd-status-badge.cancelled  { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
+    .bd-status-badge.completed  { color: #1e3a8a; background: #eff6ff; border-color: #bfdbfe; }
+
+    .bd-chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .bd-chip {
+        display: inline-block; padding: 4px 10px; border-radius: 999px;
+        background: #f0f4ff; border: 1px solid #c7d2fe; color: #3730a3;
+        font-size: .75rem; font-weight: 600;
+    }
+    .bd-chip.skill { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+
+    .bd-chip-check {
+        display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+        border-radius: 999px; font-size: .8rem; font-weight: 600; cursor: pointer;
+        border: 1.5px solid var(--cd-border); background: #fff; color: var(--cd-text-soft);
+        transition: all .15s; user-select: none;
+    }
+    .bd-chip-check input[type=checkbox] { display: none; }
+    
+    /* Matches Dashboard Active Colors */
+    .bd-chip-check.selected {
+        background: rgba(245,158,11,.1);
+        border-color: rgba(245,158,11,.4);
+        color: var(--cd-amber-dark);
+    }
+    .bd-chip-check.skill.selected {
+        background: rgba(16, 185, 129, .1);
+        border-color: rgba(16, 185, 129, .4);
+        color: #047857;
+    }
+
+    .bd-locked-note {
+        background: #fffbeb; border: 1.5px solid #fde68a; border-radius: var(--cd-radius-sm);
+        padding: 12px 16px; font-size: .85rem; color: #92400e; margin-bottom: 20px;
+    }
+
+    .bd-action-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+    /* Synchronized Buttons */
+    .bd-btn-primary {
+        border: none;
+        border-radius: var(--cd-radius-sm);
+        padding: 10px 18px;
+        background: linear-gradient(135deg, var(--cd-amber), var(--cd-amber-dark));
+        color: #fff;
+        font-weight: 700;
+        font-size: .88rem;
+        cursor: pointer;
+        transition: all .18s;
+        box-shadow: 0 2px 6px rgba(245,158,11,.25);
+    }
+    .bd-btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(245,158,11,.3); }
+
+    .bd-btn-danger {
+        border: 1px solid #fecaca;
+        border-radius: var(--cd-radius-sm);
+        padding: 10px 18px;
+        background: #fef2f2;
+        color: #dc2626;
+        font-weight: 700;
+        font-size: .88rem;
+        cursor: pointer;
+        transition: all .18s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .bd-btn-danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    .bd-btn-secondary {
+        border: 1.5px solid var(--cd-border);
+        border-radius: var(--cd-radius-sm);
+        padding: 10px 18px;
+        background: #fff;
+        color: var(--cd-text-mid);
+        font-weight: 600;
+        font-size: .88rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all .18s;
+    }
+    .bd-btn-secondary:hover { background: #f8fafc; color: var(--cd-text-primary); border-color: #cbd5e1; }
+
+    /* Alert matching */
+    .cd-alert-ok { border-radius: var(--cd-radius-sm); background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; font-size: .86rem; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; }
+    .cd-alert-err { border-radius: var(--cd-radius-sm); background: #fef2f2; border: 1.5px solid #fecaca; color: #dc2626; font-size: .86rem; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; }
+
+    @@media (max-width: 767.98px) {
+        .bd-body { padding: 16px; }
+        .bd-card { padding: 16px; }
+    }
+</style>
+
+<div class="bd-wrap">
+    <div class="bd-shell">
+
+        @* Header *@
+        <div class="bd-head">
+            <div>
+                <h1 class="bd-title">Booking Details</h1>
+                <p style="margin:4px 0 0;color:rgba(255,255,255,.8);font-size:.88rem;">
+                    @Model.Title
+                </p>
+            </div>
+            @{
+                var statusSlug = Model.Status.ToString().ToLowerInvariant();
+            }
+            <span class="bd-status-badge @statusSlug">@Model.Status</span>
+        </div>
+
+        <div class="bd-body">
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="cd-alert-err">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["ErrorMessage"]
+                </div>
+            }
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="cd-alert-ok">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (!canEdit && isCustomer)
+            {
+                <div class="bd-locked-note">
+                    <i class="bi bi-lock-fill me-1"></i>
+                    This booking is <strong>@Model.Status</strong> and can no longer be edited.
+                </div>
+            }
+
+            @* ===== MAIN FORM ===== *@
+            <form asp-controller="Customer" asp-action="UpdateBooking" method="post">
+
+                @* Preserve non-editable DTO fields as hidden *@
+                <input type="hidden" name="Id"              value="@Model.Id" />
+                <input type="hidden" name="CustomerId"      value="@Model.CustomerId" />
+                <input type="hidden" name="WorkerId"        value="@Model.WorkerId" />
+                <input type="hidden" name="Status"          value="@((int)Model.Status)" />
+                <input type="hidden" name="BookingInactive" value="@Model.BookingInactive.ToString().ToLower()" />
+                @if (Model.Latitude.HasValue)
+                {
+                    <input type="hidden" name="Latitude" value="@Model.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                }
+                @if (Model.Longitude.HasValue)
+                {
+                    <input type="hidden" name="Longitude" value="@Model.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                }
+
+                <div class="row g-4">
+                    <div class="col-12 col-lg-8">
+
+                        @* Section 1: Core details (all editable) *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-file-text me-2" style="color:var(--cd-text-soft);"></i>Service Info</h2>
+
+                            <div class="mb-3">
+                                <label class="form-label bd-label" for="Title">Title</label>
+                                <input class="form-control" id="Title" name="Title"
+                                       value="@Model.Title" @readOnlyAttr />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label bd-label" for="Description">Description</label>
+                                <textarea class="form-control" id="Description" name="Description"
+                                          rows="4" @readOnlyAttr>@Model.Description</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label bd-label" for="Requirements">Requirements</label>
+                                <textarea class="form-control" id="Requirements" name="Requirements"
+                                          rows="3" @readOnlyAttr>@Model.Requirements</textarea>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label bd-label" for="City">City</label>
+                                    <input class="form-control" id="City" name="City"
+                                           value="@Model.City" @readOnlyAttr />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label bd-label" for="Address">Address</label>
+                                    <input class="form-control" id="Address" name="Address"
+                                           value="@Model.Address" @readOnlyAttr />
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Section 2: Schedule & Budget (all editable) *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-calendar3 me-2" style="color:var(--cd-text-soft);"></i>Schedule & Budget</h2>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label bd-label" for="StartDate">Start Date</label>
+                                    <input class="form-control" id="StartDate" name="StartDate" type="date"
+                                           value="@Model.StartDate.ToString("yyyy-MM-dd")" @(canEdit ? null : "readonly") />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label bd-label" for="EndDate">End Date</label>
+                                    <input class="form-control" id="EndDate" name="EndDate" type="date"
+                                           value="@Model.EndDate.ToString("yyyy-MM-dd")" @(canEdit ? null : "readonly") />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label bd-label" for="EstimatedHours">Estimated Hours</label>
+                                    <input class="form-control" id="EstimatedHours" name="EstimatedHours"
+                                           type="number" min="1" value="@Model.EstimatedHours"
+                                           @(canEdit ? null : "readonly") />
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label bd-label" for="Budget">Budget ($)</label>
+                                    <input class="form-control" id="Budget" name="Budget"
+                                           type="number" step="0.01" min="0.01"
+                                           value="@Model.Budget" @(canEdit ? null : "readonly") />
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end pb-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" id="RequireNonSmoker"
+                                               name="RequireNonSmoker" type="checkbox"
+                                               value="true"
+                                               @(Model.RequireNonSmoker ? "checked" : "")
+                                               @disabledAttr style="cursor: pointer;"/>
+                                        <label class="form-check-label ms-1" for="RequireNonSmoker" style="color: var(--cd-text-mid); font-size: .9rem; font-weight: 500;">
+                                            Require non-smoker
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Section 3: Preferences (all editable) *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-sliders me-2" style="color:var(--cd-text-soft);"></i>Preferences</h2>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label bd-label" for="WorkArrangement">Work Arrangement</label>
+                                    <select class="form-select" id="WorkArrangement" name="WorkArrangement" @disabledAttr>
+                                        @foreach (var wa in Enum.GetValues<WorkArrangement>())
+                                        {
+                                            if (wa == Model.WorkArrangement)
+                                            {
+                                                <option value="@wa" selected>@wa</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@wa">@wa</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label bd-label" for="CommitmentPreference">Commitment</label>
+                                    <select class="form-select" id="CommitmentPreference" name="CommitmentPreference" @disabledAttr>
+                                        @foreach (var cp in Enum.GetValues<CommitmentPreference>())
+                                        {
+                                            if (cp == Model.CommitmentPreference)
+                                            {
+                                                <option value="@cp" selected>@cp</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@cp">@cp</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Section 4: Service Types (editable checkboxes) *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-grid me-2" style="color:var(--cd-text-soft);"></i>Service Types</h2>
+                            <div class="bd-chip-group">
+                                @foreach (var st in Enum.GetValues<ServiceType>())
+                                {
+                                    var stChecked = Model.ServiceTypes.Contains(st);
+                                    var stId = $"st_{st}";
+                                    if (canEdit)
+                                    {
+                                        <label class="bd-chip-check @(stChecked ? "selected" : "")" id="lbl_@stId">
+                                            <input type="checkbox"
+                                                   name="ServiceTypes"
+                                                   value="@st"
+                                                   @(stChecked ? "checked" : "")
+                                                   onchange="toggleChip(this)" />
+                                            @st
+                                        </label>
+                                    }
+                                    else
+                                    {
+                                        if (stChecked)
+                                        {
+                                            <span class="bd-chip">@st</span>
+                                        }
+                                    }
+                                }
+                            </div>
+                            @if (!canEdit && !Model.ServiceTypes.Any())
+                            {
+                                <span class="text-muted small">None specified</span>
+                            }
+                        </div>
+
+                        @* Section 5: Required Skills (editable checkboxes) *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-stars me-2" style="color:var(--cd-text-soft);"></i>Required Skills</h2>
+                            <div class="bd-chip-group">
+                                @foreach (var sk in Enum.GetValues<Skill>())
+                                {
+                                    var skChecked = Model.RequiredSkills.Contains(sk);
+                                    if (canEdit)
+                                    {
+                                        <label class="bd-chip-check skill @(skChecked ? "selected" : "")">
+                                            <input type="checkbox"
+                                                   name="RequiredSkills"
+                                                   value="@sk"
+                                                   @(skChecked ? "checked" : "")
+                                                   onchange="toggleChip(this)" />
+                                            @sk
+                                        </label>
+                                    }
+                                    else
+                                    {
+                                        if (skChecked)
+                                        {
+                                            <span class="bd-chip skill">@sk</span>
+                                        }
+                                    }
+                                }
+                            </div>
+                            @if (!canEdit && !Model.RequiredSkills.Any())
+                            {
+                                <span class="text-muted small">None specified</span>
+                            }
+                        </div>
+
+                        @* Action bar *@
+                        <div class="bd-action-bar">
+                            @if (canEdit)
+                            {
+                                <button type="submit" class="bd-btn-primary">
+                                    <i class="bi bi-check2-circle me-1"></i>Update Booking
+                                </button>
+                            }
+
+                            @if (canEdit)
+                            {
+                                <button type="button"
+                                        class="bd-btn-danger"
+                                        onclick="document.getElementById('cancelForm').submit();">
+                                    <i class="bi bi-x-circle"></i>Cancel Booking
+                                </button>
+                            }
+
+                            @if (isCustomer && !string.IsNullOrWhiteSpace(Model.WorkerId))
+                            {
+                                <a class="bd-btn-secondary"
+                                   asp-controller="Message"
+                                   asp-action="Inbox"
+                                   asp-route-userId="@Model.WorkerId">
+                                    <i class="bi bi-chat-dots-fill" style="color: var(--cd-text-soft);"></i>Contact Worker
+                                </a>
+                            }
+
+                            <a class="bd-btn-secondary" href="javascript:history.back()">
+                                <i class="bi bi-arrow-left" style="color: var(--cd-text-soft);"></i>Back
+                            </a>
+                        </div>
+
+                    </div>
+
+                    @* Right sidebar: read-only info *@
+                    <div class="col-12 col-lg-4">
+
+                        @* Participants *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-people-fill me-2" style="color:var(--cd-text-soft);"></i>Participants</h2>
+
+                            @* Customer *@
+                            <div class="mb-4">
+                                <span class="bd-label">Customer</span>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <img src="@(string.IsNullOrWhiteSpace(Model.CustomerProfilePictureUrl)
+                                                  ? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(Model.CustomerName)}&size=40&background=1a2744&color=fff&rounded=true"
+                                                  : Model.CustomerProfilePictureUrl)"
+                                         alt="@Model.CustomerName"
+                                         style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid var(--cd-border);flex-shrink:0;"/>
+                                    <div>
+                                        <div class="bd-value">@Model.CustomerName</div>
+                                        @if (!string.IsNullOrWhiteSpace(Model.CustomerAddress))
+                                        {
+                                            <div class="text-muted small" style="font-size: .8rem;">@Model.CustomerAddress</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(Model.CustomerPhoneNumber))
+                                        {
+                                            <div class="text-muted small" style="font-size: .8rem;">@Model.CustomerPhoneNumber</div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            @* Worker *@
+                            <div>
+                                <span class="bd-label">Worker</span>
+                                @if (!string.IsNullOrWhiteSpace(Model.WorkerId) && !string.IsNullOrWhiteSpace(Model.WorkerName))
+                                {
+                                    <a asp-controller="Customer"
+                                       asp-action="WorkerDetails"
+                                       asp-route-workerId="@Model.WorkerId"
+                                       class="d-flex align-items-center gap-2 mt-1 text-decoration-none"
+                                       style="color:inherit;">
+                                        <img src="@(string.IsNullOrWhiteSpace(Model.WorkerProfilePictureUrl)
+                                                      ? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(Model.WorkerName)}&size=40&background=f59e0b&color=fff&rounded=true"
+                                                      : Model.WorkerProfilePictureUrl)"
+                                             alt="@Model.WorkerName"
+                                             style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #fde68a;flex-shrink:0;"/>
+                                        <div>
+                                            <div class="bd-value" style="color:var(--cd-amber-dark);font-weight:700;">
+                                                @Model.WorkerName
+                                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.7rem;"></i>
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(Model.WorkerPhoneNumber))
+                                            {
+                                                <div class="text-muted small" style="font-size: .8rem;">@Model.WorkerPhoneNumber</div>
+                                            }
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <div
+                                            style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1.5px dashed #c0c8d5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                            <i class="bi bi-person" style="color:#aab0bb;font-size:1.1rem;"></i>
+                                        </div>
+                                        <span class="text-muted" style="font-size: .85rem;">Not assigned yet</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Booking State *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-info-circle-fill me-2" style="color:var(--cd-text-soft);"></i>Booking State</h2>
+                            <div class="bd-info-row">
+                                <div>
+                                    <span class="bd-label">Status</span>
+                                    <span class="bd-status-badge @statusSlug">@Model.Status</span>
+                                </div>
+                                <div>
+                                    <span class="bd-label">Active</span>
+                                    <span class="bd-value">@(Model.BookingInactive ? "No" : "Yes")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Location *@
+                        <div class="bd-card">
+                            <h2 class="bd-card-title"><i class="bi bi-geo-alt-fill me-2" style="color:var(--cd-text-soft);"></i>Location</h2>
+                            <div class="mb-2">
+                                <span class="bd-label">Address</span>
+                                <span class="bd-value">
+                                    @Model.City@if (!string.IsNullOrWhiteSpace(Model.Address)){<text>, @Model.Address</text>}
+                                </span>
+                            </div>
+                            @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                            {
+                                <div class="mb-1">
+                                    <span class="bd-label">Coordinates</span>
+                                    <span class="bd-value text-muted small" style="font-size: .8rem;">@Model.Latitude, @Model.Longitude</span>
+                                </div>
+                            }
+                            <div id="bookingMap" style="height:220px;border-radius:var(--cd-radius-sm);margin-top:10px;border:1px solid var(--cd-border);z-index: 1;"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </form>
+
+            @* Separate cancel form to avoid nested forms *@
+            @if (canEdit)
+            {
+                <form id="cancelForm"
+                      asp-controller="Customer"
+                      asp-action="CancelBooking"
+                      asp-route-bookingId="@Model.Id"
+                      method="post"
+                      onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                    @Html.AntiForgeryToken()
+                </form>
+            }
+
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Toggle chip selected style when checkbox clicked
+    function toggleChip(checkbox) {
+        const label = checkbox.closest('label');
+        if (checkbox.checked) {
+            label.classList.add('selected');
+        } else {
+            label.classList.remove('selected');
+        }
+    }
+
+    // Map
+    (function () {
+        const lat = @Html.Raw(lat);
+        const lon = @Html.Raw(lon);
+        const fallback = [31.9539, 35.9106];
+        const hasPoint = lat !== null && lon !== null;
+        const center = hasPoint ? [lat, lon] : fallback;
+        const map = L.map('bookingMap').setView(center, hasPoint ? 13 : 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        if (hasPoint) {
+            L.marker([lat, lon]).addTo(map).bindPopup('Booking location').openPopup();
+        }
+    })();
+</script>

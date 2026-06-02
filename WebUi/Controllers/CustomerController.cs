@@ -70,7 +70,6 @@ namespace WebUi.Controllers
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            // Child details are optional by design; do not block with ModelState.
             var result = await _customerService.AddChildAsync(model ?? new ChildDTO(), customerId);
 
             if (result.IsSuccess)
@@ -108,7 +107,6 @@ namespace WebUi.Controllers
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            // Child details are optional; only ensure ID exists for update.
             if (string.IsNullOrWhiteSpace(model?.Id))
             {
                 TempData["ErrorMessage"] = "Child ID is required for update.";
@@ -169,7 +167,15 @@ namespace WebUi.Controllers
         [HttpGet]
         public IActionResult CreateJob()
         {
-            return View();
+            var model = new ServiceRequestCreateDTO
+            {
+                TargetWorkerId = null,
+                StartDate = DateTime.Today.AddDays(1),
+                EndDate = DateTime.Today.AddDays(1),
+                ServiceTypes = new List<Core.Concretes.Enums.ServiceType>()
+            };
+
+            return View(model);
         }
 
         // POST: Customer/CreateJob
@@ -202,12 +208,31 @@ namespace WebUi.Controllers
         {
             filter ??= new WorkerSearchFilterDTO();
 
-            var result = await _customerService.BrowseWorkersAsync(filter);
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(customerId)) return Unauthorized();
+
+            var result = await _customerService.BrowseWorkersAsync(filter, customerId);
 
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+                ViewBag.CurrentFilter = filter;
+                ViewBag.CustomerLatitude = null;
+                ViewBag.CustomerLongitude = null;
                 return View(new List<WorkerCardDTO>());
+            }
+
+            // Map-centering info for WorkerShop map
+            var profile = await _customerService.GetProfileAsync(customerId);
+            if (profile.IsSuccess && profile.Data != null)
+            {
+                ViewBag.CustomerLatitude = profile.Data.Latitude;
+                ViewBag.CustomerLongitude = profile.Data.Longitude;
+            }
+            else
+            {
+                ViewBag.CustomerLatitude = null;
+                ViewBag.CustomerLongitude = null;
             }
 
             ViewBag.CurrentFilter = filter;
@@ -233,9 +258,23 @@ namespace WebUi.Controllers
 
         // GET: Customer/BookWorker
         [HttpGet]
-        public IActionResult BookWorker(string workerId)
+        public async Task<IActionResult> BookWorker(string workerId)
         {
-            if (string.IsNullOrEmpty(workerId)) return BadRequest("Worker ID is required.");
+            if (string.IsNullOrWhiteSpace(workerId))
+                return BadRequest("Worker ID is required.");
+
+            var workerResult = await _customerService.GetWorkerDetailsAsync(workerId);
+            if (!workerResult.IsSuccess || workerResult.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", workerResult.Messages ?? new[] { "Worker not found." });
+                return RedirectToAction(nameof(WorkerShop));
+            }
+
+            var worker = workerResult.Data;
+
+            ViewBag.WorkerId = worker.Id;
+            ViewBag.WorkerName = $"{worker.FirstName} {worker.LastName}".Trim();
+            ViewBag.WorkerImage = worker.ProfilePictureUrl;
 
             var model = new ServiceRequestCreateDTO
             {
@@ -245,28 +284,6 @@ namespace WebUi.Controllers
                 ServiceTypes = new List<Core.Concretes.Enums.ServiceType>()
             };
 
-            return View(model);
-        }
-
-        // POST: Customer/BookWorker
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BookWorker(ServiceRequestCreateDTO model)
-        {
-            if (!ModelState.IsValid) return View(model);
-
-            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
-
-            var result = await _customerService.CreateServiceRequestAsync(model, customerId);
-
-            if (result.IsSuccess)
-            {
-                TempData["SuccessMessage"] = "Booking requested successfully! It is now pending worker approval.";
-                return RedirectToAction(nameof(MyBookings));
-            }
-
-            ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
             return View(model);
         }
 
@@ -308,24 +325,26 @@ namespace WebUi.Controllers
             return View(result.Data);
         }
 
-        // POST: Customer/HireWorker
+        // POST: Customer/BookWorker
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> HireWorker(string applicationId)
+        public async Task<IActionResult> BookWorker(ServiceRequestCreateDTO model)
         {
-            if (string.IsNullOrEmpty(applicationId)) return BadRequest("Application ID is required.");
+            if (!ModelState.IsValid) return View(model);
 
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(customerId)) return Unauthorized();
 
-            var result = await _customerService.HireWorkerForJobAsync(applicationId, customerId);
+            var result = await _customerService.CreateServiceRequestAsync(model, customerId);
 
             if (result.IsSuccess)
-                TempData["SuccessMessage"] = "Worker successfully hired! The job is now assigned.";
-            else
-                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+            {
+                TempData["SuccessMessage"] = "Booking requested successfully! It is now pending worker approval.";
+                return RedirectToAction(nameof(MyBookings));
+            }
 
-            return RedirectToAction(nameof(MyJobs));
+            ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
+            return View(model);
         }
 
         // GET: Customer/LeaveReview
@@ -410,5 +429,173 @@ namespace WebUi.Controllers
             ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
             return View(model);
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> BookingDetails(string bookingId)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.GetBookingDetailsAsync(bookingId, customerId);
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages ?? new[] { "Booking not found." });
+                return RedirectToAction(nameof(MyBookings));
+            }
+
+            ViewBag.BookingMode = "Customer";
+            return View("~/Views/Shared/BookingDetails.cshtml", result.Data);
+        }
+        
+        // GET: Customer/JobDetails
+        [HttpGet]
+        public async Task<IActionResult> JobDetails(string jobId)
+        {
+            if (string.IsNullOrWhiteSpace(jobId)) return BadRequest("Job ID is required.");
+
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+           var result = await _customerService.GetJobPostingDetailsAsync(jobId, customerId);
+           
+           if (!result.IsSuccess || result.Data == null)
+           {
+               TempData["ErrorMessage"] = string.Join(" ", result.Messages ?? new[] { "Job not found." });
+               return RedirectToAction(nameof(MyJobs));
+           }
+           
+           var applicantsResult = await _customerService.GetJobApplicantsAsync(jobId, customerId);
+           ViewBag.Applicants = applicantsResult.IsSuccess && applicantsResult.Data != null
+               ? applicantsResult.Data
+               : new List<JobApplicationDTO>();
+
+            ViewBag.JobMode = "Customer";
+            return View("~/Views/Shared/JobDetails.cshtml", result.Data);
+        }
+        
+        // GET: Customer/ApplicationDetails
+        [HttpGet]
+        public async Task<IActionResult> ApplicationDetails(string applicationId)
+        {
+            if (string.IsNullOrWhiteSpace(applicationId)) return BadRequest("Application ID is required.");
+
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.GetJobApplicationDetailsAsync(applicationId, customerId);
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages ?? new[] { "Application not found." });
+                return RedirectToAction(nameof(MyJobs));
+            }
+
+            ViewBag.ApplicationMode = "Customer";
+            return View("~/Views/Shared/ApplicationDetails.cshtml", result.Data);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateBooking(BookingDetailDTO model)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.UpdateBookingAsync(model, customerId);
+
+            if (result.IsSuccess)
+            {
+                TempData["SuccessMessage"] = "Booking updated successfully.";
+                return RedirectToAction(nameof(BookingDetails), new { bookingId = model.Id });
+            }
+
+            ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
+            ViewBag.BookingMode = "customer";
+            return View("~/Views/Shared/BookingDetails.cshtml", model);
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelBooking(string bookingId)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.CancelBookingAsync(bookingId, customerId);
+
+            if (result.IsSuccess)
+                TempData["SuccessMessage"] = "Booking cancelled successfully.";
+            else
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+
+            return RedirectToAction(nameof(MyBookings));
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateJobPosting(JobPostingDetailDTO model)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.UpdateJobPostingAsync(model, customerId);
+
+            if (result.IsSuccess)
+            {
+                TempData["SuccessMessage"] = "Job posting updated successfully.";
+                return RedirectToAction(nameof(JobDetails), new { jobId = model.Id });
+            }
+
+            ModelState.AddModelError(string.Empty, string.Join(" ", result.Messages));
+            ViewBag.JobMode = "Customer";
+    
+            var applicantsResult = await _customerService.GetJobApplicantsAsync(model.Id, customerId);
+            ViewBag.Applicants = applicantsResult.IsSuccess && applicantsResult.Data != null
+                ? applicantsResult.Data
+                : new List<JobApplicationDTO>();
+    
+            return View("~/Views/Shared/JobDetails.cshtml", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelJobPosting(string jobId)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var result = await _customerService.CancelJobPostingAsync(jobId, customerId);
+
+            if (result.IsSuccess)
+                TempData["SuccessMessage"] = "Job posting cancelled successfully.";
+            else
+                TempData["ErrorMessage"] = string.Join(" ", result.Messages);
+
+            return RedirectToAction(nameof(MyJobs));
+        }
+        
+        [HttpGet]
+        public IActionResult FinishedJobs()
+        {
+            // Placeholder until service-level filtering for completed jobs is added
+            return View(new List<JobPostingCardDTO>());
+        }
+
+        [HttpGet]
+        public IActionResult FinishedBookings()
+        {
+            // Placeholder until service-level filtering for completed bookings is added
+            return View(new List<BookingListItemDTO>());
+        }
+
+        [HttpGet]
+        public IActionResult MessageBox()
+        {
+            return View();
+        }
+        
+        
     }
 }

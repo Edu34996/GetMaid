@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Core.Abstracts.Bases;
 
 namespace Core.Concretes.Entities
 {
-    public class WorkerReference
+    public class WorkerReference : BaseEntity
     {
         [Required]
         public string WorkerId { get; set; } = null!;
@@ -12,7 +13,5 @@ namespace Core.Concretes.Entities
         public string CustomerId { get; set; } = null!;
         public virtual Customer Customer { get; set; } = null!;
 
-        // Optional: when the customer agreed to be a reference
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

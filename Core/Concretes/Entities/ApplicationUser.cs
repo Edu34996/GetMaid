@@ -18,9 +18,12 @@ namespace Core.Concretes.Entities
         [MaxLength(1000)]
         public string Bio { get; set; } = string.Empty;
         
+        [MaxLength(500)]
+        public string? ProfilePictureUrl { get; set; }
+        
         [Required]
         [MaxLength(100)]
-        public string City { get; set; } = null!; // ADDED for local matching
+        public string City { get; set; } = null!;
         
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }

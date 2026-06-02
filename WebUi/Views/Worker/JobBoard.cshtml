@@ -1,77 +1,249 @@
-@model IEnumerable<Core.Concretes.DTOs.JobPostingCardDTO>
+@using Core.Concretes.DTOs
+@using Core.Concretes.Enums
+@model IEnumerable<JobPostingCardDTO>
 
 @{
     ViewData["Title"] = "Available Jobs";
+    var jobs = (Model ?? Enumerable.Empty<JobPostingCardDTO>()).ToList();
 }
 
-<h1>Available Jobs</h1>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="text-success border border-success p-2 mb-3">
-        @TempData["SuccessMessage"]
+<style>
+    .jb-wrap {
+        max-width: 1180px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: #0f1e35;
+    }
+
+    .jb-head {
+        border-radius: 16px;
+        padding: 22px 24px;
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(14, 24, 44, .2);
+        margin-bottom: 14px;
+    }
+
+    .jb-head h1 {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.55rem;
+        font-weight: 800;
+    }
+
+    .jb-head p {
+        margin: 6px 0 0;
+        font-size: .9rem;
+        color: rgba(255,255,255,.85);
+    }
+
+    .jb-alert {
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        font-size: .88rem;
+        border: 1px solid transparent;
+    }
+
+    .jb-alert-success {
+        background: #ecfdf5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .jb-alert-error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .jb-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        gap: 10px;
+    }
+
+    .jb-count {
+        color: #64748b;
+        font-size: .9rem;
+    }
+
+    .jb-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .jb-card {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+
+    .jb-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+        font-size: 1rem;
+        color: #0f1e35;
+    }
+
+    .jb-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        font-size: .83rem;
+    }
+
+    .jb-meta div {
+        border: 1px solid #e8edf6;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 7px 8px;
+    }
+
+    .jb-services {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .jb-badge {
+        border-radius: 999px;
+        border: 1px solid #d6e0f7;
+        background: #eef4ff;
+        color: #355288;
+        padding: 4px 8px;
+        font-size: .74rem;
+        font-weight: 600;
+    }
+
+    .jb-actions {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .jb-btn {
+        border: none;
+        border-radius: 9px;
+        padding: 8px 12px;
+        font-size: .82rem;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .jb-btn-apply {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .jb-btn-apply:hover {
+        filter: brightness(1.03);
+        color: #fff;
+    }
+
+    .jb-empty {
+        background: #fff;
+        border: 1px dashed #ced8ea;
+        border-radius: 12px;
+        text-align: center;
+        padding: 26px 14px;
+        color: #7a8699;
+    }
+
+    @@media (max-width: 1100px) {
+        .jb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @@media (max-width: 768px) {
+        .jb-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="jb-wrap">
+    <div class="jb-head">
+        <h1>Available Jobs</h1>
+        <p>Browse active job postings and submit your application.</p>
     </div>
-}
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="text-danger border border-danger p-2 mb-3">
-        @TempData["ErrorMessage"]
-    </div>
-}
-
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Location</th>
-            <th>Start Date</th>
-            <th>Budget</th>
-            <th>Services</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-    @if (Model != null && Model.Any())
+    @if (TempData["SuccessMessage"] != null)
     {
-        foreach (var job in Model)
-        {
-            <tr>
-                <td>@job.Title</td>
-                <td>@job.Location</td>
-                <td>@job.StartDate.ToShortDateString()</td>
-                <td>@job.Budget.ToString("0.00")</td>
-                <td>
-                    @if (job.ServiceTypes != null && job.ServiceTypes.Any())
-                    {
-                        @foreach (var service in job.ServiceTypes)
+        <div class="jb-alert jb-alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="jb-alert jb-alert-error">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="jb-topbar">
+        <div class="jb-count">@jobs.Count job(s) available</div>
+    </div>
+
+    @if (jobs.Any())
+    {
+        <div class="jb-grid">
+            @foreach (var job in jobs)
+            {
+                <article class="jb-card">
+                    <h3 class="jb-title">@job.Title</h3>
+
+                    <div class="jb-meta">
+                        <div><strong>City:</strong> @job.City</div>
+                        <div><strong>Start:</strong> @job.StartDate.ToShortDateString()</div>
+                        <div><strong>Budget:</strong> @job.Budget.ToString("0.00")</div>
+                        <div><strong>Services:</strong> @(job.ServiceTypes?.Count ?? 0)</div>
+                    </div>
+
+                    <div class="jb-services">
+                        @if (job.ServiceTypes != null && job.ServiceTypes.Any())
                         {
-                            <span class="badge bg-secondary me-1">@service</span>
+                            foreach (var service in job.ServiceTypes)
+                            {
+                                <span class="jb-badge">@service</span>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <span>No services listed</span>
-                    }
-                </td>
-                <td>
-                    <form asp-controller="Worker" asp-action="ApplyForJob" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="jobId" value="@job.Id" />
-                        <button type="submit" class="btn btn-success btn-sm">
-                            Apply
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
+                        else
+                        {
+                            <span class="jb-badge">No services listed</span>
+                        }
+                    </div>
+
+                    <div class="jb-actions">
+                        <!-- Use GET ApplyToJob page (new flow), not old POST ApplyForJob -->
+                        <a asp-controller="Worker"
+                           asp-action="ApplyToJob"
+                           asp-route-jobPostingId="@job.Id"
+                           class="jb-btn jb-btn-apply">
+                            Apply Now
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
     }
     else
     {
-        <tr>
-            <td colspan="6">No open jobs available right now.</td>
-        </tr>
+        <div class="jb-empty">
+            No open jobs available right now.
+        </div>
     }
-    </tbody>
-</table>
+</div>

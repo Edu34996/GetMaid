@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Utils.Helpers;
+using Utils.Models;
 
 
 namespace Business
@@ -45,6 +46,10 @@ namespace Business
             services.AddScoped<IMessageService, MessageService>();
             
             services.AddHttpClient<IGeocodingService, GeocodingService>();
+            
+            services.Configure<BrevoSettings>(configuration.GetSection("Brevo"));
+            services.AddHttpClient<IEmailSender, BrevoEmailSender>();
+            services.AddScoped<EmailTemplateService>();
             
             return services;
         }

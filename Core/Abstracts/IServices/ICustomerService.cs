@@ -32,7 +32,7 @@ namespace Core.Abstracts.IServices
         
         Task<IResult> RemoveChildAsync(string childId, string customerId);
  
-        Task<IResult<IEnumerable<WorkerCardDTO>>> BrowseWorkersAsync(WorkerSearchFilterDTO filter);
+        Task<IResult<IEnumerable<WorkerCardDTO>>> BrowseWorkersAsync(WorkerSearchFilterDTO filter, string customerId);
         
         Task<IResult<WorkerDetailsDTO>> GetWorkerDetailsAsync(string workerId);
         
@@ -45,5 +45,15 @@ namespace Core.Abstracts.IServices
         Task<IResult<ReviewUpdateDTO>> GetMyReviewByBookingIdAsync(string bookingId, string customerId);
         
         Task<IResult> UpdateReviewAsync(ReviewUpdateDTO model, string customerId);
+        
+        Task<IResult> UpdateBookingAsync(BookingDetailDTO model, string customerId);
+        
+        Task<IResult> CancelBookingAsync(string bookingId, string customerId);
+        
+        Task<IResult> UpdateJobPostingAsync(JobPostingDetailDTO model, string customerId);
+        
+        Task<IResult> CancelJobPostingAsync(string jobId, string customerId);
+
+        Task<IResult<JobApplicationDTO>> GetJobApplicationDetailsAsync(string applicationId, string customerId);
     }
 }

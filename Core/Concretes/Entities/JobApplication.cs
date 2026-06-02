@@ -20,18 +20,24 @@ namespace Core.Concretes.Entities
         [Required]
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
 
-        // NEW: worker's note to the customer
+        // Worker's application details
         [MaxLength(500)]
         public string? MessageToCustomer { get; set; }
 
-        // NEW: earliest date worker can start
         public DateTime? SoonestAvailableStartDate { get; set; }
 
-        // NEW: whether the worker is currently employed / engaged elsewhere
         public bool IsCurrentlyWorking { get; set; }
 
-        // NEW: any clarification questions for the customer
         [MaxLength(1000)]
         public string? QuestionsAboutWork { get; set; }
+
+        // Tracking dates
+        public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? RejectedAt { get; set; }
+        public DateTime? AcceptedAt { get; set; }
+
+        // Optional: if application converted to booking
+        public string? BookingId { get; set; }
+        public virtual Booking? Booking { get; set; }
     }
 }

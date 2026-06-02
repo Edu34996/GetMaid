@@ -10,25 +10,13 @@ public class WorkerProfiles : Profile
 {
     public WorkerProfiles()
     {
-        // ==========================================
-        // 1. REGISTRATION MAP
-        // ==========================================
+        // 1) Registration DTO -> Worker entity
         CreateMap<WorkerRegisterDTO, Worker>()
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
             .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore())
             .ForMember(dest => dest.IdentityDocumentPath, opt => opt.Ignore());
 
-        // ==========================================
-        // 2. LOAD DASHBOARD FORM: Entity -> Update DTO
-        // ==========================================
-
-        /*CreateMap<Worker, WorkerProfileUpdateDTO>()
-            .ForMember(dest => dest.ProfilePictureUrl,
-                opt => opt.MapFrom(src => src.ProfilePictureUrl));*/
-
-        // ==========================================
-        // 3. SAVE DASHBOARD FORM: Update DTO -> Entity
-        // ==========================================
+        // 2) Dashboard update DTO -> Worker entity
         CreateMap<WorkerProfileUpdateDTO, Worker>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.FirstName, opt => opt.Ignore())
@@ -38,10 +26,10 @@ public class WorkerProfiles : Profile
             .ForMember(dest => dest.IdentityVerificationStatus, opt => opt.Ignore())
             .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore());
 
-        // ==========================================
-        // 4. MARKETPLACE CARD: Entity -> Card DTO
-        // ==========================================
+        // 3) Worker entity -> Marketplace card DTO
         CreateMap<Worker, WorkerCardDTO>()
+            .ForMember(dest => dest.Latitude, opt => opt.MapFrom(src => src.Latitude))
+            .ForMember(dest => dest.Longitude, opt => opt.MapFrom(src => src.Longitude))
             .ForMember(dest => dest.NumberOfSkills,
                 opt => opt.MapFrom(src => src.Skills != null ? src.Skills.Count : 0))
             .ForMember(dest => dest.NumberOfLanguages,
@@ -59,9 +47,7 @@ public class WorkerProfiles : Profile
                         ? (decimal?)((src.MinHourlyRate.Value + src.MaxHourlyRate.Value) / 2m)
                         : src.MinHourlyRate ?? src.MaxHourlyRate));
 
-        // ==========================================
-        // 5. MARKETPLACE DETAILS: Entity -> Details DTO
-        // ==========================================
+        // 4) Worker entity -> Marketplace details DTO
         CreateMap<Worker, WorkerDetailsDTO>()
             .ForMember(dest => dest.TotalReviews,
                 opt => opt.MapFrom(src => src.ReviewsReceived != null ? src.ReviewsReceived.Count : 0))
@@ -71,11 +57,7 @@ public class WorkerProfiles : Profile
                         ? Math.Round(src.ReviewsReceived.Average(r => r.Rating), 1)
                         : 0.0));
 
-        // Add this after line 72, before the closing brace:
-
-        // ==========================================
-        // 6. DASHBOARD: Entity -> Dashboard DTO
-        // ==========================================
+        // 5) Worker entity -> Dashboard DTO
         CreateMap<Worker, WorkerDashboardDTO>()
             .ForMember(dest => dest.TotalReviews,
                 opt => opt.MapFrom(src => src.ReviewsReceived != null ? src.ReviewsReceived.Count : 0))

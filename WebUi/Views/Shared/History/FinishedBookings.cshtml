@@ -1,0 +1,82 @@
+@using Core.Concretes.DTOs
+@model IEnumerable<BookingListItemDTO>
+
+@{
+    ViewData["Title"] = "Finished Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var bookings = (Model ?? Enumerable.Empty<BookingListItemDTO>()).ToList();
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+    .fb-wrap { max-width:1120px; margin:24px auto 48px; padding:0 12px; font-family:'DM Sans',system-ui,sans-serif; }
+    .fb-shell { background:#fff; border:1px solid #e4e8ee; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.05); overflow:hidden; }
+    .fb-head { background:linear-gradient(125deg,#0c1224 0%,#1a2744 60%,#1f3561 100%); color:#fff; padding:22px 24px; }
+    .fb-title { margin:0; font-family:'Nunito',sans-serif; font-size:1.5rem; font-weight:800; }
+    .fb-sub { margin:6px 0 0; color:rgba(255,255,255,.82); font-size:.9rem; }
+    .fb-body { padding:22px; background:#f8fafc; }
+    .fb-stat { background:#fff; border:1px solid #e4e8ee; border-radius:12px; padding:12px 14px; margin-bottom:14px; }
+    .fb-stat b { font-family:'Nunito',sans-serif; font-size:1.2rem; }
+    .fb-table-wrap { background:#fff; border:1px solid #e4e8ee; border-radius:14px; overflow:hidden; }
+    .fb-table { width:100%; border-collapse:collapse; }
+    .fb-table th,.fb-table td { padding:11px 12px; border-bottom:1px solid #e4e8ee; text-align:left; font-size:.88rem; }
+    .fb-table th { font-size:.76rem; text-transform:uppercase; letter-spacing:.5px; color:#7a8699; background:#f8fafc; }
+    .fb-badge { display:inline-flex; align-items:center; border-radius:999px; padding:4px 9px; font-size:.74rem; font-weight:700; background:#ecfdf3; color:#065f46; border:1px solid #a7f3d0; }
+    .fb-empty { text-align:center; padding:38px 16px; color:#7a8699; }
+    @@media (max-width: 991.98px) { .fb-table-wrap{overflow-x:auto;} .fb-table{min-width:860px;} }
+</style>
+
+<div class="fb-wrap">
+    <div class="fb-shell">
+        <div class="fb-head">
+            <h1 class="fb-title">Finished Bookings</h1>
+            <p class="fb-sub">Review completed bookings and past engagements.</p>
+        </div>
+
+        <div class="fb-body">
+            <div class="fb-stat">
+                Total finished bookings: <b>@bookings.Count</b>
+            </div>
+
+            <div class="fb-table-wrap">
+                @if (bookings.Any())
+                {
+                    <table class="fb-table">
+                        <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Worker</th>
+                            <th>City</th>
+                            <th>Budget</th>
+                            <th>Start Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var booking in bookings)
+                        {
+                            <tr>
+                                <td>@booking.Title</td>
+                                <td>@booking.WorkerName</td>
+                                <td>@booking.City</td>
+                                <td>@booking.Budget.ToString("0.00")</td>
+                                <td>@booking.StartDate.ToShortDateString()</td>
+                                <td><span class="fb-badge">Finished</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="fb-empty">
+                        No finished bookings yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

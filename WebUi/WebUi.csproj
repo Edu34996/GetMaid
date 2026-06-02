@@ -21,4 +21,14 @@
       </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="EmailTemplates\**">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Views\Shared\Partials\" />
+    </ItemGroup>
+
 </Project>

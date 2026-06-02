@@ -117,10 +117,30 @@ textarea.cd-input { resize: vertical; min-height: 110px; }
 
         <nav class="cd-nav">
             <p class="cd-nav-section">MAIN</p>
-            <a class="cd-nav-link active" href="@Url.Action("Dashboard", "Customer")"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a>
-            <a class="cd-nav-link" href="@Url.Action("MyBookings", "Customer")"><i class="bi bi-calendar2-check-fill"></i><span>My Bookings</span></a>
-            <a class="cd-nav-link" href="@Url.Action("MyJobs", "Customer")"><i class="bi bi-briefcase-fill"></i><span>My Job Posts</span></a>
-            <a class="cd-nav-link" href="@Url.Action("WorkerShop", "Customer")"><i class="bi bi-search"></i><span>Find Workers</span></a>
+            <a class="cd-nav-link active" href="@Url.Action("Dashboard", "Customer")">
+                <i class="bi bi-grid-1x2-fill"></i><span>Overview</span>
+            </a>
+            <a class="cd-nav-link" href="@Url.Action("MyBookings", "Customer")">
+                <i class="bi bi-calendar2-check-fill"></i><span>My Bookings</span>
+            </a>
+            <a class="cd-nav-link" href="@Url.Action("MyJobs", "Customer")">
+                <i class="bi bi-briefcase-fill"></i><span>My Job Posts</span>
+            </a>
+            <a class="cd-nav-link" href="@Url.Action("WorkerShop", "Customer")">
+                <i class="bi bi-search"></i><span>Find Workers</span>
+            </a>
+
+            <!-- New menu items -->
+            <a class="cd-nav-link" href="@Url.Action("FinishedJobs", "Customer")">
+                <i class="bi bi-check2-square"></i><span>Finished Jobs</span>
+            </a>
+            <a class="cd-nav-link" href="@Url.Action("FinishedBookings", "Customer")">
+                <i class="bi bi-check2-circle"></i><span>Finished Bookings</span>
+            </a>
+            <a class="cd-nav-link" href="@Url.Action("MessageBox", "Customer")">
+                <i class="bi bi-chat-dots-fill"></i><span>Message Box</span>
+            </a>
+
             <p class="cd-nav-section">ACCOUNT</p>
             <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
                 @Html.AntiForgeryToken()

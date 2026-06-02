@@ -6,6 +6,7 @@ namespace Core.Concretes.Enums
         Reviewing = 2,  
         Accepted = 3,   
         Rejected = 4,   
-        Completed = 5   
+        Completed = 5,
+        Cancelled = 6
     }
 }

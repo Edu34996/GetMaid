@@ -3,141 +3,287 @@
 
 @{
     ViewData["Title"] = "Book Worker";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var workerId = ViewBag.WorkerId as string;
+    var workerName = ViewBag.WorkerName as string;
+    var workerImage = ViewBag.WorkerImage as string;
+    var hasWorker = !string.IsNullOrWhiteSpace(workerId);
 }
 
-<h1>Propose a Booking</h1>
-<p>Fill in the details below to send a booking request to this worker.</p>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="text-danger mb-3">
-        <div asp-validation-summary="All"></div>
-    </div>
-}
+<style>
+    .bw-wrap { max-width: 1120px; margin: 24px auto 48px; padding: 0 12px; font-family: 'DM Sans', system-ui, sans-serif; }
+    .bw-shell { background: #fff; border: 1px solid #e4e8ee; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05); overflow: hidden; }
+    .bw-head { background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%); color: #fff; padding: 24px 26px; }
+    .bw-head-title { font-family: 'Nunito', sans-serif; font-size: 1.55rem; font-weight: 800; letter-spacing: -.4px; margin: 0 0 6px; }
+    .bw-head-sub { margin: 0; color: rgba(255,255,255,.82); font-size: .92rem; }
+    .bw-body { padding: 24px; background: #f8fafc; }
+    .bw-alert { border-radius: 12px; background: #fef2f2; border: 1.5px solid #fecaca; color: #dc2626; font-size: .88rem; padding: 12px 14px; margin-bottom: 18px; }
 
-<form asp-controller="Customer" asp-action="BookWorker" method="post">
-    @Html.AntiForgeryToken()
+    .bw-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; }
+    @@media (max-width: 991.98px) { .bw-grid { grid-template-columns: 1fr; } }
 
-    <input type="hidden" asp-for="TargetWorkerId" />
+    .bw-card { background: #fff; border: 1px solid #e4e8ee; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); overflow: hidden; }
+    .bw-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 14px; border-bottom: 1px solid #e4e8ee; }
+    .bw-card-icon { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(245,158,11,.12); color: #d97706; font-size: .95rem; flex-shrink: 0; }
+    .bw-card-title { margin: 0; font-family: 'Nunito', sans-serif; font-size: .95rem; font-weight: 800; color: #0f1e35; letter-spacing: -.2px; }
+    .bw-card-body { padding: 18px; }
 
-    <div class="mb-3">
-        <label asp-for="Title" class="form-label"></label>
-        <input asp-for="Title" class="form-control" placeholder="e.g. Weekly childcare support" />
-        <span asp-validation-for="Title" class="text-danger"></span>
-    </div>
+    .bw-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    @@media (max-width: 767.98px) { .bw-form-grid { grid-template-columns: 1fr; } }
 
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control" rows="4"
-                  placeholder="Describe the work you need, schedule expectations, number of children, home duties, etc."></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
+    .bw-field { margin-bottom: 14px; }
+    .bw-field.full { grid-column: 1 / -1; }
 
-    <div class="mb-3">
-        <label asp-for="Requirements" class="form-label"></label>
-        <textarea asp-for="Requirements" class="form-control" rows="3"
-                  placeholder="Any preferred experience, certifications, language requirements, etc."></textarea>
-        <span asp-validation-for="Requirements" class="text-danger"></span>
-    </div>
+    .bw-label { display: block; font-size: .8rem; font-weight: 700; color: #3f4d63; margin-bottom: 6px; }
 
-    <div class="mb-3">
-        <label asp-for="Location" class="form-label"></label>
-        <input asp-for="Location" class="form-control" placeholder="Enter service location" />
-        <span asp-validation-for="Location" class="text-danger"></span>
-    </div>
+    .bw-input, .bw-select, .bw-textarea {
+        width: 100%; padding: 10px 12px; border: 1.5px solid #e4e8ee; border-radius: 10px;
+        background: #f8fafc; outline: none; color: #0f1e35; font-size: .9rem; transition: all .2s;
+    }
 
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="StartDate" class="form-label"></label>
-            <input asp-for="StartDate" type="date" class="form-control" />
-            <span asp-validation-for="StartDate" class="text-danger"></span>
+    .bw-input:focus, .bw-select:focus, .bw-textarea:focus {
+        border-color: #f59e0b; background: #fff; box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+    }
+
+    .bw-textarea { resize: vertical; min-height: 110px; }
+
+    .bw-check-panel { border: 1px solid #e4e8ee; border-radius: 12px; background: #f8fafc; padding: 12px; max-height: 240px; overflow: auto; }
+    .bw-check-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: .88rem; color: #0f1e35; }
+    .bw-check-item input { accent-color: #f59e0b; }
+
+    .bw-switch { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e4e8ee; border-radius: 12px; background: #f8fafc; }
+    .bw-switch input { accent-color: #f59e0b; width: 18px; height: 18px; }
+
+    .bw-side-note { background: linear-gradient(180deg, #fffaf0 0%, #fff 100%); border: 1px solid #fde7b0; border-radius: 14px; padding: 16px; }
+    .bw-side-note h3 { margin: 0 0 8px; font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 800; color: #92400e; }
+    .bw-side-note p, .bw-side-note li { color: #6b7280; font-size: .88rem; line-height: 1.65; }
+    .bw-side-note ul { margin: 10px 0 0 18px; padding: 0; }
+
+    .bw-validation { color: #dc2626; font-size: .78rem; margin-top: 4px; display: block; }
+
+    .bw-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+    .bw-btn { border: none; border-radius: 10px; padding: 11px 16px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all .18s ease; }
+    .bw-btn-secondary { background: #e5e7eb; color: #111827; }
+    .bw-btn-secondary:hover { background: #d1d5db; color: #111827; }
+    .bw-btn-primary { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 8px 18px rgba(217,119,6,.2); }
+    .bw-btn-primary:hover { filter: brightness(1.03); transform: translateY(-1px); }
+
+    .bw-worker-link { display: flex; align-items: center; gap: 12px; text-decoration: none; border: 1px solid #e4e8ee; background: #fff; border-radius: 12px; padding: 10px 12px; transition: all .2s ease; }
+    .bw-worker-link:hover { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.12); transform: translateY(-1px); }
+    .bw-worker-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(245,158,11,.35); background: #f8fafc; }
+    .bw-worker-meta small { display: block; color: #7a8699; font-size: .74rem; text-transform: uppercase; letter-spacing: .5px; }
+    .bw-worker-meta strong { color: #0f1e35; font-size: .92rem; }
+</style>
+
+<div class="bw-wrap">
+    <div class="bw-shell">
+        <div class="bw-head">
+            <h1 class="bw-head-title">Propose a Booking</h1>
+            <p class="bw-head-sub">Send a detailed booking request to this worker with your schedule, expectations, and preferences.</p>
         </div>
 
-        <div class="col-md-6 mb-3">
-            <label asp-for="EndDate" class="form-label"></label>
-            <input asp-for="EndDate" type="date" class="form-control" />
-            <span asp-validation-for="EndDate" class="text-danger"></span>
-        </div>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="EstimatedHours" class="form-label"></label>
-        <input asp-for="EstimatedHours" type="number" min="1" class="form-control" />
-        <span asp-validation-for="EstimatedHours" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Budget" class="form-label"></label>
-        <input asp-for="Budget" type="number" step="0.01" min="0.01" class="form-control" />
-        <span asp-validation-for="Budget" class="text-danger"></span>
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="RequireNonSmoker" class="form-check-input" />
-        <label asp-for="RequireNonSmoker" class="form-check-label"></label>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Service Types</label>
-        <div class="border rounded p-3">
-            @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
+        <div class="bw-body">
+            @if (!ViewData.ModelState.IsValid)
             {
-                <div class="form-check">
-                    <input class="form-check-input"
-                           type="checkbox"
-                           name="ServiceTypes"
-                           value="@service"
-                           id="service_@service" />
-                    <label class="form-check-label" for="service_@service">@service</label>
+                <div class="bw-alert">
+                    <div asp-validation-summary="All"></div>
                 </div>
             }
-        </div>
-        <span asp-validation-for="ServiceTypes" class="text-danger"></span>
-    </div>
 
-    <div class="mb-3">
-        <label asp-for="WorkArrangement" class="form-label"></label>
-        <select asp-for="WorkArrangement"
-                asp-items="Html.GetEnumSelectList<WorkArrangement>()"
-                class="form-select">
-            <option value="">-- Select work arrangement --</option>
-        </select>
-        <span asp-validation-for="WorkArrangement" class="text-danger"></span>
-    </div>
+            <form asp-controller="Customer" asp-action="BookWorker" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="TargetWorkerId" />
 
-    <div class="mb-3">
-        <label asp-for="CommitmentPreference" class="form-label"></label>
-        <select asp-for="CommitmentPreference"
-                asp-items="Html.GetEnumSelectList<CommitmentPreference>()"
-                class="form-select">
-            <option value="">-- Select commitment preference --</option>
-        </select>
-        <span asp-validation-for="CommitmentPreference" class="text-danger"></span>
-    </div>
+                <div class="bw-grid">
+                    <div>
+                        @if (hasWorker)
+                        {
+                            <div class="bw-card mb-3">
+                                <div class="bw-card-head">
+                                    <span class="bw-card-icon"><i class="bi bi-person-badge-fill"></i></span>
+                                    <h2 class="bw-card-title">Selected Worker</h2>
+                                </div>
+                                <div class="bw-card-body">
+                                    <a class="bw-worker-link" href="@Url.Action("WorkerDetails", "Customer", new { workerId = workerId })">
+                                        <img class="bw-worker-avatar"
+                                             src="@(string.IsNullOrWhiteSpace(workerImage) ? "https://via.placeholder.com/96x96?text=Worker" : workerImage)"
+                                             alt="Worker profile image" />
+                                        <div class="bw-worker-meta">
+                                            <small>Tap to view profile</small>
+                                            <strong>@(string.IsNullOrWhiteSpace(workerName) ? "View Worker Details" : workerName)</strong>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        }
 
-    <div class="mb-3">
-        <label class="form-label">Required Skills</label>
-        <div class="border rounded p-3">
-            @foreach (Skill skill in Enum.GetValues(typeof(Skill)))
-            {
-                <div class="form-check">
-                    <input class="form-check-input"
-                           type="checkbox"
-                           name="RequiredSkills"
-                           value="@skill"
-                           id="skill_@skill" />
-                    <label class="form-check-label" for="skill_@skill">@skill</label>
+                        <div class="bw-card mb-3">
+                            <div class="bw-card-head">
+                                <span class="bw-card-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+                                <h2 class="bw-card-title">Job Overview</h2>
+                            </div>
+                            <div class="bw-card-body">
+                                <div class="bw-form-grid">
+                                    <div class="bw-field full">
+                                        <label asp-for="Title" class="bw-label"></label>
+                                        <input asp-for="Title" class="bw-input" placeholder="e.g. Weekly childcare support" />
+                                        <span asp-validation-for="Title" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field full">
+                                        <label asp-for="Description" class="bw-label"></label>
+                                        <textarea asp-for="Description" class="bw-textarea" placeholder="Describe the work you need, schedule expectations, number of children, household duties, and anything important."></textarea>
+                                        <span asp-validation-for="Description" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field full">
+                                        <label asp-for="Requirements" class="bw-label"></label>
+                                        <textarea asp-for="Requirements" class="bw-textarea" placeholder="List preferred experience, certifications, language requirements, or special expectations."></textarea>
+                                        <span asp-validation-for="Requirements" class="bw-validation"></span>
+                                    </div>
+
+                                    <div class="bw-field">
+                                        <label asp-for="City" class="bw-label"></label>
+                                        <input asp-for="City" class="bw-input" placeholder="Enter city" />
+                                        <span asp-validation-for="City" class="bw-validation"></span>
+                                    </div>
+
+                                    <div class="bw-field">
+                                        <label asp-for="Address" class="bw-label"></label>
+                                        <input asp-for="Address" class="bw-input" placeholder="Enter address (optional)" />
+                                        <span asp-validation-for="Address" class="bw-validation"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bw-card mb-3">
+                            <div class="bw-card-head">
+                                <span class="bw-card-icon"><i class="bi bi-calendar2-week-fill"></i></span>
+                                <h2 class="bw-card-title">Schedule & Budget</h2>
+                            </div>
+                            <div class="bw-card-body">
+                                <div class="bw-form-grid">
+                                    <div class="bw-field">
+                                        <label asp-for="StartDate" class="bw-label"></label>
+                                        <input asp-for="StartDate" type="date" class="bw-input" />
+                                        <span asp-validation-for="StartDate" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field">
+                                        <label asp-for="EndDate" class="bw-label"></label>
+                                        <input asp-for="EndDate" type="date" class="bw-input" />
+                                        <span asp-validation-for="EndDate" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field">
+                                        <label asp-for="EstimatedHours" class="bw-label"></label>
+                                        <input asp-for="EstimatedHours" type="number" min="1" class="bw-input" />
+                                        <span asp-validation-for="EstimatedHours" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field">
+                                        <label asp-for="Budget" class="bw-label"></label>
+                                        <input asp-for="Budget" type="number" step="0.01" min="0.01" class="bw-input" />
+                                        <span asp-validation-for="Budget" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field full">
+                                        <label class="bw-label">Preferences</label>
+                                        <div class="bw-switch">
+                                            <input asp-for="RequireNonSmoker" />
+                                            <label asp-for="RequireNonSmoker" class="mb-0"></label>
+                                        </div>
+                                    </div>
+                                    <div class="bw-field">
+                                        <label asp-for="WorkArrangement" class="bw-label"></label>
+                                        <select asp-for="WorkArrangement" asp-items="Html.GetEnumSelectList<WorkArrangement>()" class="bw-select">
+                                            <option value="">-- Select work arrangement --</option>
+                                        </select>
+                                        <span asp-validation-for="WorkArrangement" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field">
+                                        <label asp-for="CommitmentPreference" class="bw-label"></label>
+                                        <select asp-for="CommitmentPreference" asp-items="Html.GetEnumSelectList<CommitmentPreference>()" class="bw-select">
+                                            <option value="">-- Select commitment preference --</option>
+                                        </select>
+                                        <span asp-validation-for="CommitmentPreference" class="bw-validation"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bw-card">
+                            <div class="bw-card-head">
+                                <span class="bw-card-icon"><i class="bi bi-ui-checks-grid"></i></span>
+                                <h2 class="bw-card-title">Services & Skills</h2>
+                            </div>
+                            <div class="bw-card-body">
+                                <div class="bw-form-grid">
+                                    <div class="bw-field">
+                                        <label class="bw-label">Service Types</label>
+                                        <div class="bw-check-panel">
+                                            @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
+                                            {
+                                                <label class="bw-check-item">
+                                                    <input type="checkbox" name="ServiceTypes" value="@service" id="service_@service" />
+                                                    <span>@service</span>
+                                                </label>
+                                            }
+                                        </div>
+                                        <span asp-validation-for="ServiceTypes" class="bw-validation"></span>
+                                    </div>
+                                    <div class="bw-field">
+                                        <label class="bw-label">Required Skills</label>
+                                        <div class="bw-check-panel">
+                                            @foreach (Skill skill in Enum.GetValues(typeof(Skill)))
+                                            {
+                                                <label class="bw-check-item">
+                                                    <input type="checkbox" name="RequiredSkills" value="@skill" id="skill_@skill" />
+                                                    <span>@skill</span>
+                                                </label>
+                                            }
+                                        </div>
+                                        <span asp-validation-for="RequiredSkills" class="bw-validation"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="bw-side-note mb-3">
+                            <h3>Booking Tips</h3>
+                            <p>A strong booking proposal helps the worker understand your needs quickly and respond with confidence.</p>
+                            <ul>
+                                <li>Be clear about schedule and duties.</li>
+                                <li>Mention any childcare, pet, or household specifics.</li>
+                                <li>Use requirements to highlight must-haves.</li>
+                                <li>Set a realistic budget and expected time commitment.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bw-card">
+                            <div class="bw-card-head">
+                                <span class="bw-card-icon"><i class="bi bi-send-fill"></i></span>
+                                <h2 class="bw-card-title">Submit Proposal</h2>
+                            </div>
+                            <div class="bw-card-body">
+                                <p class="text-muted mb-3" style="font-size:.88rem; line-height:1.65;">
+                                    Once submitted, the worker will be able to review this request and either accept or decline it.
+                                </p>
+
+                                <div class="bw-actions">
+                                    <a href="@Url.Action("WorkerShop", "Customer")" class="bw-btn bw-btn-secondary">Cancel</a>
+                                    <button type="submit" class="bw-btn bw-btn-primary">Send Booking Proposal</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            }
+            </form>
         </div>
-        <span asp-validation-for="RequiredSkills" class="text-danger"></span>
     </div>
-
-    <button type="submit" class="btn btn-primary">
-        Send Booking Proposal
-    </button>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

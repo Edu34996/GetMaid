@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$USER_HOME$/Desktop/getmaid_seed.sql" dialect="SQLite" />
+    <file url="file://$USER_HOME$/Desktop/seed_home_services.sql" dialect="SQLite" />
+  </component>
+</project>

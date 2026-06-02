@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(GetMaidContext))]
-    [Migration("20260524171825_InitialSetup")]
-    partial class InitialSetup
+    [Migration("20260602210609_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -113,6 +113,10 @@ namespace Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
 
@@ -173,11 +177,21 @@ namespace Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("BookingInactive")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Budget")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CommitmentPreference")
                         .HasColumnType("INTEGER");
@@ -203,9 +217,11 @@ namespace Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
 
                     b.Property<bool>("RequireNonSmoker")
                         .HasColumnType("INTEGER");
@@ -272,6 +288,10 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
@@ -292,6 +312,15 @@ namespace Data.Migrations
             modelBuilder.Entity("Core.Concretes.Entities.JobApplication", b =>
                 {
                     b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BookingId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -315,6 +344,9 @@ namespace Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("SoonestAvailableStartDate")
                         .HasColumnType("TEXT");
 
@@ -331,6 +363,8 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingId");
+
                     b.HasIndex("JobPostingId");
 
                     b.HasIndex("WorkerId");
@@ -343,11 +377,21 @@ namespace Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("AssignedWorkerId")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Budget")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CommitmentPreference")
                         .HasColumnType("INTEGER");
@@ -373,9 +417,11 @@ namespace Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
 
                     b.Property<bool>("PostInactive")
                         .HasColumnType("INTEGER");
@@ -683,10 +729,6 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ProfilePictureUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Skills")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -726,6 +768,10 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Core.Concretes.Entities.JobApplication", b =>
                 {
+                    b.HasOne("Core.Concretes.Entities.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId");
+
                     b.HasOne("Core.Concretes.Entities.JobPosting", "JobPosting")
                         .WithMany("Applications")
                         .HasForeignKey("JobPostingId")
@@ -737,6 +783,8 @@ namespace Data.Migrations
                         .HasForeignKey("WorkerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Booking");
 
                     b.Navigation("JobPosting");
 

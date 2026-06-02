@@ -9,7 +9,8 @@ namespace Core.Concretes.DTOs
     {
         public string Id { get; set; } = null!;
         public string Title { get; set; } = null!;
-        public string Location { get; set; } = null!;
+        
+        public string City { get; set; } = null!;        
         
         [Column(TypeName = "decimal(18,2)")] 
         public decimal Budget { get; set; }

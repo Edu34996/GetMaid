@@ -1,171 +1,586 @@
 @using Core.Concretes.DTOs
 @using Core.Concretes.Enums
+@using System.Text.Json
 @model IEnumerable<WorkerCardDTO>
 
 @{
     ViewData["Title"] = "Worker Shop";
+
     var currentFilter = ViewBag.CurrentFilter as WorkerSearchFilterDTO ?? new WorkerSearchFilterDTO();
+    var workers = (Model ?? Enumerable.Empty<WorkerCardDTO>()).ToList();
+
+    // Requested map-init values from ViewBag
+    var customerLat = ViewBag.CustomerLatitude as double?;
+    var customerLon = ViewBag.CustomerLongitude as double?;
+
+    var workerJson = JsonSerializer.Serialize(workers.Select(w => new
+    {
+        id = w.Id,
+        firstName = w.FirstName,
+        city = w.City,
+        isSmoker = w.IsSmoker,
+        minHourlyRate = w.MinHourlyRate,
+        maxHourlyRate = w.MaxHourlyRate,
+        averageHourlyRate = w.AverageHourlyRate,
+        averageRating = w.AverageRating,
+        totalReviews = w.TotalReviews,
+        numberOfSkills = w.NumberOfSkills,
+        numberOfLanguages = w.NumberOfLanguages,
+        offeredServices = w.OfferedServices,
+        profilePictureUrl = w.ProfilePictureUrl,
+        latitude = w.Latitude,
+        longitude = w.Longitude
+    }));
+
+    var customerJson = JsonSerializer.Serialize(new
+    {
+        latitude = customerLat,
+        longitude = customerLon
+    });
 }
 
-<h1>Find a Worker</h1>
-<hr />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-<div class="border rounded p-3 mb-4 bg-light">
-    <h3>Filter Workers</h3>
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin="" />
 
-    <form asp-controller="Customer" asp-action="WorkerShop" method="get">
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label>City</label>
-                <input type="text" name="City" value="@currentFilter.City" class="form-control" placeholder="Enter city" />
-            </div>
+<style>
+    .ws-wrap {
+        max-width: 1180px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: #0f1e35;
+    }
 
-            <div class="col-md-4 mb-3">
-                <label>Minimum Hourly Rate</label>
-                <input type="number" step="0.01" name="MinHourlyRate" value="@currentFilter.MinHourlyRate" class="form-control" />
-            </div>
+    .ws-head {
+        border-radius: 16px;
+        padding: 22px 24px;
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(14, 24, 44, .2);
+        margin-bottom: 14px;
+    }
 
-            <div class="col-md-4 mb-3">
-                <label>Maximum Hourly Rate</label>
-                <input type="number" step="0.01" name="MaxHourlyRate" value="@currentFilter.MaxHourlyRate" class="form-control" />
-            </div>
+    .ws-head h1 {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.55rem;
+        font-weight: 800;
+    }
 
-            <div class="col-md-4 mb-3">
-                <label>Minimum Experience Years</label>
-                <input type="number" name="MinExperienceYears" value="@currentFilter.MinExperienceYears" class="form-control" />
-            </div>
+    .ws-head p {
+        margin: 6px 0 0;
+        font-size: .9rem;
+        color: rgba(255,255,255,.85);
+    }
 
-            <div class="col-md-4 mb-3">
-                <label>Minimum Average Rating</label>
-                <input type="number" step="0.1" min="0" max="5" name="MinAverageRating" value="@currentFilter.MinAverageRating" class="form-control" />
-            </div>
+    .ws-map-shell, .ws-filter-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 20px rgba(0,0,0,.04);
+        margin-bottom: 14px;
+    }
 
-            <div class="col-md-4 mb-3">
-                <label>Preferred Arrangement</label>
-                <select name="PreferredArrangement" class="form-select">
-                    <option value="">-- Any --</option>
-                    @foreach (WorkArrangement arrangement in Enum.GetValues(typeof(WorkArrangement)))
-                    {
-                        <option value="@arrangement" selected="@(currentFilter.PreferredArrangement == arrangement)">
-                            @arrangement
-                        </option>
-                    }
-                </select>
-            </div>
+    .ws-block-head {
+        padding: 12px 14px;
+        background: #fbfcff;
+        border-bottom: 1px solid #e9edf4;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
 
-            <div class="col-md-4 mb-3">
-                <label>Commitment Preference</label>
-                <select name="CommitmentPreference" class="form-select">
-                    <option value="">-- Any --</option>
-                    @foreach (CommitmentPreference commitment in Enum.GetValues(typeof(CommitmentPreference)))
-                    {
-                        <option value="@commitment" selected="@(currentFilter.CommitmentPreference == commitment)">
-                            @commitment
-                        </option>
-                    }
-                </select>
-            </div>
+    .ws-block-head strong { font-size: .9rem; }
+    .ws-block-head span { color: #7a8699; font-size: .82rem; }
+
+    #workerMap { height: 360px; }
+
+    .ws-filter-shell { padding: 14px; }
+
+    .ws-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0,1fr));
+        gap: 10px;
+    }
+
+    .ws-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: .76rem;
+        color: #6f7d92;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+
+    .ws-field input, .ws-field select {
+        width: 100%;
+        border: 1px solid #d6ddea;
+        border-radius: 10px;
+        font-size: .88rem;
+        padding: 9px 10px;
+        outline: none;
+    }
+
+    .ws-field input:focus, .ws-field select:focus {
+        border-color: #94b6ff;
+        box-shadow: 0 0 0 3px rgba(59,130,246,.14);
+    }
+
+    .ws-row {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .ws-services {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+    }
+
+    .ws-services label {
+        border: 1px solid #d6ddea;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: .8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+    }
+
+    .ws-actions {
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ws-meta { color: #7a8699; font-size: .85rem; }
+
+    .ws-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-size: .84rem;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .ws-btn-primary { background: #f59e0b; color: #1f1400; }
+    .ws-btn-ghost { background: #eef2f8; color: #334155; }
+
+    .ws-cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0,1fr));
+        gap: 12px;
+    }
+
+    .ws-card {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+
+    .ws-top { display: flex; gap: 10px; align-items: center; }
+
+    .ws-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e5ebf5;
+        background: #eef2f7;
+    }
+
+    .ws-name {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-weight: 800;
+        font-size: 1rem;
+    }
+
+    .ws-city { margin: 2px 0 0; color: #7a8699; font-size: .82rem; }
+
+    .ws-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 8px;
+        font-size: .83rem;
+    }
+
+    .ws-stats div {
+        border: 1px solid #e8edf6;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 7px 8px;
+    }
+
+    .ws-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ws-badge {
+        border-radius: 999px;
+        border: 1px solid #d6e0f7;
+        background: #eef4ff;
+        color: #355288;
+        padding: 4px 8px;
+        font-size: .74rem;
+        font-weight: 600;
+    }
+
+    .ws-card-actions { margin-top: auto; display: flex; gap: 8px; }
+
+    .ws-link {
+        flex: 1;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 9px;
+        padding: 8px 10px;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .ws-link-details { border: 1px solid #c8d6ef; color: #23406f; background: #fff; }
+    .ws-link-book { border: 1px solid #f7ca77; background: #ffd98a; color: #1f2937; }
+
+    .ws-empty {
+        background: #fff;
+        border: 1px dashed #ced8ea;
+        border-radius: 12px;
+        text-align: center;
+        padding: 26px 14px;
+        color: #7a8699;
+    }
+
+    @@media (max-width: 1100px) {
+        .ws-filter-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+        .ws-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    @@media (max-width: 768px) {
+        #workerMap { height: 300px; }
+        .ws-filter-grid { grid-template-columns: 1fr 1fr; }
+        .ws-cards { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="ws-wrap">
+    <div class="ws-head">
+        <h1>Find a Worker</h1>
+        <p>Filter quickly, see workers on map, and book the right match.</p>
+    </div>
+
+    <div class="ws-map-shell">
+        <div class="ws-block-head">
+            <strong>Worker Map</strong>
+            <span id="mapInfo">Pins update as filters change</span>
         </div>
+        <div id="workerMap"></div>
+    </div>
 
-        <div class="mb-3">
-            <label class="me-3">
-                <input type="checkbox" name="NonSmokerOnly" value="true" @(currentFilter.NonSmokerOnly == true ? "checked" : "") />
-                Non-smoker only
-            </label>
+    <div class="ws-filter-shell">
+        <form id="filterForm" asp-controller="Customer" asp-action="WorkerShop" method="get">
+            <div class="ws-filter-grid">
+                <div class="ws-field">
+                    <label>City</label>
+                    <input id="fCity" type="text" name="City" value="@currentFilter.City" placeholder="Enter city" />
+                </div>
 
-            <label>
-                <input type="checkbox" name="VerifiedOnly" value="true" @(currentFilter.VerifiedOnly == true ? "checked" : "") />
-                Verified workers only
-            </label>
-        </div>
+                <div class="ws-field">
+                    <label>Min Hourly</label>
+                    <input id="fMinRate" type="number" step="0.01" name="MinHourlyRate" value="@currentFilter.MinHourlyRate" />
+                </div>
 
-        <div class="mb-3">
-            <label>Required Services</label>
-            <div class="border rounded p-2">
+                <div class="ws-field">
+                    <label>Max Hourly</label>
+                    <input id="fMaxRate" type="number" step="0.01" name="MaxHourlyRate" value="@currentFilter.MaxHourlyRate" />
+                </div>
+
+                <div class="ws-field">
+                    <label>Min Rating</label>
+                    <input id="fMinRating" type="number" step="0.1" min="0" max="5" name="MinAverageRating" value="@currentFilter.MinAverageRating" />
+                </div>
+
+                <div class="ws-field">
+                    <label>Arrangement</label>
+                    <select name="PreferredArrangement">
+                        <option value="">Any</option>
+                        @foreach (WorkArrangement arrangement in Enum.GetValues(typeof(WorkArrangement)))
+                        {
+                            <option value="@arrangement" selected="@(currentFilter.PreferredArrangement == arrangement)">
+                                @arrangement
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="ws-row">
+                <label>
+                    <input id="fNonSmoker" type="checkbox" name="NonSmokerOnly" value="true" @(currentFilter.NonSmokerOnly == true ? "checked" : "") />
+                    Non-smoker only
+                </label>
+            </div>
+
+            <div class="ws-services">
                 @foreach (ServiceType service in Enum.GetValues(typeof(ServiceType)))
                 {
-                    <label class="me-3">
-                        <input type="checkbox"
-                               name="RequiredServices"
-                               value="@service"
+                    <label>
+                        <input class="fService" type="checkbox" name="RequiredServices" value="@service"
                                @(currentFilter.RequiredServices.Contains(service) ? "checked" : "") />
                         @service
                     </label>
                 }
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-primary">Apply Filters</button>
-        <a asp-controller="Customer" asp-action="WorkerShop" class="btn btn-outline-secondary ms-2">Clear Filters</a>
-    </form>
-</div>
+            <div class="ws-actions">
+                <div class="ws-meta"><span id="resultCount">@workers.Count</span> workers visible</div>
+                <div>
+                    <button type="submit" class="ws-btn ws-btn-primary">Apply Server Filters</button>
+                    <a asp-controller="Customer" asp-action="WorkerShop" class="ws-btn ws-btn-ghost">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
 
-<h3>Available Workers</h3>
+    @if (workers.Any())
+    {
+        <div id="workerCards" class="ws-cards">
+            @foreach (var worker in workers)
+            {
+                var servicesCsv = string.Join(",", worker.OfferedServices ?? new List<ServiceType>());
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="text-danger mb-3">@TempData["ErrorMessage"]</div>
-}
+                <article class="ws-card worker-card"
+                         data-id="@worker.Id"
+                         data-city="@worker.City"
+                         data-minrate="@(worker.MinHourlyRate ?? 0)"
+                         data-maxrate="@(worker.MaxHourlyRate ?? 0)"
+                         data-rating="@worker.AverageRating"
+                         data-smoker="@worker.IsSmoker.ToString().ToLowerInvariant()"
+                         data-services="@servicesCsv"
+                         data-lat="@(worker.Latitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
+                         data-lon="@(worker.Longitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")">
 
-@if (Model != null && Model.Any())
-{
-    <div class="row">
-        @foreach (var worker in Model)
-        {
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="border rounded p-3 h-100">
-                    <div class="mb-2">
-                        <strong>@worker.FirstName</strong>
+                    <div class="ws-top">
+                        @if (!string.IsNullOrWhiteSpace(worker.ProfilePictureUrl))
+                        {
+                            <img src="@worker.ProfilePictureUrl" alt="@worker.FirstName" class="ws-avatar" />
+                        }
+                        else
+                        {
+                            <div class="ws-avatar d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-fill" style="font-size:1.1rem;color:#64748b;"></i>
+                            </div>
+                        }
+
+                        <div>
+                            <h3 class="ws-name">@worker.FirstName</h3>
+                            <p class="ws-city"><i class="bi bi-geo-alt me-1"></i>@worker.City</p>
+                        </div>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(worker.ProfilePictureUrl))
-                    {
-                        <div class="mb-2">
-                            <img src="@worker.ProfilePictureUrl" alt="@worker.FirstName" style="max-width:100%; max-height:180px; object-fit:cover;" />
-                        </div>
-                    }
+                    <div class="ws-stats">
+                        <div><strong>Rate:</strong> @(worker.MinHourlyRate?.ToString("0.00") ?? "-") - @(worker.MaxHourlyRate?.ToString("0.00") ?? "-")</div>
+                        <div><strong>Rating:</strong> @worker.AverageRating.ToString("0.0") (@worker.TotalReviews)</div>
+                        <div><strong>Skills:</strong> @worker.NumberOfSkills</div>
+                        <div><strong>Languages:</strong> @worker.NumberOfLanguages</div>
+                    </div>
 
-                    <div><strong>City:</strong> @worker.City</div>
-                    <div><strong>Smoker:</strong> @(worker.IsSmoker ? "Yes" : "No")</div>
-                    <div><strong>Min Rate:</strong> @(worker.MinHourlyRate?.ToString("0.00") ?? "-")</div>
-                    <div><strong>Max Rate:</strong> @(worker.MaxHourlyRate?.ToString("0.00") ?? "-")</div>
-                    <div><strong>Average Rate:</strong> @(worker.AverageHourlyRate?.ToString("0.00") ?? "-")</div>
-                    <div><strong>Rating:</strong> @worker.AverageRating (@worker.TotalReviews reviews)</div>
-                    <div><strong>Skills:</strong> @worker.NumberOfSkills</div>
-                    <div><strong>Languages:</strong> @worker.NumberOfLanguages</div>
-
-                    <div class="mt-2">
-                        <strong>Services:</strong><br />
+                    <div class="ws-badges">
                         @if (worker.OfferedServices != null && worker.OfferedServices.Any())
                         {
-                            @foreach (var service in worker.OfferedServices)
+                            foreach (var service in worker.OfferedServices.Take(4))
                             {
-                                <span class="badge bg-secondary me-1">@service</span>
+                                <span class="ws-badge">@service</span>
                             }
                         }
                         else
                         {
-                            <span>No services listed</span>
+                            <span class="ws-badge">No services listed</span>
                         }
                     </div>
 
-                    <div class="mt-3">
-                        <a asp-controller="Customer" asp-action="WorkerDetails" asp-route-workerId="@worker.Id"
-                           class="btn btn-outline-primary btn-sm">
+                    <div class="ws-card-actions">
+                        <a asp-controller="Customer" asp-action="WorkerDetails" asp-route-workerId="@worker.Id" class="ws-link ws-link-details">
                             View Details
                         </a>
-
-                        <a asp-controller="Customer" asp-action="BookWorker" asp-route-workerId="@worker.Id"
-                           class="btn btn-success btn-sm">
+                        <a asp-controller="Customer" asp-action="BookWorker" asp-route-workerId="@worker.Id" class="ws-link ws-link-book">
                             Book Worker
                         </a>
                     </div>
-                </div>
-            </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="ws-empty">No workers match your current filters. Try adjusting your search.</div>
+    }
+</div>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+<script>
+    (() => {
+        const workers = @Html.Raw(workerJson);
+        const customer = @Html.Raw(customerJson);
+
+        // map-valid workers only
+        const points = workers.filter(w => w.latitude != null && w.longitude != null);
+
+        const map = L.map('workerMap');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const markersLayer = L.layerGroup().addTo(map);
+        const markerById = new Map();
+
+        // customer marker + initial center preference
+        let initialCenterSet = false;
+        if (customer && customer.latitude != null && customer.longitude != null) {
+            L.marker([customer.latitude, customer.longitude], {
+                title: "Your location"
+            })
+            .bindPopup("<strong>Your location</strong>")
+            .addTo(map);
+
+            map.setView([customer.latitude, customer.longitude], 12);
+            initialCenterSet = true;
         }
-    </div>
-}
-else
-{
-    <div>No workers match your current filters. Try adjusting your search.</div>
-}
+
+        // worker markers
+        if (points.length > 0) {
+            const bounds = [];
+
+            points.forEach(w => {
+                const marker = L.marker([w.latitude, w.longitude]).bindPopup(
+                    `<strong>${w.firstName ?? "Worker"}</strong><br>${w.city ?? ""}<br>Rating: ${(w.averageRating ?? 0).toFixed(1)}`
+                );
+                marker.addTo(markersLayer);
+                markerById.set(w.id, marker);
+                bounds.push([w.latitude, w.longitude]);
+            });
+
+            // If no customer coords, fit map to workers initially
+            if (!initialCenterSet) {
+                map.fitBounds(bounds, { padding: [28, 28] });
+            }
+        } else if (!initialCenterSet) {
+            // fallback center
+            map.setView([31.5204, 74.3587], 11);
+        }
+
+        const cards = Array.from(document.querySelectorAll('.worker-card'));
+        const resultCount = document.getElementById('resultCount');
+        const mapInfo = document.getElementById('mapInfo');
+
+        const fCity = document.getElementById('fCity');
+        const fMinRate = document.getElementById('fMinRate');
+        const fMaxRate = document.getElementById('fMaxRate');
+        const fMinRating = document.getElementById('fMinRating');
+        const fNonSmoker = document.getElementById('fNonSmoker');
+        const fServices = Array.from(document.querySelectorAll('.fService'));
+
+        function norm(v) { return (v ?? '').toString().trim().toLowerCase(); }
+        function num(v, fallback = 0) {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fallback;
+        }
+
+        function applyFilters() {
+            const city = norm(fCity.value);
+            const minRate = fMinRate.value === '' ? null : num(fMinRate.value);
+            const maxRate = fMaxRate.value === '' ? null : num(fMaxRate.value);
+            const minRating = fMinRating.value === '' ? null : num(fMinRating.value);
+            const nonSmokerOnly = fNonSmoker.checked;
+            const requiredServices = fServices.filter(x => x.checked).map(x => norm(x.value));
+
+            let visible = 0;
+            const visibleCoords = [];
+
+            cards.forEach(card => {
+                const cCity = norm(card.dataset.city);
+                const cMinRate = num(card.dataset.minrate);
+                const cMaxRate = num(card.dataset.maxrate);
+                const cRating = num(card.dataset.rating);
+                const cSmoker = norm(card.dataset.smoker) === 'true';
+                const cServices = norm(card.dataset.services).split(',').filter(Boolean);
+
+                let ok = true;
+                if (city && !cCity.includes(city)) ok = false;
+                if (ok && minRate !== null && cMaxRate < minRate) ok = false;
+                if (ok && maxRate !== null && cMinRate > maxRate) ok = false;
+                if (ok && minRating !== null && cRating < minRating) ok = false;
+                if (ok && nonSmokerOnly && cSmoker) ok = false;
+
+                if (ok && requiredServices.length > 0) {
+                    for (const s of requiredServices) {
+                        if (!cServices.includes(s)) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+
+                card.style.display = ok ? '' : 'none';
+
+                const id = card.dataset.id;
+                const marker = markerById.get(id);
+                if (marker) {
+                    if (ok) {
+                        marker.addTo(markersLayer);
+                        const lat = Number(card.dataset.lat);
+                        const lon = Number(card.dataset.lon);
+                        if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                            visibleCoords.push([lat, lon]);
+                        }
+                    } else {
+                        markersLayer.removeLayer(marker);
+                    }
+                }
+
+                if (ok) visible++;
+            });
+
+            resultCount.textContent = String(visible);
+            mapInfo.textContent = `Showing ${visible} matching worker(s)`;
+
+            if (visibleCoords.length > 0) {
+                map.fitBounds(visibleCoords, { padding: [28, 28], maxZoom: 13 });
+            } else if (customer && customer.latitude != null && customer.longitude != null) {
+                map.setView([customer.latitude, customer.longitude], 12);
+            }
+        }
+
+        [fCity, fMinRate, fMaxRate, fMinRating, fNonSmoker]
+            .forEach(el => el.addEventListener('input', applyFilters));
+
+        fServices.forEach(el => el.addEventListener('change', applyFilters));
+
+        applyFilters();
+    })();
+</script>

@@ -25,8 +25,16 @@ namespace Core.Concretes.Entities
         public string? Requirements { get; set; }
 
         [Required]
-        public string Location { get; set; } = null!;
+        [MaxLength(120)]
+        public string City { get; set; } = null!;
 
+        [Required]
+        [MaxLength(250)]
+        public string Address { get; set; } = null!;
+
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        
         [Required]
         public DateTime StartDate { get; set; }
 

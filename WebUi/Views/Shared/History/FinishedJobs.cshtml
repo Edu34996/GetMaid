@@ -1,0 +1,80 @@
+@using Core.Concretes.DTOs
+@model IEnumerable<JobPostingCardDTO>
+
+@{
+    ViewData["Title"] = "Finished Jobs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var jobs = (Model ?? Enumerable.Empty<JobPostingCardDTO>()).ToList();
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+    .fj-wrap { max-width: 1120px; margin: 24px auto 48px; padding: 0 12px; font-family: 'DM Sans', system-ui, sans-serif; }
+    .fj-shell { background:#fff; border:1px solid #e4e8ee; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.05); overflow:hidden; }
+    .fj-head { background:linear-gradient(125deg,#0c1224 0%,#1a2744 60%,#1f3561 100%); color:#fff; padding:22px 24px; }
+    .fj-title { margin:0; font-family:'Nunito',sans-serif; font-size:1.5rem; font-weight:800; }
+    .fj-sub { margin:6px 0 0; color:rgba(255,255,255,.82); font-size:.9rem; }
+    .fj-body { padding:22px; background:#f8fafc; }
+    .fj-stat { background:#fff; border:1px solid #e4e8ee; border-radius:12px; padding:12px 14px; margin-bottom:14px; }
+    .fj-stat b { font-family:'Nunito',sans-serif; font-size:1.2rem; }
+    .fj-table-wrap { background:#fff; border:1px solid #e4e8ee; border-radius:14px; overflow:hidden; }
+    .fj-table { width:100%; border-collapse:collapse; }
+    .fj-table th,.fj-table td { padding:11px 12px; border-bottom:1px solid #e4e8ee; text-align:left; font-size:.88rem; }
+    .fj-table th { font-size:.76rem; text-transform:uppercase; letter-spacing:.5px; color:#7a8699; background:#f8fafc; }
+    .fj-badge { display:inline-flex; align-items:center; border-radius:999px; padding:4px 9px; font-size:.74rem; font-weight:700; background:#ecfdf3; color:#065f46; border:1px solid #a7f3d0; }
+    .fj-empty { text-align:center; padding:38px 16px; color:#7a8699; }
+    @@media (max-width: 991.98px) { .fj-table-wrap{overflow-x:auto;} .fj-table{min-width:840px;} }
+</style>
+
+<div class="fj-wrap">
+    <div class="fj-shell">
+        <div class="fj-head">
+            <h1 class="fj-title">Finished Jobs</h1>
+            <p class="fj-sub">Track job posts that have already been completed or closed.</p>
+        </div>
+
+        <div class="fj-body">
+            <div class="fj-stat">
+                Total finished jobs: <b>@jobs.Count</b>
+            </div>
+
+            <div class="fj-table-wrap">
+                @if (jobs.Any())
+                {
+                    <table class="fj-table">
+                        <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>City</th>
+                            <th>Budget</th>
+                            <th>Start Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var job in jobs)
+                        {
+                            <tr>
+                                <td>@job.Title</td>
+                                <td>@job.City</td>
+                                <td>@job.Budget.ToString("0.00")</td>
+                                <td>@job.StartDate.ToShortDateString()</td>
+                                <td><span class="fj-badge">Finished</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="fj-empty">
+                        No finished jobs yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -18,8 +18,12 @@ namespace Core.Concretes.DTOs
         [MaxLength(1000)]
         public string? Requirements { get; set; }
 
-        [Required(ErrorMessage = "Location is required.")]
-        public string Location { get; set; } = null!;
+        [Required(ErrorMessage = "City is required.")]
+        [MaxLength(120, ErrorMessage = "City cannot exceed 120 characters.")]
+        public string City { get; set; } = null!;
+
+        [MaxLength(250, ErrorMessage = "Address cannot exceed 250 characters.")]
+        public string Address { get; set; } = null!;
 
         [Required(ErrorMessage = "Start Date is required.")]
         public DateTime StartDate { get; set; }
