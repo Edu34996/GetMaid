@@ -42,6 +42,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9SZXNldFBhc3N3b3JkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/edu/RiderProjects/GetMaid/WebUi/Views/Admin/AccountSwitcher.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWRtaW4vQWNjb3VudFN3aXRjaGVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/edu/RiderProjects/GetMaid/WebUi/Views/Customer/BookWorker.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ3VzdG9tZXIvQm9va1dvcmtlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
