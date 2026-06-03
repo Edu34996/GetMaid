@@ -1,0 +1,280 @@
+@model IEnumerable<WebUi.Controllers.AccountSwitcherUserItemVM>
+
+@{
+    ViewData["Title"] = "Account Switcher";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var q = ViewBag.Query as string ?? string.Empty;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+    .as-wrap {
+        max-width: 1120px;
+        margin: 24px auto 48px;
+        padding: 0 12px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .as-shell {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.05);
+        overflow: hidden;
+    }
+
+    .as-head {
+        background: linear-gradient(125deg, #0c1224 0%, #1a2744 60%, #1f3561 100%);
+        color: #fff;
+        padding: 22px 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .as-title {
+        margin: 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -.4px;
+    }
+
+    .as-sub {
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: .9rem;
+    }
+
+    .as-body {
+        padding: 22px;
+        background: #f8fafc;
+    }
+
+    .as-alert-ok {
+        border-radius: 12px;
+        background: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        color: #15803d;
+        font-size: .86rem;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .as-tools {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 14px;
+    }
+
+    .as-search-grid {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    @@media (max-width: 767.98px) {
+        .as-search-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .as-input {
+        width: 100%;
+        border: 1.5px solid #e4e8ee;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f8fafc;
+        color: #0f1e35;
+        font-size: .9rem;
+        outline: none;
+        transition: all .2s;
+    }
+
+    .as-input:focus {
+        border-color: #f59e0b;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+    }
+
+    .as-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: #fff;
+        font-size: .84rem;
+        font-weight: 700;
+        white-space: nowrap;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all .18s ease;
+    }
+
+    .as-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.03);
+    }
+
+    .as-btn-search {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        box-shadow: 0 8px 18px rgba(217,119,6,.22);
+    }
+
+    .as-btn-return {
+        background: #b91c1c;
+        box-shadow: 0 8px 18px rgba(185,28,28,.2);
+        margin-bottom: 14px;
+    }
+
+    .as-table-wrap {
+        background: #fff;
+        border: 1px solid #e4e8ee;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .as-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .as-table th,
+    .as-table td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #e4e8ee;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .as-table th {
+        font-size: .76rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #7a8699;
+        font-weight: 700;
+        background: #f8fafc;
+    }
+
+    .as-table td {
+        color: #0f1e35;
+        font-size: .88rem;
+    }
+
+    .as-role {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: .74rem;
+        font-weight: 700;
+        border: 1px solid #c7d2fe;
+        color: #4338ca;
+        background: #eef2ff;
+    }
+
+    .as-assume-form {
+        margin: 0;
+    }
+
+    .as-btn-assume {
+        border: 1px solid #bae6fd;
+        border-radius: 9px;
+        padding: 7px 11px;
+        background: #f0f9ff;
+        color: #0369a1;
+        font-size: .78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .18s ease;
+    }
+
+    .as-btn-assume:hover {
+        background: #e0f2fe;
+        transform: translateY(-1px);
+    }
+
+    @@media (max-width: 991.98px) {
+        .as-table-wrap { overflow-x: auto; }
+        .as-table { min-width: 760px; }
+    }
+</style>
+
+<div class="as-wrap">
+    <div class="as-shell">
+        <div class="as-head">
+            <div>
+                <h1 class="as-title">Development Account Switcher</h1>
+                <p class="as-sub">Select a user account to assume identity for local testing only.</p>
+            </div>
+        </div>
+
+        <div class="as-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="as-alert-ok">
+                    <i class="bi bi-check-circle-fill me-1"></i>@TempData["SuccessMessage"]
+                </div>
+            }
+            
+            <div class="as-tools">
+                <form asp-action="AccountSwitcher" method="get" class="as-search-grid">
+                    <input name="q" value="@q" class="as-input" placeholder="Search by email or full name" />
+                    <button class="as-btn as-btn-search" type="submit">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                </form>
+            </div>
+
+            @if (User.HasClaim("IsAssumedSession", "true"))
+            {
+                <form asp-controller="Admin" asp-action="ReturnToAdmin" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="as-btn as-btn-return" type="submit">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Return to Admin
+                    </button>
+                </form>
+            }
+
+            <div class="as-table-wrap">
+                <table class="as-table">
+                    <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th style="width: 170px;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>@u.Email</td>
+                            <td>@u.FullName</td>
+                            <td><span class="as-role">@u.Role</span></td>
+                            <td>
+                                <form asp-action="AssumeUser" method="post" class="as-assume-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@u.Id" />
+                                    <button class="as-btn-assume" type="submit">
+                                        <i class="bi bi-person-check-fill me-1"></i> Assume
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
